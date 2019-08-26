@@ -3,6 +3,7 @@
 
 #include "Models/DeviceModel.h"
 #include "DatabaseManager.h"
+#include "MidiConnection.h"
 #include "DeviceDialog.h"
 
 #include <QSettings>
@@ -25,6 +26,15 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     settings.endGroup();
 
     loadDevice();
+
+    ui->inPortComboBox->addItems(MidiConnection::getInstance()->getAvailableInputPorts());
+    ui->outPortComboBox->addItems(MidiConnection::getInstance()->getAvailableOutputPorts());
+    if (MidiConnection::getInstance()->getOpenOutputPortIndex() != -1) {
+        ui->outPortComboBox->setCurrentIndex(MidiConnection::getInstance()->getOpenOutputPortIndex());
+    }
+
+    connect(ui->outPortComboBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(openOutputPort(int)));
 }
 
 SettingsDialog::~SettingsDialog()
@@ -156,4 +166,15 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue("host", ui->edtHost->text());
     settings.setValue("port", ui->edtPort->text());
     settings.endGroup();
+}
+
+void SettingsDialog::on_inPortComboBox_currentIndexChanged(int index)
+{
+
+}
+
+void SettingsDialog::openOutputPort(int index)
+{
+    qDebug() << "SettingsDialog::on_outPortComboBox_currentIndexChanged";
+    MidiConnection::getInstance()->openOutputPort(index);
 }

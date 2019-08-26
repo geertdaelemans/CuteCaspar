@@ -8,6 +8,9 @@
 #include "CasparDevice.h"
 #include "DatabaseManager.h"
 #include "SettingsDialog.h"
+
+#include "MidiConnection.h"
+
 #include "Models/LibraryModel.h"
 
 #include "Timecode.h"
@@ -44,17 +47,6 @@ MainWindow::MainWindow(QWidget *parent) :
         connectServer();
     settings.endGroup();
 
-
-    // Prepare MIDI connection
-    QMidiIn* midiIn = new QMidiIn(this);
-    midiOut = new QMidiOut(this);
-
-    qDebug() << "MIDI inputs" << midiIn->getPorts();
-    qDebug() << "MIDI outputs" << midiOut->getPorts();
-
-    ui->inPortComboBox->addItems(midiIn->getPorts());
-    ui->outPortComboBox->addItems(midiOut->getPorts());
-
     // Prepare notes panel
     QFile profile(":/Profiles/Notes.csv");
     if (!profile.open(QIODevice::ReadOnly)) {
@@ -70,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(button, SIGNAL(released()), this, SLOT(killNote()));
         ui->theGrid->addWidget(button);
     }
+
+    MidiConnection::getInstance();
 }
 
 /**
@@ -398,16 +392,6 @@ void MainWindow::on_actionPreview_toggled(bool visible)
     ui->boxServer->setVisible(visible);
 }
 
-void MainWindow::on_outPortComboBox_currentIndexChanged(int index)
-{
-    qDebug() << "Opening MIDI output" << ui->outPortComboBox->itemText(index);
-    if(midiOut->isPortOpen()) {
-        midiOut->closePort();
-        qDebug() << "MIDI port already open";
-    }
-    midiOut->openPort(static_cast<unsigned int>(index));
-}
-
 void MainWindow::playNote(unsigned int pitch)
 {
     if (pitch == 128) {
@@ -419,16 +403,7 @@ void MainWindow::playNote(unsigned int pitch)
             pitch = 60;
         }
     }
-
-    QMidiMessage *message = new QMidiMessage(this);
-    message->setChannel(1);
-    message->setStatus(MIDI_NOTE_ON);
-    message->setPitch(pitch);
-    message->setVelocity(60);
-
-    qDebug() << "ON: pitch" << message->getPitch() << "velocity" << message->getVelocity();
-
-    midiOut->sendMessage(message);
+    MidiConnection::getInstance()->playNote(pitch);
 }
 
 void MainWindow::killNote(unsigned int pitch)
@@ -442,14 +417,5 @@ void MainWindow::killNote(unsigned int pitch)
             pitch = 60;
         }
     }
-
-    QMidiMessage *message = new QMidiMessage(this);
-    message->setChannel(1);
-    message->setStatus(MIDI_NOTE_OFF);
-    message->setPitch(pitch);
-    message->setVelocity(0);
-
-    qDebug() << "OFF: pitch" << message->getPitch();
-
-    midiOut->sendMessage(message);
+    MidiConnection::getInstance()->killNote(pitch);
 }

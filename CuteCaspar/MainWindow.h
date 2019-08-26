@@ -51,7 +51,6 @@ private slots:
     void on_tableView_clicked(const QModelIndex &index);
     void on_actionSettings_triggered();
     void on_actionPreview_toggled(bool visible);
-    void on_outPortComboBox_currentIndexChanged(int index);
     void playNote(unsigned int pitch = 128);
     void killNote(unsigned int pitch = 128);
 
@@ -67,7 +66,6 @@ private:
     CasparDevice* device;
     QDateTime lastOsc;
     SettingsDialog * m_settingsDialog;
-    QMidiOut* midiOut;
     QMap<QString, unsigned int> notes;
 };
 

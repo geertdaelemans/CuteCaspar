@@ -27,6 +27,7 @@ CONFIG += c++11
 SOURCES += \
         CasparOSCListener.cpp \
         DeviceDialog.cpp \
+        MidiConnection.cpp \
         SettingsDialog.cpp \
         ip/IpEndpointName.cpp \
         ip/NetworkingUtils.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
         CasparOSCListener.h \
         DeviceDialog.h \
         MainWindow.h \
+        MidiConnection.h \
         Models/LibraryModel.h \
         SettingsDialog.h \
         ip/IpEndpointName.h \
