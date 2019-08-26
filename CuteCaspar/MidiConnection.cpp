@@ -80,8 +80,13 @@ void MidiConnection::playNote(unsigned int pitch)
     message->setVelocity(60);
 
     qDebug() << "ON: pitch" << message->getPitch() << "velocity" << message->getVelocity();
+    try {
+        midiOut->sendMessage(message);
+    }
+    catch(int e) {
+        qDebug() << "Error" << e;
+    }
 
-    midiOut->sendMessage(message);
 }
 
 

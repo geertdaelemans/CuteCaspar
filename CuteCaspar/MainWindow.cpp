@@ -4,6 +4,7 @@
 #include <QSqlQueryModel>
 #include <QSqlQuery>
 #include <QtSql>
+#include <QtMath>
 
 #include "CasparDevice.h"
 #include "DatabaseManager.h"
@@ -52,15 +53,29 @@ MainWindow::MainWindow(QWidget *parent) :
     if (!profile.open(QIODevice::ReadOnly)) {
         qDebug() << profile.errorString();
     }
-
+    int counter = 0;
     while (!profile.atEnd()) {
         QByteArray line = profile.readLine();
-        notes.insert(line.split(',').at(0), line.split(',').at(1).toUInt());
-        QPushButton *button = new QPushButton(line.split(',').at(0));
-        button->setProperty("pitch", line.split(',').at(1).toInt());
-        connect(button, SIGNAL(pressed()), this, SLOT(playNote()));
-        connect(button, SIGNAL(released()), this, SLOT(killNote()));
-        ui->theGrid->addWidget(button);
+        note tempNote;
+        tempNote.id = counter;
+        tempNote.name = line.split(',').at(0);
+        tempNote.pitch = line.split(',').at(1).toUInt();
+        notes.append(tempNote);
+        counter++;
+    }
+    int rows = qCeil(qSqrt(static_cast<qreal>(counter)));
+    qDebug() << "rows" << rows;
+    counter = 0;
+    QList<QPushButton*> button;
+    for (int i = 0; i < notes.length(); i++) {
+        QPushButton* newButton = new QPushButton(notes[i].name);
+        newButton->setProperty("pitch", notes[i].pitch);
+        newButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        connect(newButton, SIGNAL(pressed()), this, SLOT(playNote()));
+        connect(newButton, SIGNAL(released()), this, SLOT(killNote()));
+        ui->theGrid->addWidget(newButton, counter / rows, counter % rows);
+        button.append(newButton);
+        counter++;
     }
 
     MidiConnection::getInstance();

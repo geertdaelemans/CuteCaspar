@@ -20,6 +20,12 @@ namespace Ui {
 class MainWindow;
 }
 
+struct note {
+    int id;
+    QString name;
+    unsigned int pitch;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -66,7 +72,7 @@ private:
     CasparDevice* device;
     QDateTime lastOsc;
     SettingsDialog * m_settingsDialog;
-    QMap<QString, unsigned int> notes;
+    QList<note> notes;
 };
 
 #endif // MAINWINDOW_H
