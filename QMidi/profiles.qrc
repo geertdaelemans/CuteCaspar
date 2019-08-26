@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Profiles/Notes.csv</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/Graphics">
+        <file>Images/ServerSmall.png</file>
+        <file>Images/Add.png</file>
+        <file>Images/Remove.png</file>
+        <file>Images/AddHover.png</file>
+        <file>Images/RemoveHover.png</file>
+    </qresource>
+</RCC>

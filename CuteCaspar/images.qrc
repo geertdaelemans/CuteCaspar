@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Images/extras_net_offline.png</file>
+        <file>Images/extras_net_online.png</file>
+        <file>Images/extras_configure.png</file>
+        <file>Images/CasparCG.png</file>
+        <file>Images/ServerSmall.png</file>
+    </qresource>
+    <qresource prefix="/Graphics"/>
+</RCC>
