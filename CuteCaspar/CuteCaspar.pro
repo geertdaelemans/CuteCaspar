@@ -28,6 +28,8 @@ SOURCES += \
         CasparOSCListener.cpp \
         DeviceDialog.cpp \
         MidiConnection.cpp \
+        MidiLogger.cpp \
+        MidiReader.cpp \
         SettingsDialog.cpp \
         ip/IpEndpointName.cpp \
         ip/NetworkingUtils.cpp \
@@ -44,6 +46,8 @@ HEADERS += \
         DeviceDialog.h \
         MainWindow.h \
         MidiConnection.h \
+        MidiLogger.h \
+        MidiReader.h \
         Models/LibraryModel.h \
         SettingsDialog.h \
         ip/IpEndpointName.h \

@@ -15,7 +15,7 @@ MidiConnection::MidiConnection()
     // Load server information from registry
     QSettings settings("VRT", "CasparCGClient");
     settings.beginGroup("Configuration");
-    qDebug() << settings.value("midiin", "").toString();
+    qDebug() << "Registry setting" << settings.value("midiin", "").toString();
     QString midiOutName = settings.value("midiout", "").toString();
     settings.endGroup();
 
@@ -79,14 +79,7 @@ void MidiConnection::playNote(unsigned int pitch)
     message->setPitch(pitch);
     message->setVelocity(60);
 
-    qDebug() << "ON: pitch" << message->getPitch() << "velocity" << message->getVelocity();
-    try {
-        midiOut->sendMessage(message);
-    }
-    catch(int e) {
-        qDebug() << "Error" << e;
-    }
-
+    midiOut->sendMessage(message);
 }
 
 
@@ -97,8 +90,6 @@ void MidiConnection::killNote(unsigned int pitch)
     message->setStatus(MIDI_NOTE_OFF);
     message->setPitch(pitch);
     message->setVelocity(0);
-
-    qDebug() << "OFF: pitch" << message->getPitch();
 
     midiOut->sendMessage(message);
 }

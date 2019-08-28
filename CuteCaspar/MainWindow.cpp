@@ -63,8 +63,8 @@ MainWindow::MainWindow(QWidget *parent) :
         notes.append(tempNote);
         counter++;
     }
+    // Magically calculate the number of rows
     int rows = qCeil(qSqrt(static_cast<qreal>(counter)));
-    qDebug() << "rows" << rows;
     counter = 0;
     QList<QPushButton*> button;
     for (int i = 0; i < notes.length(); i++) {
@@ -79,6 +79,9 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     MidiConnection::getInstance();
+
+    midiLog = new MidiLogger();
+    midiRead = new MidiReader();
 }
 
 /**
@@ -212,8 +215,11 @@ void MainWindow::processOsc(QStringList address, QStringList values)
     {
 //        qDebug() << values[0].toDouble() << "of" << values[1].toDouble();
         double time = values[0].toDouble();
-        QString timecode = Timecode::fromTime(time, 29.97, false);
+        timecode = Timecode::fromTime(time, 29.97, false);
         ui->timeCode->setText(timecode);
+        if (recording) {
+            ui->statusLabel->setText(QString("Recording: %1").arg(timecode));
+        }
         //qDebug() << timecode;
     }
     if (adr == "channel/1/output/file/frame")
@@ -394,6 +400,9 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
         playPlaying = true;
     }
     log(QString("Loaded clip: %1").arg(clip));
+    currentClip = clip;
+    ui->startPushButton->setEnabled(true);
+    ui->statusLabel->setText("Video selected...");
 }
 
 void MainWindow::on_actionSettings_triggered()
@@ -418,6 +427,12 @@ void MainWindow::playNote(unsigned int pitch)
             pitch = 60;
         }
     }
+
+    qDebug() << timecode << "ON: pitch" << pitch;
+    if (midiLog->isReady()) {
+        midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg("ON").arg(pitch));
+    }
+
     MidiConnection::getInstance()->playNote(pitch);
 }
 
@@ -432,5 +447,58 @@ void MainWindow::killNote(unsigned int pitch)
             pitch = 60;
         }
     }
+
+    qDebug() << timecode << "OFF: pitch" << pitch;
+    if (midiLog->isReady()) {
+        midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg("OFF").arg(pitch));
+    }
+
     MidiConnection::getInstance()->killNote(pitch);
 }
+
+void MainWindow::on_startPushButton_clicked()
+{
+    if (playPlaying && recording) {
+        device->pause(1, 0);
+        ui->startPushButton->setText("Resume");
+        playPlaying = false;
+    }
+    else {
+        if (recording) {
+            device->play(1, 0);
+            ui->stopPushButton->setEnabled(true);
+            ui->startPushButton->setText("Pause");
+            playPlaying = true;
+        }
+        else {
+            if (playPlaying) {
+                device->stop(1, 0);
+            }
+            midiRead->openLog(currentClip);
+            if (midiRead->isReady()) {
+                qDebug("MIDI file found...");
+            }
+            else {
+                qDebug("No MIDI file found...");
+            }
+            midiLog->openMidiLog(currentClip);
+            device->loadMovie(1, 0, currentClip, "", 0, "", "", 0, 0, false, false, true);
+            ui->statusLabel->setText("Started...");
+            recording = true;
+            ui->startPushButton->setText("Pause");
+            ui->stopPushButton->setEnabled(true);
+            playPlaying = true;
+        }
+    }
+}
+
+void MainWindow::on_stopPushButton_clicked()
+{
+    on_btnStop_clicked();
+    ui->statusLabel->setText("Video stopped...");
+    ui->startPushButton->setText("Play");
+    recording = false;
+    midiLog->closeMidiLog();
+}
+
+

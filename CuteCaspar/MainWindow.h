@@ -14,6 +14,9 @@
 
 #include "SettingsDialog.h"
 
+#include "MidiLogger.h"
+#include "MidiReader.h"
+
 #include "qmidiout.h"
 
 namespace Ui {
@@ -60,6 +63,10 @@ private slots:
     void playNote(unsigned int pitch = 128);
     void killNote(unsigned int pitch = 128);
 
+    void on_stopPushButton_clicked();
+
+    void on_startPushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTcpSocket tcp;
@@ -73,6 +80,11 @@ private:
     QDateTime lastOsc;
     SettingsDialog * m_settingsDialog;
     QList<note> notes;
+    QString currentClip;
+    QString timecode;
+    bool recording = false;
+    MidiLogger* midiLog;
+    MidiReader* midiRead;
 };
 
 #endif // MAINWINDOW_H
