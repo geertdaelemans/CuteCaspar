@@ -39,7 +39,9 @@ public:
 
     Q_SIGNAL void mediaListUpdated();
 
-    void connectServer();
+    void connectServer();    
+    void activateButton(unsigned int);
+    void deactivateButton(unsigned int);
 
 public slots:
     void onTcpStateChanged(QAbstractSocket::SocketState socketState);
@@ -85,6 +87,8 @@ private:
     bool recording = false;
     MidiLogger* midiLog;
     MidiReader* midiRead;
+    QMap<QString, message> midiPlayList;
+    QMap<unsigned int, QPushButton*> button;
 };
 
 #endif // MAINWINDOW_H

@@ -49,7 +49,16 @@ MainWindow::MainWindow(QWidget *parent) :
     settings.endGroup();
 
     // Prepare notes panel
-    QFile profile(":/Profiles/Notes.csv");
+    QFile profile;
+    if(QFileInfo::exists("Notes.csv"))
+    {
+        profile.setFileName("Notes.csv");
+    }
+    else
+    {
+        profile.setFileName(":/Profiles/Notes.csv");
+    }
+
     if (!profile.open(QIODevice::ReadOnly)) {
         qDebug() << profile.errorString();
     }
@@ -66,7 +75,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Magically calculate the number of rows
     int rows = qCeil(qSqrt(static_cast<qreal>(counter)));
     counter = 0;
-    QList<QPushButton*> button;
     for (int i = 0; i < notes.length(); i++) {
         QPushButton* newButton = new QPushButton(notes[i].name);
         newButton->setProperty("pitch", notes[i].pitch);
@@ -74,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(newButton, SIGNAL(pressed()), this, SLOT(playNote()));
         connect(newButton, SIGNAL(released()), this, SLOT(killNote()));
         ui->theGrid->addWidget(newButton, counter / rows, counter % rows);
-        button.append(newButton);
+        button[notes[i].pitch] = newButton;
         counter++;
     }
 
@@ -201,7 +209,8 @@ void MainWindow::readyRead()
  */
 void MainWindow::processOsc(QStringList address, QStringList values)
 {
-    Q_UNUSED(values);
+    Q_UNUSED(values)
+
     QString adr = address.join("/");
 //    qDebug() << address << values;
     if (adr == "channel/1/stage/layer/0/file/frame")
@@ -217,8 +226,19 @@ void MainWindow::processOsc(QStringList address, QStringList values)
         double time = values[0].toDouble();
         timecode = Timecode::fromTime(time, 29.97, false);
         ui->timeCode->setText(timecode);
-        if (recording) {
-            ui->statusLabel->setText(QString("Recording: %1").arg(timecode));
+        if (!ui->renewCheckBox->isChecked()) {
+            if (recording) {
+                ui->statusLabel->setText(QString("Recording: %1").arg(timecode));
+                if (midiPlayList.contains(timecode)) {
+                     if (midiPlayList[timecode].type == "ON") {
+                        activateButton(midiPlayList[timecode].pitch);
+                        playNote(midiPlayList[timecode].pitch);
+                    } else {
+                        deactivateButton(midiPlayList[timecode].pitch);
+                        killNote(midiPlayList[timecode].pitch);
+                    }
+                }
+            }
         }
         //qDebug() << timecode;
     }
@@ -402,6 +422,7 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
     log(QString("Loaded clip: %1").arg(clip));
     currentClip = clip;
     ui->startPushButton->setEnabled(true);
+    ui->renewCheckBox->setEnabled(true);
     ui->statusLabel->setText("Video selected...");
 }
 
@@ -474,7 +495,7 @@ void MainWindow::on_startPushButton_clicked()
             if (playPlaying) {
                 device->stop(1, 0);
             }
-            midiRead->openLog(currentClip);
+            midiPlayList = midiRead->openLog(currentClip);
             if (midiRead->isReady()) {
                 qDebug("MIDI file found...");
             }
@@ -501,4 +522,12 @@ void MainWindow::on_stopPushButton_clicked()
     midiLog->closeMidiLog();
 }
 
+void MainWindow::activateButton(unsigned int pitch)
+{
+    button[pitch]->setDown(true);
+}
 
+void MainWindow::deactivateButton(unsigned int pitch)
+{
+    button[pitch]->setDown(false);
+}

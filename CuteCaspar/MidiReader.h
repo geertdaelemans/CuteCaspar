@@ -3,11 +3,17 @@
 
 #include <QObject>
 
+struct message {
+    QString timeCode;
+    QString type;
+    unsigned int pitch;
+};
+
 class MidiReader
 {
 public:
     MidiReader();
-    void openLog(QString videoFile);
+    QMap<QString, message> openLog(QString videoFile);
     bool isReady() const;
 
 private:
