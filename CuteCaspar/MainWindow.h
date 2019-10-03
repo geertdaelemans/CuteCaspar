@@ -16,6 +16,7 @@
 
 #include "MidiLogger.h"
 #include "MidiReader.h"
+#include "Player.h"
 
 #include "qmidiout.h"
 
@@ -48,11 +49,14 @@ public slots:
     void readyRead();
     void processOsc(QStringList address, QStringList values);
     void listMedia();
+    void setCurrentClip(int index);
+    void setTimeCode(double time);
+    void playNote(unsigned int pitch = 128);
+    void killNote(unsigned int pitch = 128);
+    void activeClipName(QString clipName);
 
 private slots:
     void disconnectServer();
-    void on_btnPlay_clicked();
-    void on_btnStop_clicked();
     void on_actionExit_triggered();
     void on_actionConnect_triggered();
     void on_actionDisconnect_triggered();
@@ -62,12 +66,16 @@ private slots:
     void on_tableView_clicked(const QModelIndex &index);
     void on_actionSettings_triggered();
     void on_actionPreview_toggled(bool visible);
-    void playNote(unsigned int pitch = 128);
-    void killNote(unsigned int pitch = 128);
-
     void on_stopPushButton_clicked();
-
     void on_startPushButton_clicked();
+    void on_actionPlaylist_triggered();
+    void on_btnStartPlaylist_clicked();
+
+    void on_btnStopPlaylist_clicked();
+
+signals:
+    void nextClip();
+    void currentTime(double time);
 
 private:
     Ui::MainWindow *ui;
@@ -89,6 +97,9 @@ private:
     MidiReader* midiRead;
     QMap<QString, message> midiPlayList;
     QMap<unsigned int, QPushButton*> button;
+    QList<QString> playlistClips;
+    int currentClipIndex = 0;
+    Player* player;
 };
 
 #endif // MAINWINDOW_H

@@ -27,14 +27,16 @@ CONFIG += c++11
 SOURCES += \
         CasparOSCListener.cpp \
         DeviceDialog.cpp \
+        Main.cpp \
         MidiConnection.cpp \
         MidiLogger.cpp \
         MidiReader.cpp \
+        PlayListDialog.cpp \
+        Player.cpp \
         SettingsDialog.cpp \
         ip/IpEndpointName.cpp \
         ip/NetworkingUtils.cpp \
         ip/UdpSocket.cpp \
-        main.cpp \
         MainWindow.cpp \
         osc/OscOutboundPacketStream.cpp \
         osc/OscPrintReceivedElements.cpp \
@@ -49,6 +51,8 @@ HEADERS += \
         MidiLogger.h \
         MidiReader.h \
         Models/LibraryModel.h \
+        PlayListDialog.h \
+        Player.h \
         SettingsDialog.h \
         ip/IpEndpointName.h \
         ip/NetworkingUtils.h \
@@ -67,6 +71,7 @@ HEADERS += \
 FORMS += \
         DeviceDialog.ui \
         MainWindow.ui \
+        PlayList.ui \
         SettingsDialog.ui
 
 LIBS += -lws2_32

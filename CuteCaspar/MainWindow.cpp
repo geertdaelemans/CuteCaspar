@@ -9,6 +9,7 @@
 #include "CasparDevice.h"
 #include "DatabaseManager.h"
 #include "SettingsDialog.h"
+#include "PlayListDialog.h"
 
 #include "MidiConnection.h"
 
@@ -128,10 +129,32 @@ void MainWindow::connectServer()
     settings.endGroup();
     device = new CasparDevice(address, port);
 
-//    emit deviceAdded(*device);
-    connect(device, SIGNAL(connectionStateChanged(CasparDevice&)), this, SLOT(connectionStateChanged(CasparDevice&)));
+    connect(device, SIGNAL(connectionStateChanged(CasparDevice&)),
+            this, SLOT(connectionStateChanged(CasparDevice&)));
 
     device->connectDevice();
+    player = new Player(device);
+    connect(player, SIGNAL(activeClip(int)),
+            this, SLOT(setCurrentClip(int)));
+
+    // Playlist: when next clip has started, load the following clip
+    connect(this, SIGNAL(nextClip()),
+            player, SLOT(loadNextClip()));
+
+    connect(this, SIGNAL(currentTime(double)),
+            player, SLOT(timecode(double)));
+
+    connect(this, SIGNAL(currentTime(double)),
+            this, SLOT(setTimeCode(double)));
+
+    connect(player, SIGNAL(playNote(unsigned int)),
+            this, SLOT(playNote(unsigned int)));
+
+    connect(player, SIGNAL(killNote(unsigned int)),
+            this, SLOT(killNote(unsigned int)));
+
+    connect(player, SIGNAL(activeClipName(QString)),
+            this, SLOT(activeClipName(QString)));
 }
 
 void MainWindow::connectionStateChanged(CasparDevice& device) {
@@ -141,12 +164,10 @@ void MainWindow::connectionStateChanged(CasparDevice& device) {
         log("Server connected");
         listMedia();
     } else {
-        ui->btnPlay->setEnabled(false);
-        ui->btnStop->setEnabled(false);
         ui->actionConnect->setEnabled(true);
         ui->actionDisconnect->setEnabled(false);
         log("Trying to connect to server");
-    };
+    }
 }
 
 /**
@@ -155,8 +176,10 @@ void MainWindow::connectionStateChanged(CasparDevice& device) {
  */
 void MainWindow::disconnectServer()
 {
-    on_btnStop_clicked();
+    device->stop(1, 0);
     device->disconnectDevice();
+    playPlaying = false;
+    ui->txtClip->setText("<none>");
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     DatabaseManager::getInstance().reset();
@@ -179,12 +202,10 @@ void MainWindow::onTcpStateChanged(QAbstractSocket::SocketState socketState)
     if (socketState == QAbstractSocket::UnconnectedState) {
         ui->actionConnect->setEnabled(true);
         ui->actionDisconnect->setEnabled(false);
-        ui->btnPlay->setEnabled(false);
-        ui->btnStop->setEnabled(false);
     } else {
         ui->actionConnect->setEnabled(false);
         ui->actionDisconnect->setEnabled(true);
-    };
+    }
 }
 
 /**
@@ -222,15 +243,12 @@ void MainWindow::processOsc(QStringList address, QStringList values)
     }
     if (adr == "channel/1/stage/layer/0/file/time")
     {
-//        qDebug() << values[0].toDouble() << "of" << values[1].toDouble();
-        double time = values[0].toDouble();
-        timecode = Timecode::fromTime(time, 29.97, false);
-        ui->timeCode->setText(timecode);
+        emit currentTime(values[0].toDouble());
         if (!ui->renewCheckBox->isChecked()) {
             if (recording) {
                 ui->statusLabel->setText(QString("Recording: %1").arg(timecode));
                 if (midiPlayList.contains(timecode)) {
-                     if (midiPlayList[timecode].type == "ON") {
+                    if (midiPlayList[timecode].type == "ON") {
                         activateButton(midiPlayList[timecode].pitch);
                         playNote(midiPlayList[timecode].pitch);
                     } else {
@@ -240,51 +258,19 @@ void MainWindow::processOsc(QStringList address, QStringList values)
                 }
             }
         }
-        //qDebug() << timecode;
     }
-    if (adr == "channel/1/output/file/frame")
-//        ui->lcdFrame->display(values[0].toInt());
-        qDebug() << "Test" << values[0].toInt();
-//    if (adr == "channel/2/output/file/fps")
-//    {
-//        if (recordFps != values[0].toInt())
-//        {
-//            recordFps = values[0].toInt();
-//            ui->lblRecordFps->setText(QString::number(recordRealFps) + "fps/" + QString::number(recordFps) + "fps");
-//        }
-//    }
-//    else if (adr == "channel/" + ui->edtChannel->text() + "/stage/layer/" + ui->edtLayer->text() + "/file/path")
-//        playPath = values[0];
-//    else if (adr == "channel/" + ui->edtChannel->text() + "/stage/layer/" + ui->edtLayer->text() + "/file/speed")
-//    {
-//        playSpeed = values[0].toFloat();
-//        if (!sliderPressed && playSpeed != ui->vslSpeed->value()/10)
-//            ui->vslSpeed->setValue(playSpeed*10);
-//    }
-//    else if (adr == "channel/" + ui->edtChannel->text() + "/stage/layer/" + ui->edtLayer->text() + "/file/frame")
-//    {
-//        playCurFrame = values[0].toInt();
-//        playLastFrame = values[1].toInt();
-//        lastOsc = QDateTime::currentDateTime();
-//    }
-//    else if (adr == "channel/" + ui->edtChannel->text() + "/stage/layer/" + ui->edtLayer->text() + "/file/vframe")
-//    {
-//        playCurVFrame = values[0].toInt();
-//        playLastVFrame = values[1].toInt();
-//    }
-//    else if (adr == "channel/" + ui->edtChannel->text() + "/stage/layer/" + ui->edtLayer->text() + "/file/fps")
-    //        playFps = values[0].toInt();
 }
 
 void MainWindow::listMedia()
 {
     device->refreshMedia();
-    connect(device, SIGNAL(mediaChanged(const QList<CasparMedia>&, CasparDevice&)), this, SLOT(mediaChanged(const QList<CasparMedia>&, CasparDevice&)), Qt::UniqueConnection);
+    connect(device, SIGNAL(mediaChanged(const QList<CasparMedia>&, CasparDevice&)),
+            this, SLOT(mediaChanged(const QList<CasparMedia>&, CasparDevice&)), Qt::UniqueConnection);
 }
 
 void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice& device)
 {
-    Q_UNUSED(device);
+    Q_UNUSED(device)
     QTime time;
     time.start();
 
@@ -344,32 +330,6 @@ void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice
         qDebug("LibraryManager::mediaChanged %d msec", time.elapsed());
 }
 
-void MainWindow::on_btnPlay_clicked()
-{
-    if (playPlaying) {
-        device->pause(1, 0);
-        ui->btnPlay->setText("Play");
-        playPlaying = false;
-    } else {
-        device->play(1, 0);
-        ui->btnStop->setEnabled(true);
-        ui->btnPlay->setText("Pause");
-        playPlaying = true;
-        if (newClipLoaded)
-            newClipLoaded = false;
-    }
-}
-
-void MainWindow::on_btnStop_clicked()
-{
-    device->stop(1, 0);
-    ui->btnPlay->setText("Play");
-    ui->btnPlay->setEnabled(false);
-    ui->btnStop->setEnabled(false);
-    ui->txtClip->setText("<none>");
-    playPlaying = false;
-}
-
 void MainWindow::on_actionExit_triggered()
 {
     QApplication::exit();
@@ -387,11 +347,11 @@ void MainWindow::on_actionDisconnect_triggered()
 
 void MainWindow::refreshMediaList()
 {
-    QSqlQueryModel * model = new QSqlQueryModel();
+    QSqlQueryModel* model = new QSqlQueryModel();
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("select Timecode, TypeId, Fps, Name from Library");
+    qry->prepare("select Timecode, TypeId, Fps, Name from Playlist");
     qry->exec();
 
     model->setQuery(*qry);
@@ -402,28 +362,20 @@ void MainWindow::refreshMediaList()
     proxyModel->sort(1, Qt::AscendingOrder);
 
     ui->tableView->setModel(proxyModel);
+
+    player->loadPlayList();
 }
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
 {
     const QModelIndex name = index.sibling(index.row(), 3);
     QString clip = name.data(Qt::DisplayRole).toString();
-    device->loadMovie(1, 0, clip, "", 0, "", "", 0, 0, false, false, true);
-    ui->txtClip->setText(clip);
-    ui->btnPlay->setText("Pause");
-    ui->btnPlay->setEnabled(true);
-    ui->btnStop->setEnabled(true);
-    if (playPlaying) {
-        newClipLoaded = true;
-    }
-    else {
-        playPlaying = true;
-    }
-    log(QString("Loaded clip: %1").arg(clip));
     currentClip = clip;
     ui->startPushButton->setEnabled(true);
     ui->renewCheckBox->setEnabled(true);
     ui->statusLabel->setText("Video selected...");
+    ui->txtClip->setText(clip);
+    log(QString("Selected clip: %1").arg(clip));
 }
 
 void MainWindow::on_actionSettings_triggered()
@@ -455,6 +407,7 @@ void MainWindow::playNote(unsigned int pitch)
     }
 
     MidiConnection::getInstance()->playNote(pitch);
+    activateButton(pitch);
 }
 
 void MainWindow::killNote(unsigned int pitch)
@@ -475,6 +428,7 @@ void MainWindow::killNote(unsigned int pitch)
     }
 
     MidiConnection::getInstance()->killNote(pitch);
+    deactivateButton(pitch);
 }
 
 void MainWindow::on_startPushButton_clicked()
@@ -503,7 +457,8 @@ void MainWindow::on_startPushButton_clicked()
                 qDebug("No MIDI file found...");
             }
             midiLog->openMidiLog(currentClip);
-            device->loadMovie(1, 0, currentClip, "", 0, "", "", 0, 0, false, false, true);
+            player->playClip(currentClip);
+            //device->loadMovie(1, 0, currentClip, "", 0, "", "", 0, 0, false, false, true);
             ui->statusLabel->setText("Started...");
             recording = true;
             ui->startPushButton->setText("Pause");
@@ -515,19 +470,74 @@ void MainWindow::on_startPushButton_clicked()
 
 void MainWindow::on_stopPushButton_clicked()
 {
-    on_btnStop_clicked();
+    device->stop(1, 0);
+    playPlaying = false;
+    recording = false;
+    ui->txtClip->setText("<none>");
     ui->statusLabel->setText("Video stopped...");
     ui->startPushButton->setText("Play");
-    recording = false;
     midiLog->closeMidiLog();
 }
 
+
 void MainWindow::activateButton(unsigned int pitch)
 {
-    button[pitch]->setDown(true);
+    if (button.contains(pitch)) {
+        button[pitch]->setDown(true);
+    }
 }
 
 void MainWindow::deactivateButton(unsigned int pitch)
 {
-    button[pitch]->setDown(false);
+    if (button.contains(pitch)) {
+        button[pitch]->setDown(false);
+    }
+}
+
+void MainWindow::on_actionPlaylist_triggered()
+{
+    PlayList* playlistDialog = new PlayList(this);
+    playlistDialog->exec();
+    refreshMediaList();
+}
+
+
+void MainWindow::on_btnStartPlaylist_clicked()
+{
+    if (player->getStatus() == PlayerStatus::PLAYLIST_LOADED) {
+        player->startPlayList();
+        ui->btnStartPlaylist->setText(tr("Pause Playlist"));
+    } else if (player->getStatus() == PlayerStatus::PLAYLIST_PLAYING) {
+        player->pausePlayList();
+        ui->btnStartPlaylist->setText(tr("Resume Playlist"));
+    } else if (player->getStatus() == PlayerStatus::PLAYLIST_PAUSED) {
+        player->resumePlayList();
+        ui->btnStartPlaylist->setText(tr("Pause Playlist"));
+    }
+}
+
+
+void MainWindow::on_btnStopPlaylist_clicked()
+{
+    player->stopPlayList();
+    ui->btnStartPlaylist->setText((tr("Start Playlist")));
+}
+
+
+void MainWindow::setCurrentClip(int index)
+{
+    ui->tableView->selectRow(index);
+}
+
+void MainWindow::setTimeCode(double time)
+{
+    timecode = Timecode::fromTime(time, 29.97, false);
+    ui->timeCode->setText(timecode);
+}
+
+void MainWindow::activeClipName(QString clipName)
+{
+    currentClip = clipName;
+    qDebug() << "Current clip:" << clipName;
+    ui->clipName->setText(clipName);
 }

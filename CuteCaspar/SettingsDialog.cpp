@@ -136,7 +136,7 @@ void SettingsDialog::removeDevice()
 
 void SettingsDialog::deviceItemDoubleClicked(QTreeWidgetItem* current, int index)
 {
-    Q_UNUSED(index);
+    Q_UNUSED(index)
 
     DeviceModel model = DatabaseManager::getInstance().getDeviceById(current->text(0).toInt());
 

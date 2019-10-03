@@ -56,6 +56,24 @@
            </property>
            <layout class="QVBoxLayout" name="verticalLayout">
             <item>
+             <widget class="QLabel" name="clipName">
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>No active clip...</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QLabel" name="timeCode">
               <property name="font">
                <font>
@@ -135,10 +153,7 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_5">
               <item>
-               <widget class="QPushButton" name="btnPlay">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
+               <widget class="QPushButton" name="btnStartPlaylist">
                 <property name="minimumSize">
                  <size>
                   <width>100</width>
@@ -146,15 +161,12 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>Play</string>
+                 <string>Start Playlist</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="btnStop">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
+               <widget class="QPushButton" name="btnStopPlaylist">
                 <property name="minimumSize">
                  <size>
                   <width>100</width>
@@ -162,7 +174,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>Stop</string>
+                 <string>Stop Playlist</string>
                 </property>
                </widget>
               </item>
@@ -271,13 +283,14 @@
      <x>0</x>
      <y>0</y>
      <width>1004</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionPlaylist"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuServer">
@@ -371,6 +384,11 @@
    </property>
    <property name="text">
     <string>Preview</string>
+   </property>
+  </action>
+  <action name="actionPlaylist">
+   <property name="text">
+    <string>Playlist</string>
    </property>
   </action>
  </widget>
