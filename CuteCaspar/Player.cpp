@@ -2,6 +2,7 @@
 
 #include <QSqlQuery>
 #include <QtSql>
+#include <QPushButton>
 
 #include "MidiConnection.h"
 
@@ -13,6 +14,7 @@ Player::Player(CasparDevice* device)
     m_status = PlayerStatus::IDLE;
 
     midiRead = new MidiReader();
+    midiLog = new MidiLogger();
 }
 
 
@@ -28,25 +30,24 @@ void Player::loadPlayList()
     m_playlistClips.clear();
     while (query.next()) {
         m_playlistClips.append(query.value(0).toString());
-        qDebug() << query.value(0).toString();
     }
     query.finish();
-    m_status = PlayerStatus::PLAYLIST_LOADED;
+    setStatus(PlayerStatus::READY);
 }
 
 
 /**
  * @brief Player::startPlayList
  */
-void Player::startPlayList()
+void Player::startPlayList(int clipIndex)
 {
     m_device->stop(1, 0);
+    m_currentClipIndex = clipIndex;
     m_timecode = 100;  // By faking the present timecode, the start of the clip (follows) will trigger loadNextClip()
-    m_device->playMovie(1, 0, m_playlistClips[0], "", 0, "", "", 0, 0, false, false);
-    m_currentClipIndex = 0;
+    m_device->playMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false);
     m_singlePlay = false;
-    emit activeClip(0);
-    m_status = PlayerStatus::PLAYLIST_PLAYING;
+    emit activeClip(m_currentClipIndex);
+    setStatus(PlayerStatus::PLAYLIST_PLAYING);
 }
 
 /**
@@ -55,14 +56,22 @@ void Player::startPlayList()
 void Player::pausePlayList()
 {
     m_device->pause(1, 0);
-    m_status = PlayerStatus::PLAYLIST_PAUSED;
+    if (m_singlePlay) {
+        setStatus(PlayerStatus::CLIP_PAUSED);
+    } else {
+        setStatus(PlayerStatus::PLAYLIST_PAUSED);
+    }
 }
 
 
 void Player::resumePlayList()
 {
     m_device->resume(1, 0);
-    m_status = PlayerStatus::PLAYLIST_PLAYING;
+    if (m_singlePlay) {
+        setStatus(PlayerStatus::CLIP_PLAYING);
+    } else {
+        setStatus(PlayerStatus::PLAYLIST_PLAYING);
+    }
 }
 
 
@@ -72,7 +81,8 @@ void Player::resumePlayList()
 void Player::stopPlayList()
 {
     m_device->stop(1, 0);
-    m_status = PlayerStatus::PLAYLIST_LOADED;
+    midiLog->closeMidiLog();
+    setStatus(PlayerStatus::READY);
 }
 
 
@@ -80,12 +90,13 @@ void Player::stopPlayList()
  * @brief Player::playClip
  * @param clipName
  */
-void Player::playClip(QString clipName)
+void Player::playClip(int clipIndex)
 {
-    m_timecode = 0.0;
+    m_timecode = 10.0;
     m_singlePlay = true;
-    m_device->playMovie(1, 0, clipName, "", 0, "", "", 0, 0, false, false);
-    m_status = PlayerStatus::CLIP_PLAYING;
+    m_currentClipIndex = clipIndex;
+    m_device->playMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false);
+    setStatus(PlayerStatus::CLIP_PLAYING);
 }
 
 
@@ -93,11 +104,23 @@ void Player::playClip(QString clipName)
  * @brief Player::getStatus
  * @return
  */
-PlayerStatus Player::getStatus()
+PlayerStatus Player::getStatus() const
 {
     return m_status;
 }
 
+
+/**
+ * @brief Player::setStatus
+ * @param status
+ */
+void Player::setStatus(PlayerStatus status)
+{
+    if (status != m_status) {
+        m_status = status;
+    }
+    emit playerStatus(m_status, m_recording);
+}
 
 /**
  * @brief Player::loadClip
@@ -124,13 +147,19 @@ void Player::loadNextClip()
     else {
         qDebug("No MIDI file found...");
     }
-
-    if (m_currentClipIndex > (m_playlistClips.size()-2)) {
-        m_currentClipIndex = 0;
-    } else {
-        m_currentClipIndex++;
+    qDebug() << "Start logging" << m_playlistClips[m_currentClipIndex];
+    if (m_recording) {
+        midiLog->openMidiLog(m_playlistClips[m_currentClipIndex]);
     }
-    loadClip(m_playlistClips[m_currentClipIndex]);
+
+    if (!m_singlePlay) {
+        if (m_currentClipIndex > (m_playlistClips.size()-2)) {
+            m_currentClipIndex = 0;
+        } else {
+            m_currentClipIndex++;
+        }
+        loadClip(m_playlistClips[m_currentClipIndex]);
+    }
 }
 
 
@@ -146,18 +175,80 @@ void Player::timecode(double time)
         qDebug() << "loadNextClip()";
         loadNextClip();
     } if (qFabs(prev_timecode - m_timecode) < 0.001) {
-        qDebug() << "Clip stopped" << prev_timecode - m_timecode;
+        qDebug() << "Clip stopped";
+        midiLog->closeMidiLog();
         if (m_singlePlay) {
             stopPlayList();
         }
     }
     QString timecode = Timecode::fromTime(time, 29.97, false);
-    if (midiPlayList.contains(timecode)) {
-        qDebug() << "found";
+    if (!m_renew && midiPlayList.contains(timecode)) {
         if (midiPlayList[timecode].type == "ON") {
-            emit playNote(midiPlayList[timecode].pitch);
+            playNote(midiPlayList[timecode].pitch, true);
         } else {
-            emit killNote(midiPlayList[timecode].pitch);
+            playNote(midiPlayList[timecode].pitch, false);
         }
     }
+}
+
+
+/**
+ * @brief Player::playNote
+ * @param pitch
+ */
+void Player::playNote(unsigned int pitch, bool noteOn)
+{
+    if (pitch == 128) {
+        auto button = qobject_cast<QPushButton *>(sender());
+        if (button && button->property("pitch").isValid()) {
+            pitch = button->property("pitch").toUInt();
+        }
+        else {
+            pitch = 60;
+        }
+    }
+
+    QString timecode = Timecode::fromTime(m_timecode, 29.97, false);
+    QString onOff = (noteOn ? "ON" : "OFF");
+    qDebug() << QString("%1 %2: pitch %3").arg(timecode).arg(onOff).arg(pitch);
+    if (midiLog->isReady()) {
+        midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg(onOff).arg(pitch));
+    }
+    if(noteOn) {
+        MidiConnection::getInstance()->playNote(pitch);
+        emit activateButton(pitch);
+    } else {
+        MidiConnection::getInstance()->killNote(pitch);
+        emit deactivateButton(pitch);
+    }
+}
+
+
+/**
+ * @brief Player::killNote
+ * @param pitch
+ */
+void Player::killNote()
+{
+    unsigned int pitch = 60;
+    auto button = qobject_cast<QPushButton *>(sender());
+    if (button && button->property("pitch").isValid()) {
+        pitch = button->property("pitch").toUInt();
+    }
+    playNote(pitch, false);
+}
+
+
+void Player::setRecording()
+{
+    if (m_recording) {
+        m_singlePlay = true;
+    }
+    m_recording = !m_recording;
+    setStatus(m_status);
+}
+
+void Player::setRenew(bool value)
+{
+    m_renew = value;
 }

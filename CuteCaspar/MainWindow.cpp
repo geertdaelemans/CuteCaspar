@@ -80,17 +80,16 @@ MainWindow::MainWindow(QWidget *parent) :
         QPushButton* newButton = new QPushButton(notes[i].name);
         newButton->setProperty("pitch", notes[i].pitch);
         newButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        connect(newButton, SIGNAL(pressed()), this, SLOT(playNote()));
-        connect(newButton, SIGNAL(released()), this, SLOT(killNote()));
+        connect(newButton, SIGNAL(pressed()),
+                player, SLOT(playNote()));
+        connect(newButton, SIGNAL(released()),
+                player, SLOT(killNote()));
         ui->theGrid->addWidget(newButton, counter / rows, counter % rows);
         button[notes[i].pitch] = newButton;
         counter++;
     }
 
     MidiConnection::getInstance();
-
-    midiLog = new MidiLogger();
-    midiRead = new MidiReader();
 }
 
 /**
@@ -147,14 +146,26 @@ void MainWindow::connectServer()
     connect(this, SIGNAL(currentTime(double)),
             this, SLOT(setTimeCode(double)));
 
-    connect(player, SIGNAL(playNote(unsigned int)),
-            this, SLOT(playNote(unsigned int)));
-
-    connect(player, SIGNAL(killNote(unsigned int)),
-            this, SLOT(killNote(unsigned int)));
-
     connect(player, SIGNAL(activeClipName(QString)),
             this, SLOT(activeClipName(QString)));
+
+    // activateButton()
+    connect(player, SIGNAL(activateButton(unsigned int)),
+            this, SLOT(activateButton(unsigned int)));
+
+    // deactivateButton()
+    connect(player, SIGNAL(deactivateButton(unsigned int)),
+            this, SLOT(deactivateButton(unsigned int)));
+
+    connect(this, SIGNAL(setRecording()),
+            player, SLOT(setRecording()));
+
+    connect(this, SIGNAL(setRenew(bool)),
+            player, SLOT(setRenew(bool)));
+
+    connect(player, SIGNAL(playerStatus(PlayerStatus, bool)),
+            this, SLOT(playerStatus(PlayerStatus, bool)));
+
 }
 
 void MainWindow::connectionStateChanged(CasparDevice& device) {
@@ -179,7 +190,6 @@ void MainWindow::disconnectServer()
     device->stop(1, 0);
     device->disconnectDevice();
     playPlaying = false;
-    ui->txtClip->setText("<none>");
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     DatabaseManager::getInstance().reset();
@@ -241,23 +251,8 @@ void MainWindow::processOsc(QStringList address, QStringList values)
         lastOsc = QDateTime::currentDateTime();
 //        qDebug() << playCurFrame << "of" << playLastFrame;
     }
-    if (adr == "channel/1/stage/layer/0/file/time")
-    {
+    if (adr == "channel/1/stage/layer/0/file/time") {
         emit currentTime(values[0].toDouble());
-        if (!ui->renewCheckBox->isChecked()) {
-            if (recording) {
-                ui->statusLabel->setText(QString("Recording: %1").arg(timecode));
-                if (midiPlayList.contains(timecode)) {
-                    if (midiPlayList[timecode].type == "ON") {
-                        activateButton(midiPlayList[timecode].pitch);
-                        playNote(midiPlayList[timecode].pitch);
-                    } else {
-                        deactivateButton(midiPlayList[timecode].pitch);
-                        killNote(midiPlayList[timecode].pitch);
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -362,6 +357,10 @@ void MainWindow::refreshMediaList()
     proxyModel->sort(1, Qt::AscendingOrder);
 
     ui->tableView->setModel(proxyModel);
+    ui->tableView->selectRow(0);
+
+    currentClipIndex = ui->tableView->selectionModel()->currentIndex().row();
+    currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(3).data(Qt::DisplayRole).toString();
 
     player->loadPlayList();
 }
@@ -369,13 +368,9 @@ void MainWindow::refreshMediaList()
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
 {
     const QModelIndex name = index.sibling(index.row(), 3);
-    QString clip = name.data(Qt::DisplayRole).toString();
-    currentClip = clip;
-    ui->startPushButton->setEnabled(true);
-    ui->renewCheckBox->setEnabled(true);
+    currentClip = name.data(Qt::DisplayRole).toString();
+    currentClipIndex = index.row();
     ui->statusLabel->setText("Video selected...");
-    ui->txtClip->setText(clip);
-    log(QString("Selected clip: %1").arg(clip));
 }
 
 void MainWindow::on_actionSettings_triggered()
@@ -389,94 +384,13 @@ void MainWindow::on_actionPreview_toggled(bool visible)
     ui->boxServer->setVisible(visible);
 }
 
-void MainWindow::playNote(unsigned int pitch)
-{
-    if (pitch == 128) {
-        auto button = qobject_cast<QPushButton *>(sender());
-        if (button && button->property("pitch").isValid()) {
-            pitch = button->property("pitch").toUInt();
-        }
-        else {
-            pitch = 60;
-        }
-    }
-
-    qDebug() << timecode << "ON: pitch" << pitch;
-    if (midiLog->isReady()) {
-        midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg("ON").arg(pitch));
-    }
-
-    MidiConnection::getInstance()->playNote(pitch);
-    activateButton(pitch);
-}
-
-void MainWindow::killNote(unsigned int pitch)
-{
-    if (pitch == 128) {
-        auto button = qobject_cast<QPushButton *>(sender());
-        if (button && button->property("pitch").isValid()) {
-            pitch = button->property("pitch").toUInt();
-        }
-        else {
-            pitch = 60;
-        }
-    }
-
-    qDebug() << timecode << "OFF: pitch" << pitch;
-    if (midiLog->isReady()) {
-        midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg("OFF").arg(pitch));
-    }
-
-    MidiConnection::getInstance()->killNote(pitch);
-    deactivateButton(pitch);
-}
-
-void MainWindow::on_startPushButton_clicked()
-{
-    if (playPlaying && recording) {
-        device->pause(1, 0);
-        ui->startPushButton->setText("Resume");
-        playPlaying = false;
-    }
-    else {
-        if (recording) {
-            device->play(1, 0);
-            ui->stopPushButton->setEnabled(true);
-            ui->startPushButton->setText("Pause");
-            playPlaying = true;
-        }
-        else {
-            if (playPlaying) {
-                device->stop(1, 0);
-            }
-            midiPlayList = midiRead->openLog(currentClip);
-            if (midiRead->isReady()) {
-                qDebug("MIDI file found...");
-            }
-            else {
-                qDebug("No MIDI file found...");
-            }
-            midiLog->openMidiLog(currentClip);
-            player->playClip(currentClip);
-            //device->loadMovie(1, 0, currentClip, "", 0, "", "", 0, 0, false, false, true);
-            ui->statusLabel->setText("Started...");
-            recording = true;
-            ui->startPushButton->setText("Pause");
-            ui->stopPushButton->setEnabled(true);
-            playPlaying = true;
-        }
-    }
-}
 
 void MainWindow::on_stopPushButton_clicked()
 {
     device->stop(1, 0);
     playPlaying = false;
     recording = false;
-    ui->txtClip->setText("<none>");
     ui->statusLabel->setText("Video stopped...");
-    ui->startPushButton->setText("Play");
-    midiLog->closeMidiLog();
 }
 
 
@@ -504,15 +418,12 @@ void MainWindow::on_actionPlaylist_triggered()
 
 void MainWindow::on_btnStartPlaylist_clicked()
 {
-    if (player->getStatus() == PlayerStatus::PLAYLIST_LOADED) {
-        player->startPlayList();
-        ui->btnStartPlaylist->setText(tr("Pause Playlist"));
+    if (player->getStatus() == PlayerStatus::READY) {
+        player->startPlayList(currentClipIndex);
     } else if (player->getStatus() == PlayerStatus::PLAYLIST_PLAYING) {
         player->pausePlayList();
-        ui->btnStartPlaylist->setText(tr("Resume Playlist"));
     } else if (player->getStatus() == PlayerStatus::PLAYLIST_PAUSED) {
         player->resumePlayList();
-        ui->btnStartPlaylist->setText(tr("Pause Playlist"));
     }
 }
 
@@ -520,7 +431,18 @@ void MainWindow::on_btnStartPlaylist_clicked()
 void MainWindow::on_btnStopPlaylist_clicked()
 {
     player->stopPlayList();
-    ui->btnStartPlaylist->setText((tr("Start Playlist")));
+}
+
+
+void MainWindow::on_btnPlayClip_clicked()
+{
+    if (player->getStatus() == PlayerStatus::READY) {
+        player->playClip(currentClipIndex);
+    } else if (player->getStatus() == PlayerStatus::CLIP_PLAYING) {
+        player->pausePlayList();
+    } else if (player->getStatus() == PlayerStatus::CLIP_PAUSED) {
+        player->resumePlayList();
+    }
 }
 
 
@@ -540,4 +462,73 @@ void MainWindow::activeClipName(QString clipName)
     currentClip = clipName;
     qDebug() << "Current clip:" << clipName;
     ui->clipName->setText(clipName);
+}
+
+void MainWindow::on_btnRecording_clicked()
+{
+    emit setRecording();
+}
+
+void MainWindow::on_renewCheckBox_stateChanged(int arg1)
+{
+    emit setRenew(arg1);
+}
+
+void MainWindow::playerStatus(PlayerStatus status, bool recording)
+{
+    switch (status) {
+    case PlayerStatus::IDLE:
+        ui->statusLabel->setText("IDLE");
+        break;
+    case PlayerStatus::READY:
+        ui->statusLabel->setText("READY");
+        ui->btnPlayClip->setText(tr("Play Clip"));
+        ui->btnStartPlaylist->setText(tr("Start Playlist"));
+        if (recording) {
+            ui->btnRecording->setText(tr("Ready"));
+            setButtonColor(ui->btnRecording, Qt::darkGreen);
+        } else {
+            ui->btnRecording->setText(tr("Not Recording"));
+            setButtonColor(ui->btnRecording, QColor(53,53,53));
+        }
+        break;
+    case PlayerStatus::CLIP_PLAYING:
+        ui->statusLabel->setText("CLIP PLAYING");
+        ui->btnPlayClip->setText(tr("Pause Clip"));
+        if (recording) {
+            ui->btnRecording->setText(tr("Recording"));
+            setButtonColor(ui->btnRecording, Qt::red);
+        } else {
+            ui->btnRecording->setText(tr("Not Recording"));
+            setButtonColor(ui->btnRecording, QColor(53,53,53));
+        }
+        break;
+    case PlayerStatus::CLIP_PAUSED:
+        ui->statusLabel->setText("CLIP PAUSED");
+        ui->btnPlayClip->setText(tr("Resume Clip"));
+        break;
+    case PlayerStatus::PLAYLIST_PLAYING:
+        ui->statusLabel->setText("PLAYLIST LOADED");
+        ui->btnStartPlaylist->setText(tr("Pause Playlist"));
+        if (recording) {
+            ui->btnRecording->setText(tr("Recording"));
+            setButtonColor(ui->btnRecording, Qt::red);
+        } else {
+            ui->btnRecording->setText(tr("Not Recording"));
+            setButtonColor(ui->btnRecording, QColor(53,53,53));
+        }
+        break;
+    case PlayerStatus::PLAYLIST_PAUSED:
+        ui->statusLabel->setText("PLAYLIST LOADED");
+        ui->btnStartPlaylist->setText(tr("Resume Playlist"));
+        break;
+    }
+}
+
+void MainWindow::setButtonColor(QPushButton* button, QColor color)
+{
+    QPalette pal = button->palette();
+    pal.setColor(QPalette::Button, color);
+    button->setPalette(pal);
+    button->update();
 }

@@ -4,14 +4,16 @@
 #include "CasparDevice.h"
 
 #include "MidiReader.h"
+#include "MidiLogger.h"
 
 enum class PlayerStatus
 {
     IDLE,
-    PLAYLIST_LOADED,
+    READY,
     PLAYLIST_PLAYING,
     PLAYLIST_PAUSED,
-    CLIP_PLAYING
+    CLIP_PLAYING,
+    CLIP_PAUSED
 };
 
 
@@ -24,16 +26,20 @@ public:
     Player(CasparDevice* device);
     void loadPlayList();
     void loadClip(QString clipName);
-    void playClip(QString clipName);
-    void startPlayList();
+    void playClip(int clipIndex);
+    void startPlayList(int clipIndex);
     void pausePlayList();
     void resumePlayList();
     void stopPlayList();
-    PlayerStatus getStatus();
+    PlayerStatus getStatus() const;
 
 public slots:
     void loadNextClip();
     void timecode(double time);
+    void playNote(unsigned int pitch = 128, bool noteOne = true);
+    void killNote();
+    void setRecording();
+    void setRenew(bool value);
 
 private:
     CasparDevice* m_device;
@@ -42,14 +48,19 @@ private:
     double m_timecode;
     PlayerStatus m_status;
     MidiReader* midiRead;
+    MidiLogger* midiLog;
     QMap<QString, message> midiPlayList;
     bool m_singlePlay = false;
+    bool m_recording = false;
+    bool m_renew = false;
+    void setStatus(PlayerStatus status);
 
 signals:
     void activeClip(int value);
-    void playNote(unsigned int pitch);
-    void killNote(unsigned int pitch);
     void activeClipName(QString clipName);
+    void activateButton(unsigned int);
+    void deactivateButton(unsigned int);
+    void playerStatus(PlayerStatus status, bool recording);
 };
 
 #endif // PLAYER_H

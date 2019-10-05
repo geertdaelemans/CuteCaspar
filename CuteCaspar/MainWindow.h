@@ -41,8 +41,6 @@ public:
     Q_SIGNAL void mediaListUpdated();
 
     void connectServer();    
-    void activateButton(unsigned int);
-    void deactivateButton(unsigned int);
 
 public slots:
     void onTcpStateChanged(QAbstractSocket::SocketState socketState);
@@ -51,9 +49,10 @@ public slots:
     void listMedia();
     void setCurrentClip(int index);
     void setTimeCode(double time);
-    void playNote(unsigned int pitch = 128);
-    void killNote(unsigned int pitch = 128);
     void activeClipName(QString clipName);
+    void activateButton(unsigned int);
+    void deactivateButton(unsigned int);
+    void playerStatus(PlayerStatus status, bool recording);
 
 private slots:
     void disconnectServer();
@@ -67,15 +66,20 @@ private slots:
     void on_actionSettings_triggered();
     void on_actionPreview_toggled(bool visible);
     void on_stopPushButton_clicked();
-    void on_startPushButton_clicked();
     void on_actionPlaylist_triggered();
     void on_btnStartPlaylist_clicked();
-
     void on_btnStopPlaylist_clicked();
+    void on_btnRecording_clicked();
+
+    void on_renewCheckBox_stateChanged(int arg1);
+
+    void on_btnPlayClip_clicked();
 
 signals:
     void nextClip();
     void currentTime(double time);
+    void setRecording();
+    void setRenew(bool value);
 
 private:
     Ui::MainWindow *ui;
@@ -100,6 +104,7 @@ private:
     QList<QString> playlistClips;
     int currentClipIndex = 0;
     Player* player;
+    void setButtonColor(QPushButton *button, QColor color);
 };
 
 #endif // MAINWINDOW_H

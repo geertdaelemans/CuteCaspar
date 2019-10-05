@@ -17,9 +17,11 @@ void MidiLogger::openMidiLog(QString videoName)
 
 void MidiLogger::closeMidiLog()
 {
-    qDebug() << "Closing log";
-    logFile->close();
-    m_ready = false;
+    if (m_ready) {
+        qDebug() << "Closing log";
+        logFile->close();
+        m_ready = false;
+    }
 }
 
 bool MidiLogger::isReady() const
