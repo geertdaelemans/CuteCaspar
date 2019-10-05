@@ -28,11 +28,16 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     loadDevice();
 
     ui->inPortComboBox->addItems(MidiConnection::getInstance()->getAvailableInputPorts());
+    if (MidiConnection::getInstance()->getOpenInputPortIndex() != -1) {
+        ui->inPortComboBox->setCurrentIndex(MidiConnection::getInstance()->getOpenInputPortIndex());
+    }
     ui->outPortComboBox->addItems(MidiConnection::getInstance()->getAvailableOutputPorts());
     if (MidiConnection::getInstance()->getOpenOutputPortIndex() != -1) {
         ui->outPortComboBox->setCurrentIndex(MidiConnection::getInstance()->getOpenOutputPortIndex());
     }
 
+    connect(ui->inPortComboBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(openInputPort(int)));
     connect(ui->outPortComboBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(openOutputPort(int)));
 }
@@ -168,13 +173,14 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.endGroup();
 }
 
-void SettingsDialog::on_inPortComboBox_currentIndexChanged(int index)
-{
-
-}
-
 void SettingsDialog::openOutputPort(int index)
 {
     qDebug() << "SettingsDialog::on_outPortComboBox_currentIndexChanged";
     MidiConnection::getInstance()->openOutputPort(index);
+}
+
+void SettingsDialog::openInputPort(int index)
+{
+    qDebug() << "SettingsDialog::on_inPortComboBox_currentIndexChanged";
+    MidiConnection::getInstance()->openInputPort(index);
 }

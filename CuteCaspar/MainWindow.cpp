@@ -89,7 +89,10 @@ MainWindow::MainWindow(QWidget *parent) :
         counter++;
     }
 
-    MidiConnection::getInstance();
+    MidiConnection* midiCon = MidiConnection::getInstance();
+
+    connect(midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
+            player, SLOT(playNote(unsigned int, bool)));
 }
 
 /**
@@ -383,16 +386,6 @@ void MainWindow::on_actionPreview_toggled(bool visible)
 {
     ui->boxServer->setVisible(visible);
 }
-
-
-void MainWindow::on_stopPushButton_clicked()
-{
-    device->stop(1, 0);
-    playPlaying = false;
-    recording = false;
-    ui->statusLabel->setText("Video stopped...");
-}
-
 
 void MainWindow::activateButton(unsigned int pitch)
 {

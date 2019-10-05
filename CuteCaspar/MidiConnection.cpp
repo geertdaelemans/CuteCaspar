@@ -15,7 +15,7 @@ MidiConnection::MidiConnection()
     // Load server information from registry
     QSettings settings("VRT", "CasparCGClient");
     settings.beginGroup("Configuration");
-    qDebug() << "Registry setting" << settings.value("midiin", "").toString();
+    QString midiInName = settings.value("midiin", "").toString();
     QString midiOutName = settings.value("midiout", "").toString();
     settings.endGroup();
 
@@ -28,7 +28,17 @@ MidiConnection::MidiConnection()
         }
     }
 
-    reportAvailableMidiPorts();
+    if (midiInName != "") {
+        QStringList inputs = getAvailableInputPorts();
+        if (inputs.size() > 0) {
+            int index = inputs.indexOf(midiInName);
+            index = (index == -1 ? 0 : index);
+            openInputPort(index);
+        }
+    }
+
+    connect(midiIn, SIGNAL(midiMessageReceived(QMidiMessage*)),
+            this, SLOT(messageReceived(QMidiMessage*)));
 }
 
 
@@ -50,8 +60,25 @@ QStringList MidiConnection::getAvailableOutputPorts() {
     return midiOut->getPorts();
 }
 
+void MidiConnection::openInputPort(int index)
+{
+    if(midiIn->isPortOpen()) {
+        midiIn->closePort();
+    }
+    midiIn->openPort(static_cast<unsigned int>(index));
+    currentInputPortName = getAvailableInputPorts()[index];
+    currentInputPortIndex = index;
+    qDebug() << "Opened MIDI input" << currentInputPortName;
 
-void MidiConnection::openOutputPort(int index) {
+    QSettings settings("VRT", "CasparCGClient");
+    settings.beginGroup("Configuration");
+    settings.setValue("midiin", currentInputPortName);
+    settings.endGroup();
+}
+
+
+void MidiConnection::openOutputPort(int index)
+{
     if(midiOut->isPortOpen()) {
         midiOut->closePort();
     }
@@ -65,6 +92,12 @@ void MidiConnection::openOutputPort(int index) {
     settings.setValue("midiout", currentOutputPortName);
     settings.endGroup();
 }
+
+
+int MidiConnection::getOpenInputPortIndex() const {
+    return currentInputPortIndex;
+}
+
 
 int MidiConnection::getOpenOutputPortIndex() const {
     return currentOutputPortIndex;
@@ -98,4 +131,24 @@ void MidiConnection::killNote(unsigned int pitch)
 void MidiConnection::reportAvailableMidiPorts() {
     qDebug() << "MIDI inputs" << midiIn->getPorts();
     qDebug() << "MIDI outputs" << midiOut->getPorts();
+}
+
+void MidiConnection::messageReceived(QMidiMessage* msg)
+{
+    switch (msg->getStatus()) {
+    case MIDI_NOTE_ON:
+        if (msg->getVelocity() == 0) {
+            emit midiMessageReceived(msg->getPitch(), false);
+        } else {
+            // For Yamaha interpretation of MIDI_NOTE_ON with velocity 0
+            emit midiMessageReceived(msg->getPitch(), true);
+        }
+        break;
+    case MIDI_NOTE_OFF:
+        emit midiMessageReceived(msg->getPitch(), false);
+        break;
+    default:
+        qDebug() << "Not supported" << msg->getRawMessage();
+        break;
+    }
 }

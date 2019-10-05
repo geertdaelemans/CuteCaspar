@@ -22,7 +22,7 @@ private slots:
     void showAddDeviceDialog();
     void removeDevice();
     void deviceItemDoubleClicked(QTreeWidgetItem *current, int index);
-    void on_inPortComboBox_currentIndexChanged(int index);
+    void openInputPort(int index);
     void openOutputPort(int index);
 
 private:

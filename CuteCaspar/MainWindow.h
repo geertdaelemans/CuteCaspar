@@ -65,7 +65,6 @@ private slots:
     void on_tableView_clicked(const QModelIndex &index);
     void on_actionSettings_triggered();
     void on_actionPreview_toggled(bool visible);
-    void on_stopPushButton_clicked();
     void on_actionPlaylist_triggered();
     void on_btnStartPlaylist_clicked();
     void on_btnStopPlaylist_clicked();
