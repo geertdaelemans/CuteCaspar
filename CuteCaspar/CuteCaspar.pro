@@ -30,9 +30,11 @@ SOURCES += \
         Main.cpp \
         MidiConnection.cpp \
         MidiLogger.cpp \
+        MidiPanelDialog.cpp \
         MidiReader.cpp \
         PlayListDialog.cpp \
         Player.cpp \
+        RaspberryPI.cpp \
         SettingsDialog.cpp \
         ip/IpEndpointName.cpp \
         ip/NetworkingUtils.cpp \
@@ -49,10 +51,12 @@ HEADERS += \
         MainWindow.h \
         MidiConnection.h \
         MidiLogger.h \
+        MidiPanelDialog.h \
         MidiReader.h \
         Models/LibraryModel.h \
         PlayListDialog.h \
         Player.h \
+        RaspberryPI.h \
         SettingsDialog.h \
         ip/IpEndpointName.h \
         ip/NetworkingUtils.h \
@@ -71,6 +75,7 @@ HEADERS += \
 FORMS += \
         DeviceDialog.ui \
         MainWindow.ui \
+        MidiPanelDialog.ui \
         PlayList.ui \
         SettingsDialog.ui
 

@@ -25,6 +25,8 @@ private slots:
     void openInputPort(int index);
     void openOutputPort(int index);
 
+    void on_btnConnectRasp_clicked();
+
 private:
     Ui::SettingsDialog *ui;
     void loadDevice();

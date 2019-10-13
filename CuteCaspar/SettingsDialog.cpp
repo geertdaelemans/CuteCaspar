@@ -4,6 +4,7 @@
 #include "Models/DeviceModel.h"
 #include "DatabaseManager.h"
 #include "MidiConnection.h"
+#include "RaspberryPI.h"
 #include "DeviceDialog.h"
 
 #include <QSettings>
@@ -23,6 +24,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->chkAutoConnect->setChecked(settings.value("auto_connect", true).toBool());
     ui->edtHost->setText(settings.value("host", "127.0.0.1").toString());
     ui->edtPort->setText(settings.value("port", "5250").toString());
+    ui->edtOScPort->setText(settings.value("osc_port", "6250").toString());
+    ui->edtRaspAddress->setText(settings.value("raspaddress", "127.0.0.1").toString());
+    ui->edtRaspPort->setText(settings.value("raspport", "1234").toString());
     settings.endGroup();
 
     loadDevice();
@@ -170,6 +174,9 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue("auto_connect", ui->chkAutoConnect->isChecked());
     settings.setValue("host", ui->edtHost->text());
     settings.setValue("port", ui->edtPort->text());
+    settings.setValue("osc_port", ui->edtOScPort->text());
+    settings.setValue("raspaddress", ui->edtRaspAddress->text());
+    settings.setValue("raspport", ui->edtRaspPort->text());
     settings.endGroup();
 }
 
@@ -183,4 +190,14 @@ void SettingsDialog::openInputPort(int index)
 {
     qDebug() << "SettingsDialog::on_inPortComboBox_currentIndexChanged";
     MidiConnection::getInstance()->openInputPort(index);
+}
+
+void SettingsDialog::on_btnConnectRasp_clicked()
+{
+    QSettings settings("VRT", "CasparCGClient");
+    settings.beginGroup("Configuration");
+    settings.setValue("raspaddress", ui->edtRaspAddress->text());
+    settings.setValue("raspport", ui->edtRaspPort->text());
+    settings.endGroup();
+    RaspberryPI::getInstance()->connect();
 }

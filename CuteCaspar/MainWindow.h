@@ -13,6 +13,7 @@
 #include "CasparDevice.h"
 
 #include "SettingsDialog.h"
+#include "MidiPanelDialog.h"
 
 #include "MidiLogger.h"
 #include "MidiReader.h"
@@ -24,11 +25,11 @@ namespace Ui {
 class MainWindow;
 }
 
-struct note {
-    int id;
-    QString name;
-    unsigned int pitch;
-};
+//struct note {
+//    int id;
+//    QString name;
+//    unsigned int pitch;
+//};
 
 class MainWindow : public QMainWindow
 {
@@ -69,10 +70,10 @@ private slots:
     void on_btnStartPlaylist_clicked();
     void on_btnStopPlaylist_clicked();
     void on_btnRecording_clicked();
-
     void on_renewCheckBox_stateChanged(int arg1);
-
     void on_btnPlayClip_clicked();
+
+    void on_actionMidi_Panel_triggered();
 
 signals:
     void nextClip();
@@ -92,6 +93,7 @@ private:
     CasparDevice* device;
     QDateTime lastOsc;
     SettingsDialog * m_settingsDialog;
+    MidiPanelDialog * m_midiPanelDialog;
     QList<note> notes;
     QString currentClip;
     QString timecode;

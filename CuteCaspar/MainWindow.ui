@@ -268,6 +268,7 @@
      <string>Views</string>
     </property>
     <addaction name="actionPreview"/>
+    <addaction name="actionMidi_Panel"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuServer"/>
@@ -346,6 +347,11 @@
   <action name="actionPlaylist">
    <property name="text">
     <string>Playlist</string>
+   </property>
+  </action>
+  <action name="actionMidi_Panel">
+   <property name="text">
+    <string>Midi Panel</string>
    </property>
   </action>
  </widget>

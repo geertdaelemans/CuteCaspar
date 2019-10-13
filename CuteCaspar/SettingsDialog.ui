@@ -25,15 +25,119 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="General">
       <property name="enabled">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <attribute name="title">
        <string>General</string>
       </attribute>
+      <widget class="QWidget" name="layoutWidget_4">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>20</y>
+         <width>280</width>
+         <height>114</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayoutRasp">
+        <item>
+         <widget class="QLabel" name="lblRaspberryPI">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Raspberry PI</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayoutRasp">
+          <item>
+           <layout class="QVBoxLayout" name="fieldRaspAddress">
+            <item>
+             <widget class="QLabel" name="lblRaspAddress">
+              <property name="text">
+               <string>Address:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="edtRaspAddress">
+              <property name="text">
+               <string>127.0.0.1</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="fieldRaspPort">
+            <item>
+             <widget class="QLabel" name="lblRaspPort">
+              <property name="text">
+               <string>Port:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="edtRaspPort">
+              <property name="text">
+               <string>1234</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnConnectRasp">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Connect</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QLabel" name="label">
+       <property name="geometry">
+        <rect>
+         <x>370</x>
+         <y>20</y>
+         <width>261</width>
+         <height>161</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap resource="images.qrc">:/Images/RASPBERRY_PI_2_B_01.png</pixmap>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
+       </property>
+      </widget>
      </widget>
      <widget class="QWidget" name="Servers">
       <attribute name="title">
@@ -45,7 +149,7 @@
          <x>9</x>
          <y>9</y>
          <width>280</width>
-         <height>78</height>
+         <height>115</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -53,8 +157,20 @@
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <layout class="QVBoxLayout" name="fieldAddress">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SetMinimumSize</enum>
+            </property>
             <item>
              <widget class="QLabel" name="labelAddress">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>Address:</string>
               </property>
@@ -76,6 +192,12 @@
            <layout class="QVBoxLayout" name="fieldPort">
             <item>
              <widget class="QLabel" name="labelPort">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>Port:</string>
               </property>
@@ -88,6 +210,30 @@
              <widget class="QLineEdit" name="edtPort">
               <property name="text">
                <string>5250</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="fieldOscPort">
+            <item>
+             <widget class="QLabel" name="lblOscPort">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>OSC Port:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="edtOScPort">
+              <property name="text">
+               <string>6250</string>
               </property>
              </widget>
             </item>
@@ -108,9 +254,9 @@
        <property name="geometry">
         <rect>
          <x>80</x>
-         <y>100</y>
+         <y>160</y>
          <width>551</width>
-         <height>381</height>
+         <height>321</height>
         </rect>
        </property>
        <column>
@@ -338,7 +484,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="images.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

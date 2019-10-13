@@ -5,6 +5,7 @@
         <file>Images/extras_configure.png</file>
         <file>Images/CasparCG.png</file>
         <file>Images/ServerSmall.png</file>
+        <file>Images/RASPBERRY_PI_2_B_01.png</file>
     </qresource>
     <qresource prefix="/Graphics"/>
 </RCC>

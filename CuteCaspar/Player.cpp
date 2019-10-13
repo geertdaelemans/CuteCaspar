@@ -211,16 +211,17 @@ void Player::playNote(unsigned int pitch, bool noteOn)
     QString timecode = Timecode::fromTime(m_timecode, 29.97, false);
     QString onOff = (noteOn ? "ON" : "OFF");
     qDebug() << QString("%1 %2: pitch %3").arg(timecode).arg(onOff).arg(pitch);
-    if (midiLog->isReady()) {
+    if (midiLog->isReady() && pitch != previousPitch && noteOn) {
         midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg(onOff).arg(pitch));
     }
-    if(noteOn) {
+    if(noteOn && pitch != previousPitch) {
+        MidiConnection::getInstance()->killNote(previousPitch);
         MidiConnection::getInstance()->playNote(pitch);
         emit activateButton(pitch);
     } else {
         MidiConnection::getInstance()->killNote(pitch);
-        emit deactivateButton(pitch);
     }
+    previousPitch = pitch;
 }
 
 

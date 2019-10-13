@@ -54,6 +54,7 @@ private:
     bool m_recording = false;
     bool m_renew = false;
     void setStatus(PlayerStatus status);
+    unsigned int previousPitch;
 
 signals:
     void activeClip(int value);

@@ -12,6 +12,7 @@
 #include "PlayListDialog.h"
 
 #include "MidiConnection.h"
+#include "RaspberryPI.h"
 
 #include "Models/LibraryModel.h"
 
@@ -27,8 +28,15 @@ MainWindow::MainWindow(QWidget *parent) :
     playPlaying = false;
     ui->setupUi(this);
 
+    // Retrieve OSC Port Number
+    unsigned short oscPort = 6250;
+    QSettings settings("VRT", "CasparCGClient");
+    settings.beginGroup("Configuration");
+    oscPort = static_cast<unsigned short>(settings.value("osc_port", 6250).toInt());
+    settings.endGroup();
+
     // Set-up UDP connection with device
-    udp.bind(QHostAddress::Any, 6250);
+    udp.bind(QHostAddress::Any, oscPort);
 
     // Data is available for reading from the device
     connect(&udp, SIGNAL(readyRead()),
@@ -43,7 +51,6 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(refreshMediaList()));
 
     // When AutoConnect is active connect immediately to server
-    QSettings settings("VRT", "CasparCGClient");
     settings.beginGroup("Configuration");
     if (settings.value("auto_connect", true).toBool())
         connectServer();
@@ -93,6 +100,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
             player, SLOT(playNote(unsigned int, bool)));
+
+    RaspberryPI::getInstance();
 }
 
 /**
@@ -376,11 +385,34 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
     ui->statusLabel->setText("Video selected...");
 }
 
+/**
+ * PANELS
+ */
+
 void MainWindow::on_actionSettings_triggered()
 {
     m_settingsDialog = new SettingsDialog();
     m_settingsDialog->exec();
 }
+
+void MainWindow::on_actionMidi_Panel_triggered()
+{
+    m_midiPanelDialog = new MidiPanelDialog();
+    m_midiPanelDialog->show();
+
+    // Send notes to player
+    connect(m_midiPanelDialog, SIGNAL(buttonPushed(unsigned int, bool)),
+            player, SLOT(playNote(unsigned int, bool)));
+
+    // Receive activateButton()
+    connect(player, SIGNAL(activateButton(unsigned int)),
+            m_midiPanelDialog, SLOT(activateButton(unsigned int)));
+
+    // Receive deactivateButton()
+    connect(player, SIGNAL(deactivateButton(unsigned int)),
+            m_midiPanelDialog, SLOT(deactivateButton(unsigned int)));
+}
+
 
 void MainWindow::on_actionPreview_toggled(bool visible)
 {
