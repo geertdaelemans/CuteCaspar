@@ -96,13 +96,6 @@ void MidiPanelDialog::activateButton(unsigned int pitch)
     }
 }
 
-void MidiPanelDialog::deactivateButton(unsigned int pitch)
-{
-    if (button.contains(pitch) && !SINGLE_BUTTON_MODUS) {
-        button[pitch]->setDown(false);
-    }
-}
-
 void MidiPanelDialog::setButtonColor(QPushButton* button, QColor color)
 {
     QPalette pal = button->palette();

@@ -11,25 +11,22 @@
 #include "AmcpDevice.h"
 #include "CasparOSCListener.h"
 #include "CasparDevice.h"
+#include "RaspberryPI.h"
 
 #include "SettingsDialog.h"
 #include "MidiPanelDialog.h"
+#include "RaspberryPIDialog.h"
 
 #include "MidiLogger.h"
 #include "MidiReader.h"
 #include "Player.h"
+#include "MidiConnection.h"
 
 #include "qmidiout.h"
 
 namespace Ui {
 class MainWindow;
 }
-
-//struct note {
-//    int id;
-//    QString name;
-//    unsigned int pitch;
-//};
 
 class MainWindow : public QMainWindow
 {
@@ -50,10 +47,8 @@ public slots:
     void listMedia();
     void setCurrentClip(int index);
     void setTimeCode(double time);
-    void activeClipName(QString clipName);
-    void activateButton(unsigned int);
-    void deactivateButton(unsigned int);
-    void playerStatus(PlayerStatus status, bool recording);
+    void activeClipName(QString clipName, bool insert = false);
+    void playerStatus(PlayerStatus status, bool isRecording);
 
 private slots:
     void disconnectServer();
@@ -72,8 +67,11 @@ private slots:
     void on_btnRecording_clicked();
     void on_renewCheckBox_stateChanged(int arg1);
     void on_btnPlayClip_clicked();
-
     void on_actionMidi_Panel_triggered();
+
+    void on_pushButton_clicked();
+
+    void on_actionRaspberryPI_triggered();
 
 signals:
     void nextClip();
@@ -85,26 +83,20 @@ private:
     Ui::MainWindow *ui;
     QTcpSocket tcp;
     QUdpSocket udp;
-    bool playPlaying = false;
-    bool newClipLoaded = false;
     int playCurFrame, playLastFrame, playCurVFrame, playLastVFrame, playFps;
     void log(QString message);
     CasparOscListener listener;
-    CasparDevice* device;
+    CasparDevice* device = nullptr;
     QDateTime lastOsc;
-    SettingsDialog * m_settingsDialog;
-    MidiPanelDialog * m_midiPanelDialog;
-    QList<note> notes;
+    SettingsDialog * m_settingsDialog = nullptr;
+    MidiPanelDialog * m_midiPanelDialog = nullptr;
+    RaspberryPIDialog * m_raspberryPIDialog = nullptr;
+    RaspberryPI* m_raspberryPI = nullptr;
     QString currentClip;
     QString timecode;
-    bool recording = false;
-    MidiLogger* midiLog;
-    MidiReader* midiRead;
-    QMap<QString, message> midiPlayList;
-    QMap<unsigned int, QPushButton*> button;
-    QList<QString> playlistClips;
     int currentClipIndex = 0;
-    Player* player;
+    Player* player = nullptr;
+    MidiConnection* midiCon = nullptr;
     void setButtonColor(QPushButton *button, QColor color);
 };
 

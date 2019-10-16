@@ -12,6 +12,7 @@ enum class PlayerStatus
     READY,
     PLAYLIST_PLAYING,
     PLAYLIST_PAUSED,
+    PLAYLIST_INSERT,
     CLIP_PLAYING,
     CLIP_PAUSED
 };
@@ -30,6 +31,7 @@ public:
     void startPlayList(int clipIndex);
     void pausePlayList();
     void resumePlayList();
+    void interruptPlaylist(QString clipName);
     void stopPlayList();
     PlayerStatus getStatus() const;
 
@@ -45,6 +47,7 @@ private:
     CasparDevice* m_device;
     QList<QString> m_playlistClips;
     int m_currentClipIndex = 0;
+    int m_nextClipIndex = 0;
     double m_timecode;
     PlayerStatus m_status;
     MidiReader* midiRead;
@@ -53,14 +56,15 @@ private:
     bool m_singlePlay = false;
     bool m_recording = false;
     bool m_renew = false;
+    bool m_interrupted = false;
+    QString m_interruptedClipName;
     void setStatus(PlayerStatus status);
     unsigned int previousPitch;
 
 signals:
     void activeClip(int value);
-    void activeClipName(QString clipName);
+    void activeClipName(QString clipName, bool insert = false);
     void activateButton(unsigned int);
-    void deactivateButton(unsigned int);
     void playerStatus(PlayerStatus status, bool recording);
 };
 

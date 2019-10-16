@@ -26,7 +26,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->edtPort->setText(settings.value("port", "5250").toString());
     ui->edtOScPort->setText(settings.value("osc_port", "6250").toString());
     ui->edtRaspAddress->setText(settings.value("raspaddress", "127.0.0.1").toString());
-    ui->edtRaspPort->setText(settings.value("raspport", "1234").toString());
+    ui->edtRaspPortIn->setText(settings.value("raspport_in", "1234").toString());
+    ui->edtRaspPortOut->setText(settings.value("raspport_out", "1235").toString());
     settings.endGroup();
 
     loadDevice();
@@ -176,7 +177,8 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue("port", ui->edtPort->text());
     settings.setValue("osc_port", ui->edtOScPort->text());
     settings.setValue("raspaddress", ui->edtRaspAddress->text());
-    settings.setValue("raspport", ui->edtRaspPort->text());
+    settings.setValue("raspport_in", ui->edtRaspPortIn->text());
+    settings.setValue("raspport_out", ui->edtRaspPortOut->text());
     settings.endGroup();
 }
 
@@ -197,7 +199,8 @@ void SettingsDialog::on_btnConnectRasp_clicked()
     QSettings settings("VRT", "CasparCGClient");
     settings.beginGroup("Configuration");
     settings.setValue("raspaddress", ui->edtRaspAddress->text());
-    settings.setValue("raspport", ui->edtRaspPort->text());
+    settings.setValue("raspport_in", ui->edtRaspPortIn->text());
+    settings.setValue("raspport_out", ui->edtRaspPortOut->text());
     settings.endGroup();
     RaspberryPI::getInstance()->connect();
 }

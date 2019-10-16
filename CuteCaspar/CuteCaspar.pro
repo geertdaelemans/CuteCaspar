@@ -35,6 +35,7 @@ SOURCES += \
         PlayListDialog.cpp \
         Player.cpp \
         RaspberryPI.cpp \
+        RaspberryPIDialog.cpp \
         SettingsDialog.cpp \
         ip/IpEndpointName.cpp \
         ip/NetworkingUtils.cpp \
@@ -57,6 +58,7 @@ HEADERS += \
         PlayListDialog.h \
         Player.h \
         RaspberryPI.h \
+        RaspberryPIDialog.h \
         SettingsDialog.h \
         ip/IpEndpointName.h \
         ip/NetworkingUtils.h \
@@ -77,6 +79,7 @@ FORMS += \
         MainWindow.ui \
         MidiPanelDialog.ui \
         PlayList.ui \
+        RaspberryPIDialog.ui \
         SettingsDialog.ui
 
 LIBS += -lws2_32

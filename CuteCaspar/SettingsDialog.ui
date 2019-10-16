@@ -25,7 +25,7 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="General">
       <property name="enabled">
@@ -85,11 +85,11 @@
            </layout>
           </item>
           <item>
-           <layout class="QVBoxLayout" name="fieldRaspPort">
+           <layout class="QVBoxLayout" name="fieldRaspPortIn">
             <item>
-             <widget class="QLabel" name="lblRaspPort">
+             <widget class="QLabel" name="lblRaspPortIn">
               <property name="text">
-               <string>Port:</string>
+               <string>IN Port:</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -97,9 +97,30 @@
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="edtRaspPort">
+             <widget class="QLineEdit" name="edtRaspPortIn">
               <property name="text">
                <string>1234</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="fieldRaspPortOut">
+            <item>
+             <widget class="QLabel" name="lblRaspPortOut">
+              <property name="text">
+               <string>OUT Port:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="edtRaspPortOut">
+              <property name="text">
+               <string>1235</string>
               </property>
              </widget>
             </item>

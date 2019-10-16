@@ -27,24 +27,34 @@ void RaspberryPI::connect()
     QSettings settings("VRT", "CasparCGClient");
     settings.beginGroup("Configuration");
     QString address = settings.value("raspaddress", "127.0.0.1").toString();
-    unsigned short port = static_cast<unsigned short>(settings.value("raspport", "1234").toInt());
+    m_address = QHostAddress(address);
+    m_portIn = static_cast<unsigned short>(settings.value("raspport_in", "1234").toInt());
+    m_portOut = static_cast<unsigned short>(settings.value("raspport_out", "1235").toInt());
     settings.endGroup();
 
     // Open UDP socket to Raspberry PI
-    if (udpSocket == nullptr) {
-        udpSocket = new QUdpSocket(this);
+    if (udpSocketIn == nullptr) {
+        udpSocketIn = new QUdpSocket(this);
     }
-    if (udpSocket->state() != QAbstractSocket::UnconnectedState) {
-        udpSocket->close();
+    if (udpSocketIn->state() != QAbstractSocket::UnconnectedState) {
+        udpSocketIn->close();
     }
-    udpSocket->bind(QHostAddress(address), port);
+    udpSocketIn->bind(QHostAddress("192.168.0.184"), m_portIn);
+
+
+    if (udpSocketOut == nullptr) {
+        udpSocketOut = new QUdpSocket(this);
+    }
+    if (udpSocketOut->state() != QAbstractSocket::UnconnectedState) {
+        udpSocketOut->close();
+    }
 
     // When a datagram has been received, go and process it
-    QObject::connect(udpSocket, SIGNAL(readyRead()),
+    QObject::connect(udpSocketIn, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()), Qt::UniqueConnection);
 
     // Report connection
-    qDebug() << QString("Raspberry PI connected on %1:%2").arg(address).arg(port);
+    qDebug() << QString("Raspberry PI connected on %1:%2").arg(address).arg(m_portIn);
 }
 
 
@@ -53,14 +63,34 @@ void RaspberryPI::connect()
  */
 void RaspberryPI::processPendingDatagrams()
 {
-    while (udpSocket->hasPendingDatagrams())
+    while (udpSocketIn->hasPendingDatagrams())
     {
         QByteArray datagram;
 
-        datagram.resize(static_cast<int>(udpSocket->pendingDatagramSize()));
+        datagram.resize(static_cast<int>(udpSocketIn->pendingDatagramSize()));
 
-        udpSocket->readDatagram(datagram.data(), datagram.size());
+        udpSocketIn->readDatagram(datagram.data(), datagram.size());
 
-        qDebug() << QString("Received datagram: %1").arg(datagram.data());
+        parseMessage(datagram.data());
     }
+}
+
+
+/**
+ * @brief RaspberryPI::sendMessage
+ * @param msg
+ */
+void RaspberryPI::sendMessage(QString msg)
+{
+    QByteArray Data;
+    Data.append("raspi/");
+    Data.append(msg);
+    udpSocketOut->writeDatagram(Data, Data.size(), m_address, m_portOut);
+    qDebug() << QString("Sending UDP Message '%1' to %2:%3").arg(msg).arg(m_address.toString()).arg(m_portOut);
+}
+
+
+void RaspberryPI::parseMessage(QString msg)
+{
+    emit statusButton(msg);
 }

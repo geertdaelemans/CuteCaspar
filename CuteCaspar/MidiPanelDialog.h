@@ -25,7 +25,6 @@ public:
 
 public slots:
     void activateButton(unsigned int pitch);
-    void deactivateButton(unsigned int pitch);
 
 signals:
     void buttonPushed(unsigned int, bool);

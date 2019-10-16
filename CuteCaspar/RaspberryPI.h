@@ -14,12 +14,23 @@ public:
     static RaspberryPI *getInstance();
     void connect();
 
+signals:
+    void statusButton(QString msg);
+
+public slots:
+    void sendMessage(QString msg);
+
 private slots:
     void processPendingDatagrams();
 
 private:
     static RaspberryPI* s_inst;
-    QUdpSocket* udpSocket;
+    QUdpSocket* udpSocketIn = nullptr;
+    QUdpSocket* udpSocketOut = nullptr;
+    QHostAddress m_address = QHostAddress("127.0.0.1");
+    unsigned short m_portIn = 1234;
+    unsigned short m_portOut = 1235;
+    void parseMessage(QString msg);
 };
 
 #endif // RASPBERRYPI_H

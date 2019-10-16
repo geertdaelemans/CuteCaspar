@@ -88,6 +88,13 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QPushButton" name="pushButton">
+              <property name="text">
+               <string>Test Clip</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
           <widget class="QGroupBox" name="boxPlaying">
@@ -117,16 +124,6 @@
            </layout>
           </widget>
          </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tabPanel">
-       <attribute name="title">
-        <string>Panel</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <layout class="QGridLayout" name="theGrid"/>
         </item>
        </layout>
       </widget>
@@ -269,6 +266,7 @@
     </property>
     <addaction name="actionPreview"/>
     <addaction name="actionMidi_Panel"/>
+    <addaction name="actionRaspberryPI"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuServer"/>
@@ -352,6 +350,11 @@
   <action name="actionMidi_Panel">
    <property name="text">
     <string>Midi Panel</string>
+   </property>
+  </action>
+  <action name="actionRaspberryPI">
+   <property name="text">
+    <string>RaspberryPI</string>
    </property>
   </action>
  </widget>

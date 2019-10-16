@@ -6,13 +6,8 @@
 #include <QtSql>
 #include <QtMath>
 
-#include "CasparDevice.h"
 #include "DatabaseManager.h"
-#include "SettingsDialog.h"
 #include "PlayListDialog.h"
-
-#include "MidiConnection.h"
-#include "RaspberryPI.h"
 
 #include "Models/LibraryModel.h"
 
@@ -25,7 +20,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    playPlaying = false;
     ui->setupUi(this);
 
     // Retrieve OSC Port Number
@@ -50,58 +44,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(mediaListUpdated()),
             this, SLOT(refreshMediaList()));
 
+    midiCon = MidiConnection::getInstance();
+
     // When AutoConnect is active connect immediately to server
     settings.beginGroup("Configuration");
     if (settings.value("auto_connect", true).toBool())
         connectServer();
     settings.endGroup();
 
-    // Prepare notes panel
-    QFile profile;
-    if(QFileInfo::exists("Notes.csv"))
-    {
-        profile.setFileName("Notes.csv");
-    }
-    else
-    {
-        profile.setFileName(":/Profiles/Notes.csv");
-    }
-
-    if (!profile.open(QIODevice::ReadOnly)) {
-        qDebug() << profile.errorString();
-    }
-    int counter = 0;
-    while (!profile.atEnd()) {
-        QByteArray line = profile.readLine();
-        note tempNote;
-        tempNote.id = counter;
-        tempNote.name = line.split(',').at(0);
-        tempNote.pitch = line.split(',').at(1).toUInt();
-        notes.append(tempNote);
-        counter++;
-    }
-    // Magically calculate the number of rows
-    int rows = qCeil(qSqrt(static_cast<qreal>(counter)));
-    counter = 0;
-    for (int i = 0; i < notes.length(); i++) {
-        QPushButton* newButton = new QPushButton(notes[i].name);
-        newButton->setProperty("pitch", notes[i].pitch);
-        newButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        connect(newButton, SIGNAL(pressed()),
-                player, SLOT(playNote()));
-        connect(newButton, SIGNAL(released()),
-                player, SLOT(killNote()));
-        ui->theGrid->addWidget(newButton, counter / rows, counter % rows);
-        button[notes[i].pitch] = newButton;
-        counter++;
-    }
-
-    MidiConnection* midiCon = MidiConnection::getInstance();
-
-    connect(midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
-            player, SLOT(playNote(unsigned int, bool)));
-
-    RaspberryPI::getInstance();
+    m_raspberryPI = RaspberryPI::getInstance();
 }
 
 /**
@@ -145,6 +96,10 @@ void MainWindow::connectServer()
 
     device->connectDevice();
     player = new Player(device);
+
+    connect(midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
+            player, SLOT(playNote(unsigned int, bool)));
+
     connect(player, SIGNAL(activeClip(int)),
             this, SLOT(setCurrentClip(int)));
 
@@ -158,16 +113,8 @@ void MainWindow::connectServer()
     connect(this, SIGNAL(currentTime(double)),
             this, SLOT(setTimeCode(double)));
 
-    connect(player, SIGNAL(activeClipName(QString)),
-            this, SLOT(activeClipName(QString)));
-
-    // activateButton()
-    connect(player, SIGNAL(activateButton(unsigned int)),
-            this, SLOT(activateButton(unsigned int)));
-
-    // deactivateButton()
-    connect(player, SIGNAL(deactivateButton(unsigned int)),
-            this, SLOT(deactivateButton(unsigned int)));
+    connect(player, SIGNAL(activeClipName(QString, bool)),
+            this, SLOT(activeClipName(QString, bool)));
 
     connect(this, SIGNAL(setRecording()),
             player, SLOT(setRecording()));
@@ -201,7 +148,6 @@ void MainWindow::disconnectServer()
 {
     device->stop(1, 0);
     device->disconnectDevice();
-    playPlaying = false;
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     DatabaseManager::getInstance().reset();
@@ -397,20 +343,37 @@ void MainWindow::on_actionSettings_triggered()
 
 void MainWindow::on_actionMidi_Panel_triggered()
 {
-    m_midiPanelDialog = new MidiPanelDialog();
+    if (!m_midiPanelDialog) {
+        m_midiPanelDialog = new MidiPanelDialog();
+
+        // Send notes to player
+        connect(m_midiPanelDialog, SIGNAL(buttonPushed(unsigned int, bool)),
+                player, SLOT(playNote(unsigned int, bool)));
+
+        // Receive activateButton()
+        connect(player, SIGNAL(activateButton(unsigned int)),
+                m_midiPanelDialog, SLOT(activateButton(unsigned int)));
+    }
     m_midiPanelDialog->show();
+    m_midiPanelDialog->activateWindow();
+}
 
-    // Send notes to player
-    connect(m_midiPanelDialog, SIGNAL(buttonPushed(unsigned int, bool)),
-            player, SLOT(playNote(unsigned int, bool)));
 
-    // Receive activateButton()
-    connect(player, SIGNAL(activateButton(unsigned int)),
-            m_midiPanelDialog, SLOT(activateButton(unsigned int)));
+void MainWindow::on_actionRaspberryPI_triggered()
+{
+    if (!m_raspberryPIDialog) {
+        m_raspberryPIDialog = new RaspberryPIDialog();
 
-    // Receive deactivateButton()
-    connect(player, SIGNAL(deactivateButton(unsigned int)),
-            m_midiPanelDialog, SLOT(deactivateButton(unsigned int)));
+        // Send commands to RaspberryPI
+        connect(m_raspberryPIDialog, SIGNAL(sendMessage(QString)),
+                m_raspberryPI, SLOT(sendMessage(QString)));
+
+        // Update remote button status
+        connect(m_raspberryPI, SIGNAL(statusButton(QString)),
+                m_raspberryPIDialog, SLOT(statusButton(QString)));
+    }
+    m_raspberryPIDialog->show();
+    m_raspberryPIDialog->activateWindow();
 }
 
 
@@ -419,19 +382,6 @@ void MainWindow::on_actionPreview_toggled(bool visible)
     ui->boxServer->setVisible(visible);
 }
 
-void MainWindow::activateButton(unsigned int pitch)
-{
-    if (button.contains(pitch)) {
-        button[pitch]->setDown(true);
-    }
-}
-
-void MainWindow::deactivateButton(unsigned int pitch)
-{
-    if (button.contains(pitch)) {
-        button[pitch]->setDown(false);
-    }
-}
 
 void MainWindow::on_actionPlaylist_triggered()
 {
@@ -482,11 +432,16 @@ void MainWindow::setTimeCode(double time)
     ui->timeCode->setText(timecode);
 }
 
-void MainWindow::activeClipName(QString clipName)
+void MainWindow::activeClipName(QString clipName, bool insert)
 {
     currentClip = clipName;
-    qDebug() << "Current clip:" << clipName;
-    ui->clipName->setText(clipName);
+    if (!insert) {
+        ui->clipName->setStyleSheet("QLabel { color : white; }");
+        ui->clipName->setText(clipName);
+    } else {
+        ui->clipName->setStyleSheet("QLabel { color : red; }");
+        ui->clipName->setText("INSERT\n" + clipName);
+    }
 }
 
 void MainWindow::on_btnRecording_clicked()
@@ -499,7 +454,7 @@ void MainWindow::on_renewCheckBox_stateChanged(int arg1)
     emit setRenew(arg1);
 }
 
-void MainWindow::playerStatus(PlayerStatus status, bool recording)
+void MainWindow::playerStatus(PlayerStatus status, bool isRecording)
 {
     switch (status) {
     case PlayerStatus::IDLE:
@@ -509,7 +464,7 @@ void MainWindow::playerStatus(PlayerStatus status, bool recording)
         ui->statusLabel->setText("READY");
         ui->btnPlayClip->setText(tr("Play Clip"));
         ui->btnStartPlaylist->setText(tr("Start Playlist"));
-        if (recording) {
+        if (isRecording) {
             ui->btnRecording->setText(tr("Ready"));
             setButtonColor(ui->btnRecording, Qt::darkGreen);
         } else {
@@ -520,7 +475,7 @@ void MainWindow::playerStatus(PlayerStatus status, bool recording)
     case PlayerStatus::CLIP_PLAYING:
         ui->statusLabel->setText("CLIP PLAYING");
         ui->btnPlayClip->setText(tr("Pause Clip"));
-        if (recording) {
+        if (isRecording) {
             ui->btnRecording->setText(tr("Recording"));
             setButtonColor(ui->btnRecording, Qt::red);
         } else {
@@ -533,9 +488,9 @@ void MainWindow::playerStatus(PlayerStatus status, bool recording)
         ui->btnPlayClip->setText(tr("Resume Clip"));
         break;
     case PlayerStatus::PLAYLIST_PLAYING:
-        ui->statusLabel->setText("PLAYLIST LOADED");
+        ui->statusLabel->setText("PLAYLIST PLAYING");
         ui->btnStartPlaylist->setText(tr("Pause Playlist"));
-        if (recording) {
+        if (isRecording) {
             ui->btnRecording->setText(tr("Recording"));
             setButtonColor(ui->btnRecording, Qt::red);
         } else {
@@ -544,8 +499,11 @@ void MainWindow::playerStatus(PlayerStatus status, bool recording)
         }
         break;
     case PlayerStatus::PLAYLIST_PAUSED:
-        ui->statusLabel->setText("PLAYLIST LOADED");
+        ui->statusLabel->setText("PLAYLIST PAUSED");
         ui->btnStartPlaylist->setText(tr("Resume Playlist"));
+        break;
+    case PlayerStatus::PLAYLIST_INSERT:
+        ui->statusLabel->setText("PLAYLIST INSERT");
         break;
     }
 }
@@ -556,4 +514,9 @@ void MainWindow::setButtonColor(QPushButton* button, QColor color)
     pal.setColor(QPalette::Button, color);
     button->setPalette(pal);
     button->update();
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    player->interruptPlaylist("Ghostly Apparitions - Startling Specter - Hologram - Window - Horizontal Scenes - Ghoulish Girl");
 }

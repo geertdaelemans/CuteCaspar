@@ -43,6 +43,7 @@ void Player::startPlayList(int clipIndex)
 {
     m_device->stop(1, 0);
     m_currentClipIndex = clipIndex;
+    m_nextClipIndex = clipIndex;
     m_timecode = 100;  // By faking the present timecode, the start of the clip (follows) will trigger loadNextClip()
     m_device->playMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false);
     m_singlePlay = false;
@@ -63,7 +64,9 @@ void Player::pausePlayList()
     }
 }
 
-
+/**
+ * @brief Player::resumePlayList
+ */
 void Player::resumePlayList()
 {
     m_device->resume(1, 0);
@@ -85,6 +88,24 @@ void Player::stopPlayList()
     setStatus(PlayerStatus::READY);
 }
 
+void Player::interruptPlaylist(QString clipName)
+{
+    m_device->stop(1, 0);
+    m_interrupted = true;
+    m_interruptedClipName = clipName;
+    if (getStatus() != PlayerStatus::PLAYLIST_PLAYING && getStatus() != PlayerStatus::PLAYLIST_INSERT) {
+        m_timecode = 10.0;
+        m_singlePlay = true;
+    }
+    m_nextClipIndex = m_currentClipIndex;
+    qDebug() << "Interrupted" << m_playlistClips[m_currentClipIndex];
+    m_device->playMovie(1, 0, clipName, "", 0, "", "", 0, 0, false, false);
+    if (!m_singlePlay) {
+        m_device->loadMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false, true);
+    }
+    setStatus(PlayerStatus::PLAYLIST_INSERT);
+}
+
 
 /**
  * @brief Player::playClip
@@ -95,6 +116,7 @@ void Player::playClip(int clipIndex)
     m_timecode = 10.0;
     m_singlePlay = true;
     m_currentClipIndex = clipIndex;
+    m_nextClipIndex = clipIndex;
     m_device->playMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false);
     setStatus(PlayerStatus::CLIP_PLAYING);
 }
@@ -137,28 +159,46 @@ void Player::loadClip(QString clipName)
  */
 void Player::loadNextClip()
 {
-    emit activeClip(m_currentClipIndex);
-    emit activeClipName(m_playlistClips[m_currentClipIndex]);
-    qDebug() << m_playlistClips[m_currentClipIndex];
-    midiPlayList = midiRead->openLog(m_playlistClips[m_currentClipIndex]);
-    if (midiRead->isReady()) {
-        qDebug("MIDI file found...");
-    }
-    else {
-        qDebug("No MIDI file found...");
-    }
-    qDebug() << "Start logging" << m_playlistClips[m_currentClipIndex];
-    if (m_recording) {
-        midiLog->openMidiLog(m_playlistClips[m_currentClipIndex]);
-    }
-
-    if (!m_singlePlay) {
-        if (m_currentClipIndex > (m_playlistClips.size()-2)) {
-            m_currentClipIndex = 0;
-        } else {
-            m_currentClipIndex++;
+    if (!m_interrupted) {
+        m_currentClipIndex = m_nextClipIndex;
+        emit activeClip(m_currentClipIndex);
+        emit activeClipName(m_playlistClips[m_currentClipIndex]);
+        qDebug() << "Playing:" << m_playlistClips[m_currentClipIndex];
+        midiPlayList = midiRead->openLog(m_playlistClips[m_currentClipIndex]);
+        if (midiRead->isReady()) {
+            qDebug("MIDI file found...");
         }
-        loadClip(m_playlistClips[m_currentClipIndex]);
+        else {
+            qDebug("No MIDI file found...");
+        }
+        if (m_recording) {
+            midiLog->openMidiLog(m_playlistClips[m_currentClipIndex]);
+        }
+
+        if (!m_singlePlay) {
+            if (m_currentClipIndex > (m_playlistClips.size()-2)) {
+                m_nextClipIndex = 0;
+            } else {
+                m_nextClipIndex++;
+            }
+            loadClip(m_playlistClips[m_nextClipIndex]);
+            setStatus(PlayerStatus::PLAYLIST_PLAYING);
+        }
+    } else {
+        emit activeClipName(m_interruptedClipName, true);
+        qDebug() << "Playing:" << m_interruptedClipName;
+        midiPlayList = midiRead->openLog(m_interruptedClipName);
+        if (midiRead->isReady()) {
+            qDebug("MIDI file found...");
+        }
+        else {
+            qDebug("No MIDI file found...");
+        }
+        if (m_recording) {
+            midiLog->openMidiLog(m_interruptedClipName);
+        }
+        m_interrupted = false;
+        setStatus(PlayerStatus::PLAYLIST_INSERT);
     }
 }
 
@@ -172,12 +212,12 @@ void Player::timecode(double time)
     double prev_timecode = m_timecode;
     m_timecode = time;
     if (prev_timecode > m_timecode && m_timecode < 1.0) {
-        qDebug() << "loadNextClip()";
         loadNextClip();
     } if (qFabs(prev_timecode - m_timecode) < 0.001) {
         qDebug() << "Clip stopped";
         midiLog->closeMidiLog();
         if (m_singlePlay) {
+            qDebug() << "stopPlayList()";
             stopPlayList();
         }
     }
