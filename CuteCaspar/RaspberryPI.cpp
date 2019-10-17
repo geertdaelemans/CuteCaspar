@@ -3,6 +3,9 @@
 #include <QUdpSocket>
 #include <QSettings>
 
+#include <QHostInfo>
+#include <QNetworkInterface>
+
 RaspberryPI* RaspberryPI::s_inst = nullptr;
 
 RaspberryPI::RaspberryPI()
@@ -32,16 +35,25 @@ void RaspberryPI::connect()
     m_portOut = static_cast<unsigned short>(settings.value("raspport_out", "1235").toInt());
     settings.endGroup();
 
-    // Open UDP socket to Raspberry PI
+    // Find real LocalHost Address
+    QHostAddress localhost;
+    foreach (const QHostAddress &address, QNetworkInterface::allAddresses()) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost)) {
+            localhost = address;
+        }
+    }
+    qDebug() << "Localhost IP:" << localhost.toString();
+
+    // Open incoming UDP socket to Raspberry PI
     if (udpSocketIn == nullptr) {
         udpSocketIn = new QUdpSocket(this);
     }
     if (udpSocketIn->state() != QAbstractSocket::UnconnectedState) {
         udpSocketIn->close();
     }
-    udpSocketIn->bind(QHostAddress("192.168.0.184"), m_portIn);
+    udpSocketIn->bind(localhost, m_portIn);
 
-
+    // Open outgoing UDP socket to Raspberry PI
     if (udpSocketOut == nullptr) {
         udpSocketOut = new QUdpSocket(this);
     }
@@ -63,15 +75,11 @@ void RaspberryPI::connect()
  */
 void RaspberryPI::processPendingDatagrams()
 {
-    while (udpSocketIn->hasPendingDatagrams())
-    {
+    while (udpSocketIn->hasPendingDatagrams()) {
         QByteArray datagram;
-
         datagram.resize(static_cast<int>(udpSocketIn->pendingDatagramSize()));
-
         udpSocketIn->readDatagram(datagram.data(), datagram.size());
-
-        parseMessage(datagram.data());
+        parseMessage(&datagram.data()[6]);
     }
 }
 
@@ -92,5 +100,6 @@ void RaspberryPI::sendMessage(QString msg)
 
 void RaspberryPI::parseMessage(QString msg)
 {
+    qDebug() << "parseMessage" << msg;
     emit statusButton(msg);
 }

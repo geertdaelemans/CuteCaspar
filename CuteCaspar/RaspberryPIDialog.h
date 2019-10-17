@@ -19,7 +19,7 @@ public slots:
     void statusButton(QString msg);
 
 private slots:
-    void on_btnQuit_clicked();
+    void on_btnConnect_clicked();
     void on_btnLed_clicked();
 
 signals:
@@ -27,7 +27,8 @@ signals:
 
 private:
     Ui::RaspberryPIDialog *ui;
-    bool ledOn = false;
+    bool m_ledOn = false;
+    bool m_isConnected = false;
 };
 
 #endif // RASPBERRYPIDIALOG_H
