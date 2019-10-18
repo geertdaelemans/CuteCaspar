@@ -521,5 +521,5 @@ void MainWindow::setButtonColor(QPushButton* button, QColor color)
 
 void MainWindow::on_pushButton_clicked()
 {
-    player->insertPlaylist("Ghostly Apparitions - Startling Specter - Hologram - Window - Horizontal Scenes - Ghoulish Girl");
+    player->insertPlaylist();
 }

@@ -18,6 +18,12 @@ PlayList::PlayList(QWidget *parent) :
 
     DatabaseManager::getInstance().getDevice();
 
+    m_playlist = "Playlist";
+
+    ui->cmbPlaylists->addItem("Main Playlist", "Playlist");
+    ui->cmbPlaylists->addItem("Scares Playlist", "Scares");
+    ui->cmbPlaylists->addItem("Extra Playlist", "Extras");
+
     refreshMediaList();
     refreshPlayList();
 }
@@ -58,7 +64,7 @@ void PlayList::refreshPlayList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("select Id, Name, TypeId, Timecode, Fps from Playlist");
+    qry->prepare(QString("select Id, Name, TypeId, Timecode, Fps from %1").arg(m_playlist));
     qry->exec();
 
     model->setQuery(*qry);
@@ -80,7 +86,7 @@ void PlayList::refreshPlayList()
 void PlayList::on_clipList_doubleClicked(const QModelIndex &index)
 {
     QSqlQuery query;
-    if (!query.prepare("INSERT INTO Playlist (Name, TypeId, Timecode, Fps) VALUES (:name, :typeid, :timecode, :fps)"))
+    if (!query.prepare(QString("INSERT INTO %1 (Name, TypeId, Timecode, Fps) VALUES (:name, :typeid, :timecode, :fps)").arg(m_playlist)))
         qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
     query.bindValue(":name", index.siblingAtColumn(0).data(Qt::DisplayRole).toString());
     query.bindValue(":typeid", index.siblingAtColumn(1).data(Qt::DisplayRole).toString());
@@ -94,7 +100,7 @@ void PlayList::on_clipList_doubleClicked(const QModelIndex &index)
 void PlayList::on_clearPlaylistButton_clicked()
 {
     QSqlQuery query;
-    if (!query.prepare("DELETE FROM Playlist"))
+    if (!query.prepare(QString("DELETE FROM %1").arg(m_playlist)))
         qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
     query.exec();
 
@@ -104,4 +110,10 @@ void PlayList::on_clearPlaylistButton_clicked()
 void PlayList::on_clipList_clicked(const QModelIndex &index)
 {
     const QString clipName = index.siblingAtColumn(0).data(Qt::DisplayRole).toString();
+}
+
+void PlayList::on_cmbPlaylists_currentIndexChanged(int index)
+{
+    m_playlist = ui->cmbPlaylists->itemData(index).toString();
+    refreshPlayList();
 }

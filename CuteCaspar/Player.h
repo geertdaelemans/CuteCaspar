@@ -61,6 +61,9 @@ private:
     void setStatus(PlayerStatus status);
     unsigned int previousPitch;
     bool m_insert = false;
+    int getNumberOfClips(QString playlist) const;
+    void updateRandomClip();
+    QString m_randomScare;
 
 signals:
     void activeClip(int value);

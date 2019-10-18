@@ -33,6 +33,42 @@ void Player::loadPlayList()
     }
     query.finish();
     setStatus(PlayerStatus::READY);
+    updateRandomClip();
+}
+
+
+/**
+ * @brief Player::getNumberOfClips
+ * @param playlist
+ * @return
+ */
+int Player::getNumberOfClips(QString playlist) const
+{
+    int number = 0;
+    QSqlQuery query;
+    if (!query.prepare(QString("SELECT Count(*) FROM %1").arg(playlist)))
+        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
+    query.exec();
+    while(query.next()) {
+        number = query.value(0).toInt();
+    }
+    query.finish();
+    return number;
+}
+
+
+void Player::updateRandomClip()
+{
+    int amount = getNumberOfClips("Scares");
+    int id = QRandomGenerator::global()->bounded(amount) + 1;
+    QSqlQuery query;
+    if (!query.prepare(QString("SELECT Name FROM Scares WHERE id = %1").arg(id)))
+        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
+    query.exec();
+    while (query.next()) {
+        m_randomScare = query.value(0).toString();
+    }
+    query.finish();
 }
 
 
@@ -92,18 +128,25 @@ void Player::insertPlaylist(QString clipName)
 {
     m_device->stop(1, 0);
     m_interrupted = true;
-    m_interruptedClipName = clipName;
+    if (clipName == "random") {
+        m_interruptedClipName = m_randomScare;
+    } else {
+        m_interruptedClipName = clipName;
+    }
     if (getStatus() != PlayerStatus::PLAYLIST_PLAYING && getStatus() != PlayerStatus::PLAYLIST_INSERT) {
         m_timecode = 10.0;
         m_singlePlay = true;
     }
     m_nextClipIndex = m_currentClipIndex;
     qDebug() << "Interrupted" << m_playlistClips[m_currentClipIndex];
-    m_device->playMovie(1, 0, clipName, "", 0, "", "", 0, 0, false, false);
+    m_device->playMovie(1, 0, m_interruptedClipName, "", 0, "", "", 0, 0, false, false);
     if (!m_singlePlay) {
         m_device->loadMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false, true);
     }
     setStatus(PlayerStatus::PLAYLIST_INSERT);
+    if (clipName == "random") {
+        updateRandomClip();
+    }
 }
 
 

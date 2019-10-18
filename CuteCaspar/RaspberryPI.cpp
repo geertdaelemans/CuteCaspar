@@ -169,7 +169,7 @@ void RaspberryPI::parseMessage(QString msg)
 {
     if (msg == "high" && isButtonActive()) {
         qDebug() << "Insert clip" << msg;
-        emit insertPlaylist("Scare Ghoulish Girl");
+        emit insertPlaylist();
         setButtonActive(false);
     }
     emit statusButton(msg);
