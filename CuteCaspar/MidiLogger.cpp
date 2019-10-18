@@ -8,8 +8,8 @@ MidiLogger::MidiLogger()
 
 void MidiLogger::openMidiLog(QString videoName)
 {
-    qDebug() << "Ready to write to" << videoName;
-    logFile = new QFile(QString("%1.midi").arg(videoName));
+    qDebug() << "Ready to write to" << videoName.replace("/","-");
+    logFile = new QFile(QString("%1.midi").arg(videoName.replace("/","-")));
     logFile->open(QIODevice::WriteOnly | QIODevice::Text);
     out = new QTextStream(logFile);
     m_ready = true;

@@ -13,7 +13,7 @@ QMap<QString, message> MidiReader::openLog(QString videoFile)
 {
     m_ready = false;
     QMap<QString, message> output;
-    QFile logFile(QString("%1.midi").arg(videoFile));
+    QFile logFile(QString("%1.midi").arg(videoFile.replace("/","-")));
     if (logFile.open(QIODevice::ReadOnly))
     {
        QTextStream in(&logFile);
