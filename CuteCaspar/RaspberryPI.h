@@ -4,6 +4,12 @@
 #include <QObject>
 #include <QUdpSocket>
 
+struct status {
+    bool buttonActive = false;
+    bool magnetActive = false;
+    bool connected = false;
+};
+
 class RaspberryPI : public QObject
 {
 
@@ -12,13 +18,24 @@ class RaspberryPI : public QObject
 public:
     RaspberryPI();
     static RaspberryPI *getInstance();
-    void connect();
+    void setup();
+    void startConnection();
+    void stopConnection();
+    bool isButtonActive() const;
+    bool isMagnetActive() const;
+    void setButtonActive(bool buttonActive);
+    void setMagnetActive(bool magnetActive);
+    bool isConnected();
 
 signals:
     void statusButton(QString msg);
+    void statusUpdate(status stat);
+    void insertPlaylist(QString clipName = "random");
+    void heartBeat();
 
 public slots:
     void sendMessage(QString msg);
+    void insertFinished();
 
 private slots:
     void processPendingDatagrams();
@@ -31,6 +48,10 @@ private:
     unsigned short m_portIn = 1234;
     unsigned short m_portOut = 1235;
     void parseMessage(QString msg);
+    bool m_buttonActive = false;
+    bool m_magnetActive = false;
+    bool m_connected = false;
+    void sendStatus();
 };
 
 #endif // RASPBERRYPI_H

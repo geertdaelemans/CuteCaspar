@@ -3,6 +3,8 @@
 
 #include <QDialog>
 
+#include "RaspberryPI.h"
+
 namespace Ui {
 class RaspberryPIDialog;
 }
@@ -17,18 +19,16 @@ public:
 
 public slots:
     void statusButton(QString msg);
+    void refreshUpdate(status stat);
 
 private slots:
     void on_btnConnect_clicked();
-    void on_btnLed_clicked();
-
-signals:
-    void sendMessage(QString msg);
+    void on_btnMagnet_clicked();
+    void on_btnButton_clicked();
 
 private:
     Ui::RaspberryPIDialog *ui;
-    bool m_ledOn = false;
-    bool m_isConnected = false;
+    void setButtonColor(QPushButton *button, QColor color);
 };
 
 #endif // RASPBERRYPIDIALOG_H

@@ -16,6 +16,7 @@ class SettingsDialog : public QDialog
 public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
+    static SettingsDialog *getInstance();
 
 private slots:
     void on_buttonBox_accepted();
@@ -28,6 +29,7 @@ private slots:
     void on_btnConnectRasp_clicked();
 
 private:
+    static SettingsDialog* s_inst;
     Ui::SettingsDialog *ui;
     void loadDevice();
     void checkEmptyDeviceList();

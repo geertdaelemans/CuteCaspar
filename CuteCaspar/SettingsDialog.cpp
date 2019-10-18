@@ -9,6 +9,8 @@
 
 #include <QSettings>
 
+SettingsDialog* SettingsDialog::s_inst = nullptr;
+
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog)
@@ -50,6 +52,15 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 SettingsDialog::~SettingsDialog()
 {
     delete ui;
+}
+
+
+SettingsDialog* SettingsDialog::getInstance()
+{
+    if (!s_inst) {
+        s_inst = new SettingsDialog();
+    }
+    return s_inst;
 }
 
 void SettingsDialog::loadDevice()
@@ -202,5 +213,5 @@ void SettingsDialog::on_btnConnectRasp_clicked()
     settings.setValue("raspport_in", ui->edtRaspPortIn->text());
     settings.setValue("raspport_out", ui->edtRaspPortOut->text());
     settings.endGroup();
-    RaspberryPI::getInstance()->connect();
+    RaspberryPI::getInstance()->setup();
 }

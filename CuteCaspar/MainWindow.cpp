@@ -45,14 +45,13 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(refreshMediaList()));
 
     midiCon = MidiConnection::getInstance();
+    m_raspberryPI = RaspberryPI::getInstance();
 
     // When AutoConnect is active connect immediately to server
     settings.beginGroup("Configuration");
     if (settings.value("auto_connect", true).toBool())
         connectServer();
     settings.endGroup();
-
-    m_raspberryPI = RaspberryPI::getInstance();
 }
 
 /**
@@ -125,6 +124,11 @@ void MainWindow::connectServer()
     connect(player, SIGNAL(playerStatus(PlayerStatus, bool)),
             this, SLOT(playerStatus(PlayerStatus, bool)));
 
+    connect(m_raspberryPI, SIGNAL(insertPlaylist(QString)),
+            player, SLOT(insertPlaylist(QString)));
+
+    connect(player, SIGNAL(insertFinished()),
+            m_raspberryPI, SLOT(insertFinished()));
 }
 
 void MainWindow::connectionStateChanged(CasparDevice& device) {
@@ -337,8 +341,7 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
 
 void MainWindow::on_actionSettings_triggered()
 {
-    m_settingsDialog = new SettingsDialog();
-    m_settingsDialog->exec();
+    SettingsDialog::getInstance()->exec();
 }
 
 void MainWindow::on_actionMidi_Panel_triggered()
@@ -364,13 +367,13 @@ void MainWindow::on_actionRaspberryPI_triggered()
     if (!m_raspberryPIDialog) {
         m_raspberryPIDialog = new RaspberryPIDialog();
 
-        // Send commands to RaspberryPI
-        connect(m_raspberryPIDialog, SIGNAL(sendMessage(QString)),
-                m_raspberryPI, SLOT(sendMessage(QString)));
-
         // Update remote button status
         connect(m_raspberryPI, SIGNAL(statusButton(QString)),
                 m_raspberryPIDialog, SLOT(statusButton(QString)));
+
+        // Update other statuses
+        connect(m_raspberryPI, SIGNAL(statusUpdate(status)),
+                m_raspberryPIDialog, SLOT(refreshUpdate(status)));
     }
     m_raspberryPIDialog->show();
     m_raspberryPIDialog->activateWindow();
@@ -518,5 +521,5 @@ void MainWindow::setButtonColor(QPushButton* button, QColor color)
 
 void MainWindow::on_pushButton_clicked()
 {
-    player->interruptPlaylist("Ghostly Apparitions - Startling Specter - Hologram - Window - Horizontal Scenes - Ghoulish Girl");
+    player->insertPlaylist("Ghostly Apparitions - Startling Specter - Hologram - Window - Horizontal Scenes - Ghoulish Girl");
 }

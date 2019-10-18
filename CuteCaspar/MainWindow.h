@@ -88,7 +88,6 @@ private:
     CasparOscListener listener;
     CasparDevice* device = nullptr;
     QDateTime lastOsc;
-    SettingsDialog * m_settingsDialog = nullptr;
     MidiPanelDialog * m_midiPanelDialog = nullptr;
     RaspberryPIDialog * m_raspberryPIDialog = nullptr;
     RaspberryPI* m_raspberryPI = nullptr;

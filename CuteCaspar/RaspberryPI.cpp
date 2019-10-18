@@ -5,12 +5,14 @@
 
 #include <QHostInfo>
 #include <QNetworkInterface>
+#include <QTimer>
+#include <QEventLoop>
 
 RaspberryPI* RaspberryPI::s_inst = nullptr;
 
 RaspberryPI::RaspberryPI()
 {
-    connect();
+    setup();
 }
 
 RaspberryPI* RaspberryPI::getInstance()
@@ -24,7 +26,7 @@ RaspberryPI* RaspberryPI::getInstance()
 /**
  * @brief RaspberryPI::connect
  */
-void RaspberryPI::connect()
+void RaspberryPI::setup()
 {
     // Load server information from registry
     QSettings settings("VRT", "CasparCGClient");
@@ -69,6 +71,71 @@ void RaspberryPI::connect()
     qDebug() << QString("Raspberry PI connected on %1:%2").arg(address).arg(m_portIn);
 }
 
+void RaspberryPI::startConnection()
+{
+    sendMessage("start");
+    m_connected = true;
+    setButtonActive(true);
+}
+
+void RaspberryPI::stopConnection()
+{
+    sendMessage("quit");
+    m_connected = false;
+    setButtonActive(false);
+}
+
+bool RaspberryPI::isButtonActive() const
+{
+    return m_buttonActive;
+}
+
+bool RaspberryPI::isMagnetActive() const
+{
+    return m_magnetActive;
+}
+
+bool RaspberryPI::isConnected()
+{
+    sendMessage("alive");
+
+    QTimer timer;
+    timer.setSingleShot(true);
+    QEventLoop loop;
+    connect(this, SIGNAL(heartBeat()), &loop, SLOT(quit()));
+    connect( &timer, &QTimer::timeout, &loop, &QEventLoop::quit );
+    timer.start(250);
+    loop.exec();
+
+    m_connected = timer.isActive();
+
+    return m_connected;
+}
+
+void RaspberryPI::setButtonActive(bool buttonActive)
+{
+    if (buttonActive) {
+        sendMessage("on");
+        m_buttonActive = true;
+    } else {
+        sendMessage("off");
+        m_buttonActive = false;
+    }
+    sendStatus();
+}
+
+void RaspberryPI::setMagnetActive(bool magnetActive)
+{
+    if (magnetActive) {
+        sendMessage("magnet_on");
+        m_magnetActive = true;
+    } else {
+        sendMessage("magnet_off");
+        m_magnetActive = false;
+    }
+    sendStatus();
+}
+
 
 /**
  * @brief RaspberryPI::processPendingDatagrams
@@ -100,6 +167,28 @@ void RaspberryPI::sendMessage(QString msg)
 
 void RaspberryPI::parseMessage(QString msg)
 {
-    qDebug() << "parseMessage" << msg;
+    if (msg == "high" && isButtonActive()) {
+        qDebug() << "Insert clip" << msg;
+        emit insertPlaylist("Scare Ghoulish Girl");
+        setButtonActive(false);
+    }
     emit statusButton(msg);
+    if (msg == "ok") {
+        emit heartBeat();
+    }
+}
+
+void RaspberryPI::insertFinished()
+{
+    qDebug() << "Insert finished()";
+    setButtonActive(true);
+}
+
+void RaspberryPI::sendStatus()
+{
+    status stat;
+    stat.connected = m_connected;
+    stat.buttonActive = m_buttonActive;
+    stat.magnetActive = m_magnetActive;
+    emit statusUpdate(stat);
 }

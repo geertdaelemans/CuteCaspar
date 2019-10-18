@@ -31,7 +31,6 @@ public:
     void startPlayList(int clipIndex);
     void pausePlayList();
     void resumePlayList();
-    void interruptPlaylist(QString clipName);
     void stopPlayList();
     PlayerStatus getStatus() const;
 
@@ -42,6 +41,7 @@ public slots:
     void killNote();
     void setRecording();
     void setRenew(bool value);
+    void insertPlaylist(QString clipName = "random");
 
 private:
     CasparDevice* m_device;
@@ -60,12 +60,14 @@ private:
     QString m_interruptedClipName;
     void setStatus(PlayerStatus status);
     unsigned int previousPitch;
+    bool m_insert = false;
 
 signals:
     void activeClip(int value);
     void activeClipName(QString clipName, bool insert = false);
     void activateButton(unsigned int);
     void playerStatus(PlayerStatus status, bool recording);
+    void insertFinished();
 };
 
 #endif // PLAYER_H
