@@ -51,11 +51,11 @@ RaspberryPIDialog::~RaspberryPIDialog()
 void RaspberryPIDialog::statusButton(QString msg)
 {
     if (msg == "high") {
-        QPixmap pixmap(":/Images/2) Red button Hover.ico");
+        QPixmap pixmap(":/Images/Red button Hover.png");
         ui->lblButton->setPixmap(pixmap);
         ui->lblButton->show();
     } else if (msg == "low") {
-        QPixmap pixmap(":/Images/3) Red button Pressed.ico");
+        QPixmap pixmap(":/Images/Red button Pressed.png");
         ui->lblButton->setPixmap(pixmap);
         ui->lblButton->show();
     }

@@ -237,7 +237,7 @@
      <x>0</x>
      <y>0</y>
      <width>1004</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -282,6 +282,8 @@
    </attribute>
    <addaction name="actionConnect"/>
    <addaction name="actionDisconnect"/>
+   <addaction name="separator"/>
+   <addaction name="actionRaspberryPI"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
@@ -353,6 +355,10 @@
    </property>
   </action>
   <action name="actionRaspberryPI">
+   <property name="icon">
+    <iconset resource="images.qrc">
+     <normaloff>:/Images/Raspi.png</normaloff>:/Images/Raspi.png</iconset>
+   </property>
    <property name="text">
     <string>RaspberryPI</string>
    </property>

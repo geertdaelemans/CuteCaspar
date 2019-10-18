@@ -5,9 +5,10 @@
         <file>Images/extras_configure.png</file>
         <file>Images/CasparCG.png</file>
         <file>Images/ServerSmall.png</file>
-        <file>Images/RASPBERRY_PI_2_B_01.png</file>
-        <file>Images/2) Red button Hover.ico</file>
-        <file>Images/3) Red button Pressed.ico</file>
+        <file>Images/Raspi.png</file>
+        <file>Images/Red button Hover.png</file>
+        <file>Images/Red button Pressed.png</file>
+        <file>Images/RaspberryPI.png</file>
     </qresource>
     <qresource prefix="/Graphics"/>
 </RCC>
