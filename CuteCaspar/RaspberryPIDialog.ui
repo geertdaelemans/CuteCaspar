@@ -85,6 +85,19 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="btnLight">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+         <property name="text">
+          <string>Light</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

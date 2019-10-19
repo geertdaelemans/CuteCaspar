@@ -95,6 +95,11 @@ bool RaspberryPI::isMagnetActive() const
     return m_magnetActive;
 }
 
+bool RaspberryPI::isLightActive() const
+{
+    return m_lightActive;
+}
+
 bool RaspberryPI::isConnected()
 {
     sendMessage("alive");
@@ -132,6 +137,18 @@ void RaspberryPI::setMagnetActive(bool magnetActive)
     } else {
         sendMessage("magnet_off");
         m_magnetActive = false;
+    }
+    sendStatus();
+}
+
+void RaspberryPI::setLightActive(bool lightActive)
+{
+    if (lightActive) {
+        sendMessage("light_on");
+        m_lightActive = true;
+    } else {
+        sendMessage("light_off");
+        m_lightActive = false;
     }
     sendStatus();
 }
@@ -190,5 +207,6 @@ void RaspberryPI::sendStatus()
     stat.connected = m_connected;
     stat.buttonActive = m_buttonActive;
     stat.magnetActive = m_magnetActive;
+    stat.lightActive = m_lightActive;
     emit statusUpdate(stat);
 }

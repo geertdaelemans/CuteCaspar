@@ -22,6 +22,7 @@ RaspberryPIDialog::RaspberryPIDialog(QWidget *parent) :
         ui->btnConnect->setText("Quit");
         ui->btnButton->setEnabled(true);
         ui->btnMagnet->setEnabled(true);
+        ui->btnLight->setEnabled(true);
 
         // Initialize button status
         if (RaspberryPI::getInstance()->isButtonActive()) {
@@ -36,10 +37,18 @@ RaspberryPIDialog::RaspberryPIDialog(QWidget *parent) :
         } else {
             setButtonColor(ui->btnMagnet, Qt::darkRed);
         }
+
+        // Initialize light status
+        if (RaspberryPI::getInstance()->isLightActive()) {
+            setButtonColor(ui->btnLight, Qt::darkGreen);
+        } else {
+            setButtonColor(ui->btnLight, Qt::darkRed);
+        }
     } else {
         ui->btnConnect->setText("Connect");
         setButtonColor(ui->btnButton, QColor(53,53,53));
         setButtonColor(ui->btnMagnet, QColor(53,53,53));
+        setButtonColor(ui->btnLight, QColor(53,53,53));
     }
 }
 
@@ -68,6 +77,7 @@ void RaspberryPIDialog::on_btnConnect_clicked()
             ui->btnConnect->setText("Quit");
             ui->btnButton->setEnabled(true);
             ui->btnMagnet->setEnabled(true);
+            ui->btnLight->setEnabled(true);
             // Initialize button status
             RaspberryPI::getInstance()->setButtonActive(true);
         } else {
@@ -88,8 +98,10 @@ void RaspberryPIDialog::on_btnConnect_clicked()
         ui->btnConnect->setText("Connect");
         ui->btnButton->setEnabled(false);
         ui->btnMagnet->setEnabled(false);
+        ui->btnLight->setEnabled(false);
         setButtonColor(ui->btnButton, QColor(53,53,53));
         setButtonColor(ui->btnMagnet, QColor(53,53,53));
+        setButtonColor(ui->btnLight, QColor(53,53,53));
     }
 }
 
@@ -120,6 +132,17 @@ void RaspberryPIDialog::on_btnButton_clicked()
     }
 }
 
+
+void RaspberryPIDialog::on_btnLight_clicked()
+{
+    if (!RaspberryPI::getInstance()->isLightActive()) {
+        RaspberryPI::getInstance()->setLightActive(true);
+    } else {
+        RaspberryPI::getInstance()->setLightActive(false);
+    }
+}
+
+
 void RaspberryPIDialog::refreshUpdate(status stat)
 {
     qDebug() << "Connected" << stat.connected;
@@ -132,5 +155,10 @@ void RaspberryPIDialog::refreshUpdate(status stat)
         setButtonColor(ui->btnMagnet, Qt::darkGreen);
     } else {
         setButtonColor(ui->btnMagnet, Qt::darkRed);
+    }
+    if (stat.lightActive) {
+        setButtonColor(ui->btnLight, Qt::darkGreen);
+    } else {
+        setButtonColor(ui->btnLight, Qt::darkRed);
     }
 }

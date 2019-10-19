@@ -26,6 +26,8 @@ private slots:
     void on_btnMagnet_clicked();
     void on_btnButton_clicked();
 
+    void on_btnLight_clicked();
+
 private:
     Ui::RaspberryPIDialog *ui;
     void setButtonColor(QPushButton *button, QColor color);

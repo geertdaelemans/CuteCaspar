@@ -7,6 +7,7 @@
 struct status {
     bool buttonActive = false;
     bool magnetActive = false;
+    bool lightActive = false;
     bool connected = false;
 };
 
@@ -23,8 +24,10 @@ public:
     void stopConnection();
     bool isButtonActive() const;
     bool isMagnetActive() const;
+    bool isLightActive() const;
     void setButtonActive(bool buttonActive);
     void setMagnetActive(bool magnetActive);
+    void setLightActive(bool lightActive);
     bool isConnected();
 
 signals:
@@ -50,6 +53,7 @@ private:
     void parseMessage(QString msg);
     bool m_buttonActive = false;
     bool m_magnetActive = false;
+    bool m_lightActive = false;
     bool m_connected = false;
     void sendStatus();
 };
