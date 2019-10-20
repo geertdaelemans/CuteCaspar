@@ -265,6 +265,8 @@
      <string>Views</string>
     </property>
     <addaction name="actionPreview"/>
+    <addaction name="separator"/>
+    <addaction name="actionControl_Panel"/>
     <addaction name="actionMidi_Panel"/>
     <addaction name="actionRaspberryPI"/>
    </widget>
@@ -361,6 +363,11 @@
    </property>
    <property name="text">
     <string>RaspberryPI</string>
+   </property>
+  </action>
+  <action name="actionControl_Panel">
+   <property name="text">
+    <string>Control Panel</string>
    </property>
   </action>
  </widget>

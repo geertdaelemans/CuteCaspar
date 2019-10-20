@@ -26,6 +26,7 @@ CONFIG += c++11
 
 SOURCES += \
         CasparOSCListener.cpp \
+        ControlDialog.cpp \
         DeviceDialog.cpp \
         Main.cpp \
         MidiConnection.cpp \
@@ -48,6 +49,7 @@ SOURCES += \
 
 HEADERS += \
         CasparOSCListener.h \
+        ControlDialog.h \
         DeviceDialog.h \
         MainWindow.h \
         MidiConnection.h \
@@ -75,6 +77,7 @@ HEADERS += \
         osc/OscTypes.h
 
 FORMS += \
+        ControlDialog.ui \
         DeviceDialog.ui \
         MainWindow.ui \
         MidiPanelDialog.ui \

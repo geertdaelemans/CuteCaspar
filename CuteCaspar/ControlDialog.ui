@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MidiPanelDialog</class>
- <widget class="QDialog" name="MidiPanelDialog">
+ <class>ControlDialog</class>
+ <widget class="QDialog" name="ControlDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>775</width>
-    <height>591</height>
+    <width>798</width>
+    <height>679</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MIDI Panel</string>
+   <string>Control Panel</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -32,7 +32,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="buttonBar">
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
@@ -47,13 +47,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+      <widget class="QPushButton" name="btnClose">
        <property name="text">
         <string>Close</string>
        </property>
@@ -66,18 +60,18 @@
  <resources/>
  <connections>
   <connection>
-   <sender>pushButton</sender>
+   <sender>btnClose</sender>
    <signal>clicked()</signal>
-   <receiver>MidiPanelDialog</receiver>
+   <receiver>ControlDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>702</x>
-     <y>570</y>
+     <x>340</x>
+     <y>449</y>
     </hint>
     <hint type="destinationlabel">
-     <x>772</x>
-     <y>566</y>
+     <x>373</x>
+     <y>451</y>
     </hint>
    </hints>
   </connection>

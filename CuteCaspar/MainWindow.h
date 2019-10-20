@@ -16,6 +16,7 @@
 #include "SettingsDialog.h"
 #include "MidiPanelDialog.h"
 #include "RaspberryPIDialog.h"
+#include "ControlDialog.h"
 
 #include "MidiLogger.h"
 #include "MidiReader.h"
@@ -73,6 +74,8 @@ private slots:
 
     void on_actionRaspberryPI_triggered();
 
+    void on_actionControl_Panel_triggered();
+
 signals:
     void nextClip();
     void currentTime(double time);
@@ -90,6 +93,7 @@ private:
     QDateTime lastOsc;
     MidiPanelDialog * m_midiPanelDialog = nullptr;
     RaspberryPIDialog * m_raspberryPIDialog = nullptr;
+    ControlDialog* m_controlDialog = nullptr;
     RaspberryPI* m_raspberryPI = nullptr;
     QString currentClip;
     QString timecode;

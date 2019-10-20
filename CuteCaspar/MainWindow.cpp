@@ -344,6 +344,22 @@ void MainWindow::on_actionSettings_triggered()
     SettingsDialog::getInstance()->exec();
 }
 
+
+void MainWindow::on_actionControl_Panel_triggered()
+{
+    if (!m_controlDialog) {
+        m_controlDialog = new ControlDialog();
+
+        // Send selected clips to Player
+        connect(m_controlDialog, SIGNAL(insertPlaylist(QString)),
+                player, SLOT(insertPlaylist(QString)));
+    }
+    m_controlDialog->setup();
+    m_controlDialog->show();
+    m_controlDialog->activateWindow();
+}
+
+
 void MainWindow::on_actionMidi_Panel_triggered()
 {
     if (!m_midiPanelDialog) {
