@@ -74,6 +74,8 @@ signals:
     void activateButton(unsigned int);
     void playerStatus(PlayerStatus status, bool recording);
     void insertFinished();
+    void newMidiPlaylist(QMap<QString, message> midiPlayList);
+    void currentNote(QString timecode, bool noteOn, unsigned int pitch);
 };
 
 #endif // PLAYER_H

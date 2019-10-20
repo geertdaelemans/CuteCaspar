@@ -20,4 +20,4 @@ This software is currently in full development. No guarantees.
 Still to do/resolve:
 * Open and closing of panels does not get noticed by MainWindow
 * Manipulating items in a playlist
-
+* Need to clean-up loadNextClip()

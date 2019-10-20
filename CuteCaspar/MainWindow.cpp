@@ -520,6 +520,14 @@ void MainWindow::on_actionMIDI_Editor_triggered()
 {
     if (!m_midiEditorDialog) {
         m_midiEditorDialog = new MidiEditorDialog();
+
+        // Retrieve current MIDI playlist from Player
+        connect(player, SIGNAL(newMidiPlaylist(QMap<QString, message>)),
+                m_midiEditorDialog, SLOT(newMidiPlaylist(QMap<QString, message>)));
+
+        // Actual note being played at the moment
+        connect(player, SIGNAL(currentNote(QString, bool, unsigned int)),
+                m_midiEditorDialog, SLOT(currentNote(QString, bool, unsigned int)));
     }
     if (!m_midiEditorDialog->isVisible()) {
         m_midiEditorDialog->show();

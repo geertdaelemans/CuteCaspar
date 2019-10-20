@@ -209,6 +209,7 @@ void Player::loadNextClip()
         emit activeClipName(m_playlistClips[m_currentClipIndex]);
         qDebug() << "Playing:" << m_playlistClips[m_currentClipIndex];
         midiPlayList = midiRead->openLog(m_playlistClips[m_currentClipIndex]);
+        emit newMidiPlaylist(midiPlayList);
         if (midiRead->isReady()) {
             qDebug("MIDI file found...");
         }
@@ -235,6 +236,7 @@ void Player::loadNextClip()
         emit activeClipName(m_interruptedClipName, true);
         qDebug() << "Playing:" << m_interruptedClipName;
         midiPlayList = midiRead->openLog(m_interruptedClipName);
+        emit newMidiPlaylist(midiPlayList);
         if (midiRead->isReady()) {
             qDebug("MIDI file found...");
         }
@@ -311,6 +313,7 @@ void Player::playNote(unsigned int pitch, bool noteOn)
     QString timecode = Timecode::fromTime(m_timecode, 29.97, false);
     QString onOff = (noteOn ? "ON" : "OFF");
     qDebug() << QString("%1 %2: pitch %3").arg(timecode).arg(onOff).arg(pitch);
+    emit currentNote(timecode, noteOn, pitch);
     if (midiLog->isReady() && pitch != previousPitch && noteOn) {
         midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg(onOff).arg(pitch));
     }
