@@ -100,7 +100,8 @@ RESOURCES += \
     images.qrc
 
 DISTFILES += \
-    ../README.md
+    ../README.md \
+    ../raspberrypi_startup.py
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Common/release/ -lCommon
