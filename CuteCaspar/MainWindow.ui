@@ -267,6 +267,7 @@
     <addaction name="actionPreview"/>
     <addaction name="separator"/>
     <addaction name="actionControl_Panel"/>
+    <addaction name="actionMIDI_Editor"/>
     <addaction name="actionMidi_Panel"/>
     <addaction name="actionRaspberryPI"/>
    </widget>
@@ -317,15 +318,6 @@
     <string>Disconnect</string>
    </property>
   </action>
-  <action name="actionSet_up_Connection">
-   <property name="icon">
-    <iconset resource="images.qrc">
-     <normaloff>:/Images/extras_configure.png</normaloff>:/Images/extras_configure.png</iconset>
-   </property>
-   <property name="text">
-    <string>Set-up Connection</string>
-   </property>
-  </action>
   <action name="actionSettings">
    <property name="icon">
     <iconset resource="images.qrc">
@@ -352,11 +344,17 @@
    </property>
   </action>
   <action name="actionMidi_Panel">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Midi Panel</string>
+    <string>MIDI Panel</string>
    </property>
   </action>
   <action name="actionRaspberryPI">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="images.qrc">
      <normaloff>:/Images/Raspi.png</normaloff>:/Images/Raspi.png</iconset>
@@ -366,8 +364,19 @@
    </property>
   </action>
   <action name="actionControl_Panel">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Control Panel</string>
+   </property>
+  </action>
+  <action name="actionMIDI_Editor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>MIDI Editor</string>
    </property>
   </action>
  </widget>

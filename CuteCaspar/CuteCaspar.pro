@@ -30,6 +30,7 @@ SOURCES += \
         DeviceDialog.cpp \
         Main.cpp \
         MidiConnection.cpp \
+        MidiEditorDialog.cpp \
         MidiLogger.cpp \
         MidiPanelDialog.cpp \
         MidiReader.cpp \
@@ -53,6 +54,7 @@ HEADERS += \
         DeviceDialog.h \
         MainWindow.h \
         MidiConnection.h \
+        MidiEditorDialog.h \
         MidiLogger.h \
         MidiPanelDialog.h \
         MidiReader.h \
@@ -80,6 +82,7 @@ FORMS += \
         ControlDialog.ui \
         DeviceDialog.ui \
         MainWindow.ui \
+        MidiEditorDialog.ui \
         MidiPanelDialog.ui \
         PlayList.ui \
         RaspberryPIDialog.ui \

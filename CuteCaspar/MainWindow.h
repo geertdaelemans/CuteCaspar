@@ -14,6 +14,7 @@
 #include "RaspberryPI.h"
 
 #include "SettingsDialog.h"
+#include "MidiEditorDialog.h"
 #include "MidiPanelDialog.h"
 #include "RaspberryPIDialog.h"
 #include "ControlDialog.h"
@@ -73,6 +74,8 @@ private slots:
     void on_actionRaspberryPI_triggered();
     void on_actionControl_Panel_triggered();
 
+    void on_actionMIDI_Editor_triggered();
+
 signals:
     void nextClip();
     void currentTime(double time);
@@ -88,8 +91,9 @@ private:
     void log(QString message);
     CasparOscListener listener;
     CasparDevice* device = nullptr;
-    MidiPanelDialog * m_midiPanelDialog = nullptr;
-    RaspberryPIDialog * m_raspberryPIDialog = nullptr;
+    MidiEditorDialog* m_midiEditorDialog = nullptr;
+    MidiPanelDialog* m_midiPanelDialog = nullptr;
+    RaspberryPIDialog* m_raspberryPIDialog = nullptr;
     ControlDialog* m_controlDialog = nullptr;
     RaspberryPI* m_raspberryPI = nullptr;
     QString currentClip;

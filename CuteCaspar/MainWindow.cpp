@@ -332,65 +332,6 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
     ui->statusLabel->setText("Video selected...");
 }
 
-/**
- * PANELS
- */
-
-void MainWindow::on_actionSettings_triggered()
-{
-    SettingsDialog::getInstance()->exec();
-}
-
-
-void MainWindow::on_actionControl_Panel_triggered()
-{
-    if (!m_controlDialog) {
-        m_controlDialog = new ControlDialog();
-
-        // Send selected clips to Player
-        connect(m_controlDialog, SIGNAL(insertPlaylist(QString)),
-                player, SLOT(insertPlaylist(QString)));
-    }
-    m_controlDialog->setup();
-    m_controlDialog->show();
-    m_controlDialog->activateWindow();
-}
-
-
-void MainWindow::on_actionMidi_Panel_triggered()
-{
-    if (!m_midiPanelDialog) {
-        m_midiPanelDialog = new MidiPanelDialog();
-
-        // Send notes to player
-        connect(m_midiPanelDialog, SIGNAL(buttonPushed(unsigned int, bool)),
-                player, SLOT(playNote(unsigned int, bool)));
-
-        // Receive activateButton()
-        connect(player, SIGNAL(activateButton(unsigned int)),
-                m_midiPanelDialog, SLOT(activateButton(unsigned int)));
-    }
-    m_midiPanelDialog->show();
-    m_midiPanelDialog->activateWindow();
-}
-
-
-void MainWindow::on_actionRaspberryPI_triggered()
-{
-    if (!m_raspberryPIDialog) {
-        m_raspberryPIDialog = new RaspberryPIDialog();
-
-        // Update remote button status
-        connect(m_raspberryPI, SIGNAL(statusButton(QString)),
-                m_raspberryPIDialog, SLOT(statusButton(QString)));
-
-        // Update other statuses
-        connect(m_raspberryPI, SIGNAL(statusUpdate(status)),
-                m_raspberryPIDialog, SLOT(refreshUpdate(status)));
-    }
-    m_raspberryPIDialog->show();
-    m_raspberryPIDialog->activateWindow();
-}
 
 
 void MainWindow::on_actionPreview_toggled(bool visible)
@@ -535,4 +476,105 @@ void MainWindow::setButtonColor(QPushButton* button, QColor color)
 void MainWindow::on_pushButton_clicked()
 {
     player->insertPlaylist();
+}
+
+/**************************************************************
+ * PANELS
+ **************************************************************/
+
+/**
+ * @brief MainWindow::on_actionSettings_triggered
+ */
+void MainWindow::on_actionSettings_triggered()
+{
+    SettingsDialog::getInstance()->exec();
+}
+
+
+/**
+ * @brief MainWindow::on_actionControl_Panel_triggered
+ */
+void MainWindow::on_actionControl_Panel_triggered()
+{
+    if (!m_controlDialog) {
+        m_controlDialog = new ControlDialog();
+
+        // Send selected clips to Player
+        connect(m_controlDialog, SIGNAL(insertPlaylist(QString)),
+                player, SLOT(insertPlaylist(QString)));
+    }
+    if (!m_controlDialog->isVisible()) {
+        m_controlDialog->setup();
+        m_controlDialog->show();
+        m_controlDialog->activateWindow();
+    } else {
+        m_controlDialog->hide();
+    }
+}
+
+
+/**
+ * @brief MainWindow::on_actionMIDI_Editor_triggered
+ */
+void MainWindow::on_actionMIDI_Editor_triggered()
+{
+    if (!m_midiEditorDialog) {
+        m_midiEditorDialog = new MidiEditorDialog();
+    }
+    if (!m_midiEditorDialog->isVisible()) {
+        m_midiEditorDialog->show();
+        m_midiEditorDialog->activateWindow();
+    } else {
+        m_midiEditorDialog->hide();
+    }
+}
+
+
+/**
+ * @brief MainWindow::on_actionMidi_Panel_triggered
+ */
+void MainWindow::on_actionMidi_Panel_triggered()
+{
+    if (!m_midiPanelDialog) {
+        m_midiPanelDialog = new MidiPanelDialog();
+
+        // Send notes to player
+        connect(m_midiPanelDialog, SIGNAL(buttonPushed(unsigned int, bool)),
+                player, SLOT(playNote(unsigned int, bool)));
+
+        // Receive activateButton()
+        connect(player, SIGNAL(activateButton(unsigned int)),
+                m_midiPanelDialog, SLOT(activateButton(unsigned int)));
+    }
+    if (!m_midiPanelDialog->isVisible()) {
+        m_midiPanelDialog->show();
+        m_midiPanelDialog->activateWindow();
+    } else {
+        m_midiPanelDialog->hide();
+    }
+}
+
+
+/**
+ * @brief MainWindow::on_actionRaspberryPI_triggered
+ */
+void MainWindow::on_actionRaspberryPI_triggered()
+{
+    if (!m_raspberryPIDialog) {
+        m_raspberryPIDialog = new RaspberryPIDialog();
+
+        // Update remote button status
+        connect(m_raspberryPI, SIGNAL(statusButton(QString)),
+                m_raspberryPIDialog, SLOT(statusButton(QString)));
+
+        // Update other statuses
+        connect(m_raspberryPI, SIGNAL(statusUpdate(status)),
+                m_raspberryPIDialog, SLOT(refreshUpdate(status)));
+    }
+    if (!m_raspberryPIDialog->isVisible()) {
+        m_raspberryPIDialog->show();
+        m_raspberryPIDialog->activateWindow();
+    } else {
+        m_raspberryPIDialog->hide();
+    }
 }
