@@ -96,7 +96,8 @@ RESOURCES += \
     cutecaspar.qrc \
     images.qrc
 
-DISTFILES +=
+DISTFILES += \
+    ../README.md
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Common/release/ -lCommon
