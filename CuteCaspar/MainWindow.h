@@ -69,16 +69,14 @@ private slots:
     void on_renewCheckBox_stateChanged(int arg1);
     void on_btnPlayClip_clicked();
     void on_actionMidi_Panel_triggered();
-
     void on_pushButton_clicked();
-
     void on_actionRaspberryPI_triggered();
-
     void on_actionControl_Panel_triggered();
 
 signals:
     void nextClip();
     void currentTime(double time);
+    void currentFrame(int frame, int lastFrame);
     void setRecording();
     void setRenew(bool value);
 
@@ -86,11 +84,10 @@ private:
     Ui::MainWindow *ui;
     QTcpSocket tcp;
     QUdpSocket udp;
-    int playCurFrame, playLastFrame, playCurVFrame, playLastVFrame, playFps;
+    int playCurVFrame, playLastVFrame, playFps;
     void log(QString message);
     CasparOscListener listener;
     CasparDevice* device = nullptr;
-    QDateTime lastOsc;
     MidiPanelDialog * m_midiPanelDialog = nullptr;
     RaspberryPIDialog * m_raspberryPIDialog = nullptr;
     ControlDialog* m_controlDialog = nullptr;

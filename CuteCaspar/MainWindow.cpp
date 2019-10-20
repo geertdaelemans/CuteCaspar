@@ -109,6 +109,9 @@ void MainWindow::connectServer()
     connect(this, SIGNAL(currentTime(double)),
             player, SLOT(timecode(double)));
 
+    connect(this, SIGNAL(currentFrame(int, int)),
+            player, SLOT(currentFrame(int, int)));
+
     connect(this, SIGNAL(currentTime(double)),
             this, SLOT(setTimeCode(double)));
 
@@ -202,16 +205,10 @@ void MainWindow::readyRead()
  */
 void MainWindow::processOsc(QStringList address, QStringList values)
 {
-    Q_UNUSED(values)
-
     QString adr = address.join("/");
 //    qDebug() << address << values;
-    if (adr == "channel/1/stage/layer/0/file/frame")
-    {
-        playCurFrame = values[0].toInt();
-        playLastFrame = values[1].toInt();
-        lastOsc = QDateTime::currentDateTime();
-//        qDebug() << playCurFrame << "of" << playLastFrame;
+    if (adr == "channel/1/stage/layer/0/file/frame") {
+        emit currentFrame(values[0].toInt(), values[1].toInt());
     }
     if (adr == "channel/1/stage/layer/0/file/time") {
         emit currentTime(values[0].toDouble());

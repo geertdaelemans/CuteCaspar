@@ -127,6 +127,7 @@ void Player::stopPlayList()
 void Player::insertPlaylist(QString clipName)
 {
     m_device->stop(1, 0);
+    int frameStopped = m_currentFrame;
     m_interrupted = true;
     if (clipName == "random") {
         m_interruptedClipName = m_randomScare;
@@ -141,7 +142,7 @@ void Player::insertPlaylist(QString clipName)
     qDebug() << "Interrupted" << m_playlistClips[m_currentClipIndex];
     m_device->playMovie(1, 0, m_interruptedClipName, "", 0, "", "", 0, 0, false, false);
     if (!m_singlePlay) {
-        m_device->loadMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false, true);
+        m_device->loadMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", frameStopped, 0, false, false, true);
     }
     setStatus(PlayerStatus::PLAYLIST_INSERT);
     if (clipName == "random") {
@@ -264,6 +265,8 @@ void Player::timecode(double time)
         qDebug() << "Clip stopped";
         if (m_insert) {
             emit insertFinished();
+            if (!m_singlePlay)
+                loadNextClip();
             m_insert = false;
         }
         midiLog->closeMidiLog();
@@ -280,6 +283,12 @@ void Player::timecode(double time)
             playNote(midiPlayList[timecode].pitch, false);
         }
     }
+}
+
+void Player::currentFrame(int frame, int lastFrame)
+{
+    m_currentFrame = frame;
+    m_lastFrame = lastFrame;
 }
 
 

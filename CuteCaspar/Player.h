@@ -37,6 +37,7 @@ public:
 public slots:
     void loadNextClip();
     void timecode(double time);
+    void currentFrame(int frame, int lastFrame);
     void playNote(unsigned int pitch = 128, bool noteOne = true);
     void killNote();
     void setRecording();
@@ -64,6 +65,8 @@ private:
     int getNumberOfClips(QString playlist) const;
     void updateRandomClip();
     QString m_randomScare;
+    int m_currentFrame;
+    int m_lastFrame;
 
 signals:
     void activeClip(int value);
