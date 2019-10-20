@@ -9,6 +9,9 @@
         <file>Images/Red button Hover.png</file>
         <file>Images/Red button Pressed.png</file>
         <file>Images/RaspberryPI.png</file>
+        <file>Images/File MIDI.png</file>
+        <file>Images/File Video Clip.png</file>
+        <file>Images/Control Panel.png</file>
     </qresource>
     <qresource prefix="/Graphics"/>
 </RCC>

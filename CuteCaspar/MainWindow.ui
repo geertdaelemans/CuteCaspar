@@ -286,6 +286,10 @@
    <addaction name="actionConnect"/>
    <addaction name="actionDisconnect"/>
    <addaction name="separator"/>
+   <addaction name="actionControl_Panel"/>
+   <addaction name="actionMidi_Panel"/>
+   <addaction name="separator"/>
+   <addaction name="actionMIDI_Editor"/>
    <addaction name="actionRaspberryPI"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -347,6 +351,10 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="images.qrc">
+     <normaloff>:/Images/Control Panel.png</normaloff>:/Images/Control Panel.png</iconset>
+   </property>
    <property name="text">
     <string>MIDI Panel</string>
    </property>
@@ -367,6 +375,10 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="images.qrc">
+     <normaloff>:/Images/File Video Clip.png</normaloff>:/Images/File Video Clip.png</iconset>
+   </property>
    <property name="text">
     <string>Control Panel</string>
    </property>
@@ -374,6 +386,10 @@
   <action name="actionMIDI_Editor">
    <property name="checkable">
     <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="images.qrc">
+     <normaloff>:/Images/File MIDI.png</normaloff>:/Images/File MIDI.png</iconset>
    </property>
    <property name="text">
     <string>MIDI Editor</string>

@@ -6,6 +6,7 @@
 
 #include <QDebug>
 #include <QMessageBox>
+#include <QCloseEvent>
 
 
 RaspberryPIDialog::RaspberryPIDialog(QWidget *parent) :

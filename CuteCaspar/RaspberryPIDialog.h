@@ -25,7 +25,6 @@ private slots:
     void on_btnConnect_clicked();
     void on_btnMagnet_clicked();
     void on_btnButton_clicked();
-
     void on_btnLight_clicked();
 
 private:

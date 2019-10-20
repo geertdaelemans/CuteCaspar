@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>MIDI Panel</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="images.qrc">
+    <normaloff>:/Images/Control Panel.png</normaloff>:/Images/Control Panel.png</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="theGrid">
@@ -63,7 +67,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="images.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>pushButton</sender>
