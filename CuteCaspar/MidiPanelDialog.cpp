@@ -3,8 +3,6 @@
 
 #include <QtCore>
 
-const bool SINGLE_BUTTON_MODUS = true;
-
 MidiPanelDialog::MidiPanelDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MidiPanelDialog)
@@ -14,34 +12,12 @@ MidiPanelDialog::MidiPanelDialog(QWidget *parent) :
 
     ui->setupUi(this);
 
-    // Prepare notes panel
-    QFile profile;
-    if(QFileInfo::exists("Notes.csv"))
-    {
-        profile.setFileName("Notes.csv");
-    }
-    else
-    {
-        profile.setFileName(":/Profiles/Notes.csv");
-    }
-
-    if (!profile.open(QIODevice::ReadOnly)) {
-        qDebug() << profile.errorString();
-    }
-    int counter = 0;
-    while (!profile.atEnd()) {
-        QByteArray line = profile.readLine();
-        note tempNote;
-        tempNote.id = counter;
-        tempNote.name = line.split(',').at(0);
-        tempNote.pitch = line.split(',').at(1).toUInt();
-        notes.append(tempNote);
-        counter++;
-    }
+    // Retrieve notes definitions
+    notes = MidiNotes::getInstance()->getNotes();
 
     // Magically calculate the number of rows
-    int rows = qCeil(qSqrt(static_cast<qreal>(counter)));
-    counter = 0;
+    int rows = qCeil(qSqrt(static_cast<qreal>(MidiNotes::getInstance()->getNumberOfNotes())));
+    int counter = 0;
     for (int i = 0; i < notes.length(); i++) {
         QPushButton* newButton = new QPushButton(notes[i].name);
         newButton->setFocusPolicy(Qt::NoFocus);
@@ -80,7 +56,7 @@ void MidiPanelDialog::killNote()
     if (button && button->property("pitch").isValid()) {
         pitch = button->property("pitch").toUInt();
     }
-    emit buttonPushed(pitch, false);
+//    emit buttonPushed(pitch, false);
 }
 
 void MidiPanelDialog::activateButton(unsigned int pitch)
@@ -88,7 +64,7 @@ void MidiPanelDialog::activateButton(unsigned int pitch)
     if (button.contains(pitch)) {
         button[pitch]->setDown(true);
         setButtonColor(button[pitch], Qt::darkGreen);
-        if (SINGLE_BUTTON_MODUS && pitch != previousPitch) {
+        if (pitch != previousPitch) {
             button[previousPitch]->setDown(false);
             setButtonColor(button[previousPitch], QColor(53,53,53));
         }

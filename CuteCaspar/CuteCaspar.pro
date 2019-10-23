@@ -28,10 +28,12 @@ SOURCES += \
         CasparOSCListener.cpp \
         ControlDialog.cpp \
         DeviceDialog.cpp \
+        EffectsDelegate.cpp \
         Main.cpp \
         MidiConnection.cpp \
         MidiEditorDialog.cpp \
         MidiLogger.cpp \
+        MidiNotes.cpp \
         MidiPanelDialog.cpp \
         MidiReader.cpp \
         PlayListDialog.cpp \
@@ -52,10 +54,12 @@ HEADERS += \
         CasparOSCListener.h \
         ControlDialog.h \
         DeviceDialog.h \
+        EffectsDelegate.h \
         MainWindow.h \
         MidiConnection.h \
         MidiEditorDialog.h \
         MidiLogger.h \
+        MidiNotes.h \
         MidiPanelDialog.h \
         MidiReader.h \
         Models/LibraryModel.h \

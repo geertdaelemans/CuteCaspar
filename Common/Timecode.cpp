@@ -32,3 +32,13 @@ QString Timecode::fromTime(double time, double fps, bool useDropFrameNotation)
     else
         return smpteFormat.sprintf("%02d:%02d:%02d:%02d", hour, minutes, seconds, frames);
 }
+
+double Timecode::toTime(QString timecode, double fps)
+{
+    int hour = timecode.mid(0, 2).toInt();
+    int minutes = timecode.mid(3, 2).toInt();
+    int seconds = timecode.mid(6, 2).toInt();
+    int frames = timecode.mid(9, 2).toInt();
+
+    return (hour * 3600) + (minutes * 60) + (seconds) + (frames / fps);
+}

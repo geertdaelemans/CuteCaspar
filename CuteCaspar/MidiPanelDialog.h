@@ -5,15 +5,11 @@
 #include <QPushButton>
 #include <QMap>
 
+#include "MidiNotes.h"
+
 namespace Ui {
 class MidiPanelDialog;
 }
-
-struct note {
-    int id;
-    QString name;
-    unsigned int pitch;
-};
 
 class MidiPanelDialog : public QDialog
 {

@@ -150,6 +150,22 @@ void Player::insertPlaylist(QString clipName)
     }
 }
 
+void Player::saveMidiPlayList(QMap<QString, message> playList)
+{
+    qDebug() << "Player::saveMidiPlayList";
+    midiPlayList = playList;
+    if (midiLog->isReady()) {
+        qDebug() << "Cannot write";
+    } else {
+        qDebug() << "Writing" << m_playlistClips[m_currentClipIndex];
+        midiLog->openMidiLog(m_playlistClips[m_currentClipIndex]);
+        foreach(auto it, midiPlayList) {
+            midiLog->writeNote(QString("%1,%2,%3").arg(it.timeCode).arg(it.type).arg(it.pitch));
+        }
+        midiLog->closeMidiLog();
+    }
+}
+
 
 /**
  * @brief Player::playClip
@@ -263,6 +279,7 @@ void Player::timecode(double time)
     m_timecode = time;
     if (prev_timecode > m_timecode && m_timecode < 1.0) {
         loadNextClip();
+//        i = midiPlayList.begin();   // EXPERIMENT WITH ITERATOR
     } if (qFabs(prev_timecode - m_timecode) < 0.001) {
         qDebug() << "Clip stopped";
         if (m_insert) {
@@ -278,6 +295,12 @@ void Player::timecode(double time)
         }
     }
     QString timecode = Timecode::fromTime(time, 29.97, false);
+//    if (i != midiPlayList.end()) {                   // EXPERIMENT WITH ITERATOR
+//        if (i->timeCode <= timecode) {
+//            qDebug() << "Bang" << i->timeCode;
+//            i++;
+//        }
+//    }
     if (!m_renew && midiPlayList.contains(timecode)) {
         if (midiPlayList[timecode].type == "ON") {
             playNote(midiPlayList[timecode].pitch, true);
@@ -314,7 +337,7 @@ void Player::playNote(unsigned int pitch, bool noteOn)
     QString onOff = (noteOn ? "ON" : "OFF");
     qDebug() << QString("%1 %2: pitch %3").arg(timecode).arg(onOff).arg(pitch);
     emit currentNote(timecode, noteOn, pitch);
-    if (midiLog->isReady() && pitch != previousPitch && noteOn) {
+    if (midiLog->isReady() /*&& pitch != previousPitch*/ && noteOn) {
         midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg(onOff).arg(pitch));
     }
     if(noteOn && pitch != previousPitch) {

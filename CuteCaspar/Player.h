@@ -43,6 +43,7 @@ public slots:
     void setRecording();
     void setRenew(bool value);
     void insertPlaylist(QString clipName = "random");
+    void saveMidiPlayList(QMap<QString, message> midiPlayList);
 
 private:
     CasparDevice* m_device;
@@ -54,6 +55,7 @@ private:
     MidiReader* midiRead;
     MidiLogger* midiLog;
     QMap<QString, message> midiPlayList;
+    QMap<QString, message>::iterator i;
     bool m_singlePlay = false;
     bool m_recording = false;
     bool m_renew = false;
