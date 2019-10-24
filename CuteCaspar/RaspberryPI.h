@@ -5,10 +5,12 @@
 #include <QUdpSocket>
 
 struct status {
-    bool buttonActive = false;
-    bool magnetActive = false;
-    bool lightActive = false;
     bool connected = false;
+    bool buttonActive = false;
+    bool lightActive = false;
+    bool magnetActive = false;
+    bool motionActive = false;
+    bool smokeActive = false;
 };
 
 class RaspberryPI : public QObject
@@ -22,13 +24,17 @@ public:
     void setup();
     void startConnection();
     void stopConnection();
-    bool isButtonActive() const;
-    bool isMagnetActive() const;
-    bool isLightActive() const;
-    void setButtonActive(bool buttonActive);
-    void setMagnetActive(bool magnetActive);
-    void setLightActive(bool lightActive);
     bool isConnected();
+    bool isButtonActive() const;
+    bool isLightActive() const;
+    bool isMagnetActive() const;
+    bool isMotionActive() const;
+    bool isSmokeActive() const;
+    void setButtonActive(bool buttonActive);
+    void setLightActive(bool lightActive);
+    void setMagnetActive(bool magnetActive);
+    void setMotionActive(bool motionActive);
+    void setSmokeActive(bool smokeActive);
 
 signals:
     void statusButton(QString msg);
@@ -50,11 +56,8 @@ private:
     QHostAddress m_address = QHostAddress("127.0.0.1");
     unsigned short m_portIn = 1234;
     unsigned short m_portOut = 1235;
+    status m_status;
     void parseMessage(QString msg);
-    bool m_buttonActive = false;
-    bool m_magnetActive = false;
-    bool m_lightActive = false;
-    bool m_connected = false;
     void sendStatus();
 };
 

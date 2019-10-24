@@ -74,31 +74,20 @@ void RaspberryPI::setup()
 void RaspberryPI::startConnection()
 {
     sendMessage("start");
-    m_connected = true;
+    m_status.connected = true;
     setButtonActive(true);
 }
 
 void RaspberryPI::stopConnection()
 {
     sendMessage("quit");
-    m_connected = false;
+    m_status.connected = false;
     setButtonActive(false);
 }
 
-bool RaspberryPI::isButtonActive() const
-{
-    return m_buttonActive;
-}
-
-bool RaspberryPI::isMagnetActive() const
-{
-    return m_magnetActive;
-}
-
-bool RaspberryPI::isLightActive() const
-{
-    return m_lightActive;
-}
+/**
+ * STATUS CHECKS
+ */
 
 bool RaspberryPI::isConnected()
 {
@@ -112,44 +101,73 @@ bool RaspberryPI::isConnected()
     timer.start(250);
     loop.exec();
 
-    m_connected = timer.isActive();
+    m_status.connected = timer.isActive();
 
-    return m_connected;
+    return m_status.connected;
 }
+
+bool RaspberryPI::isButtonActive() const
+{
+    return m_status.buttonActive;
+}
+
+bool RaspberryPI::isLightActive() const
+{
+    return m_status.lightActive;
+}
+
+bool RaspberryPI::isMagnetActive() const
+{
+    return m_status.magnetActive;
+}
+
+bool RaspberryPI::isMotionActive() const
+{
+    return m_status.motionActive;
+}
+
+bool RaspberryPI::isSmokeActive() const
+{
+    return m_status.smokeActive;
+}
+
+
+/**
+ * SET/UNSET ACTIONS FOR RASPBERRY PI
+ */
 
 void RaspberryPI::setButtonActive(bool buttonActive)
 {
-    if (buttonActive) {
-        sendMessage("on");
-        m_buttonActive = true;
-    } else {
-        sendMessage("off");
-        m_buttonActive = false;
-    }
-    sendStatus();
-}
-
-void RaspberryPI::setMagnetActive(bool magnetActive)
-{
-    if (magnetActive) {
-        sendMessage("magnet_on");
-        m_magnetActive = true;
-    } else {
-        sendMessage("magnet_off");
-        m_magnetActive = false;
-    }
+    sendMessage(buttonActive ? "on" : "off");
+    m_status.buttonActive = buttonActive;
     sendStatus();
 }
 
 void RaspberryPI::setLightActive(bool lightActive)
 {
-    if (lightActive) {
-        sendMessage("light_on");
-        m_lightActive = true;
-    } else {
-        sendMessage("light_off");
-        m_lightActive = false;
-    }
+    sendMessage(lightActive ? "light_on" : "light_off");
+    m_status.lightActive = lightActive;
+    sendStatus();
+}
+
+void RaspberryPI::setMagnetActive(bool magnetActive)
+{
+    sendMessage(magnetActive ? "magnet_on" : "magnet_off");
+    m_status.magnetActive = magnetActive;
+    sendStatus();
+}
+
+void RaspberryPI::setMotionActive(bool motionActive)
+{
+    sendMessage(motionActive ? "motion_on" : "motion_off");
+    m_status.motionActive = motionActive;
+    sendStatus();
+}
+
+void RaspberryPI::setSmokeActive(bool smokeActive)
+{
+    sendMessage(smokeActive ? "smoke_on" : "smoke_off");
+    m_status.smokeActive = smokeActive;
     sendStatus();
 }
 
@@ -197,16 +215,11 @@ void RaspberryPI::parseMessage(QString msg)
 
 void RaspberryPI::insertFinished()
 {
-    qDebug() << "Insert finished()";
+    // When inserted clip has finised, release the push button
     setButtonActive(true);
 }
 
 void RaspberryPI::sendStatus()
 {
-    status stat;
-    stat.connected = m_connected;
-    stat.buttonActive = m_buttonActive;
-    stat.magnetActive = m_magnetActive;
-    stat.lightActive = m_lightActive;
-    emit statusUpdate(stat);
+    emit statusUpdate(m_status);
 }

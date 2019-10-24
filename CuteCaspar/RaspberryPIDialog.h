@@ -2,6 +2,7 @@
 #define RASPBERRYPIDIALOG_H
 
 #include <QDialog>
+#include <QStatusBar>
 
 #include "RaspberryPI.h"
 
@@ -27,9 +28,15 @@ private slots:
     void on_btnButton_clicked();
     void on_btnLight_clicked();
 
+    void on_btnMotion_clicked();
+
+    void on_btnSmoke_clicked();
+
 private:
     Ui::RaspberryPIDialog *ui;
+    QStatusBar* statusBar;
     void setButtonColor(QPushButton *button, QColor color);
+    void setButton(QPushButton *button, bool state);
 };
 
 #endif // RASPBERRYPIDIALOG_H

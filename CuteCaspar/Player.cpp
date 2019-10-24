@@ -5,6 +5,7 @@
 #include <QPushButton>
 
 #include "MidiConnection.h"
+#include "RaspberryPI.h"
 
 #include "Timecode.h"
 
@@ -331,6 +332,39 @@ void Player::playNote(unsigned int pitch, bool noteOn)
         else {
             pitch = 60;
         }
+    } else if (pitch > 128) {
+        switch(pitch) {
+        case 129:
+            RaspberryPI::getInstance()->setButtonActive(true);
+            break;
+        case 130:
+            RaspberryPI::getInstance()->setButtonActive(false);
+            break;
+        case 131:
+            RaspberryPI::getInstance()->setLightActive(true);
+            break;
+        case 132:
+            RaspberryPI::getInstance()->setLightActive(false);
+            break;
+        case 133:
+            RaspberryPI::getInstance()->setMagnetActive(true);
+            break;
+        case 134:
+            RaspberryPI::getInstance()->setMagnetActive(false);
+            break;
+        case 135:
+            RaspberryPI::getInstance()->setMotionActive(true);
+            break;
+        case 136:
+            RaspberryPI::getInstance()->setMotionActive(false);
+            break;
+        case 137:
+            RaspberryPI::getInstance()->setSmokeActive(true);
+            break;
+        case 138:
+            RaspberryPI::getInstance()->setSmokeActive(false);
+            break;
+        }
     }
 
     QString timecode = Timecode::fromTime(m_timecode, 29.97, false);
@@ -340,12 +374,14 @@ void Player::playNote(unsigned int pitch, bool noteOn)
     if (midiLog->isReady() /*&& pitch != previousPitch*/ && noteOn) {
         midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg(onOff).arg(pitch));
     }
-    if(noteOn && pitch != previousPitch) {
-        MidiConnection::getInstance()->killNote(previousPitch);
-        MidiConnection::getInstance()->playNote(pitch);
-        emit activateButton(pitch);
-    } else {
-        MidiConnection::getInstance()->killNote(pitch);
+    if (pitch < 128) {
+        if(noteOn/* && pitch != previousPitch*/) {
+            MidiConnection::getInstance()->killNote(previousPitch);
+            MidiConnection::getInstance()->playNote(pitch);
+            emit activateButton(pitch);
+        } else {
+            MidiConnection::getInstance()->killNote(pitch);
+        }
     }
     previousPitch = pitch;
 }
