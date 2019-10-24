@@ -88,8 +88,10 @@ void RaspberryPIDialog::on_btnConnect_clicked()
         if (RaspberryPI::getInstance()->isConnected()) {
             ui->btnConnect->setText("Quit");
             ui->btnButton->setEnabled(true);
-            ui->btnMagnet->setEnabled(true);
             ui->btnLight->setEnabled(true);
+            ui->btnMagnet->setEnabled(true);
+            ui->btnMotion->setEnabled(true);
+            ui->btnSmoke->setEnabled(true);
             // Initialize button status
             RaspberryPI::getInstance()->setButtonActive(true);
         } else {
@@ -109,12 +111,26 @@ void RaspberryPIDialog::on_btnConnect_clicked()
         RaspberryPI::getInstance()->stopConnection();
         ui->btnConnect->setText("Connect");
         ui->btnButton->setEnabled(false);
-        ui->btnMagnet->setEnabled(false);
         ui->btnLight->setEnabled(false);
+        ui->btnMagnet->setEnabled(false);
+        ui->btnMotion->setEnabled(false);
+        ui->btnSmoke->setEnabled(false);
         setButtonColor(ui->btnButton, QColor(53,53,53));
-        setButtonColor(ui->btnMagnet, QColor(53,53,53));
         setButtonColor(ui->btnLight, QColor(53,53,53));
+        setButtonColor(ui->btnMagnet, QColor(53,53,53));
+        setButtonColor(ui->btnMotion, QColor(53,53,53));
+        setButtonColor(ui->btnSmoke, QColor(53,53,53));
     }
+}
+
+void RaspberryPIDialog::on_btnReboot_clicked()
+{
+    RaspberryPI::getInstance()->reboot();
+}
+
+void RaspberryPIDialog::on_btnShutdown_clicked()
+{
+    RaspberryPI::getInstance()->shutdown();
 }
 
 void RaspberryPIDialog::on_btnButton_clicked()

@@ -171,6 +171,16 @@ void RaspberryPI::setSmokeActive(bool smokeActive)
     sendStatus();
 }
 
+void RaspberryPI::reboot()
+{
+    sendMessage("reboot");
+}
+
+void RaspberryPI::shutdown()
+{
+    sendMessage("shutdown");
+}
+
 
 /**
  * @brief RaspberryPI::processPendingDatagrams

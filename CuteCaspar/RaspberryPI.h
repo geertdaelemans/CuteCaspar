@@ -35,6 +35,8 @@ public:
     void setMagnetActive(bool magnetActive);
     void setMotionActive(bool motionActive);
     void setSmokeActive(bool smokeActive);
+    void reboot();
+    void shutdown();
 
 signals:
     void statusButton(QString msg);

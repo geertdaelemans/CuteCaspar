@@ -27,10 +27,10 @@ private slots:
     void on_btnMagnet_clicked();
     void on_btnButton_clicked();
     void on_btnLight_clicked();
-
     void on_btnMotion_clicked();
-
     void on_btnSmoke_clicked();
+    void on_btnReboot_clicked();
+    void on_btnShutdown_clicked();
 
 private:
     Ui::RaspberryPIDialog *ui;
