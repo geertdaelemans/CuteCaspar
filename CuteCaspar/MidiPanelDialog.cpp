@@ -31,6 +31,14 @@ MidiPanelDialog::MidiPanelDialog(QWidget *parent) :
         button[notes[i].pitch] = newButton;
         counter++;
     }
+
+    // Timer sequence for notes with a duration
+    m_timer = new QTimer(this);
+    m_timer->setSingleShot(true);
+    connect(this, SIGNAL(waitNote(int)),
+            m_timer, SLOT(start(int)));
+    connect(m_timer, SIGNAL(timeout()),
+            this, SLOT(automatedSequence()));
 }
 
 MidiPanelDialog::~MidiPanelDialog()
@@ -92,6 +100,13 @@ void MidiPanelDialog::activateButton(unsigned int pitch, bool active)
             previousPitch = pitch;
         }
     }
+    if (m_timer->isActive()) {
+        m_timer->stop();
+    }
+    if (MidiNotes::getInstance()->getDuration(pitch) > 0 && m_live) {
+        m_nextPitch = MidiNotes::getInstance()->getNext(pitch);
+        emit waitNote(static_cast<int>(MidiNotes::getInstance()->getDuration(pitch)));
+    }
 }
 
 void MidiPanelDialog::setButtonColor(QPushButton* button, QColor color)
@@ -102,3 +117,12 @@ void MidiPanelDialog::setButtonColor(QPushButton* button, QColor color)
     button->update();
 }
 
+void MidiPanelDialog::automatedSequence()
+{
+    activateButton(m_nextPitch);
+}
+
+void MidiPanelDialog::on_chkLive_stateChanged(int check)
+{
+    m_live = check;
+}

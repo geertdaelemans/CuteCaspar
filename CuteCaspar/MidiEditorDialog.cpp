@@ -77,7 +77,11 @@ void MidiEditorDialog::currentNote(QString timecode, bool noteOn, unsigned int p
 
 void MidiEditorDialog::addNewNote(QString timecode, bool noteOn, unsigned int pitch)
 {
-    m_currentIndex++;
+    if(m_model->rowCount() == 0) {
+        m_currentIndex = 0;
+    } else {
+        m_currentIndex++;
+    }
     QList<QStandardItem*> items;
     items.append(new QStandardItem(timecode));
     items.append(new QStandardItem(noteOn ? "ON" : "OFF"));
