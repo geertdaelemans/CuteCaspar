@@ -45,30 +45,52 @@ void MidiPanelDialog::playNote()
     if (button && button->property("pitch").isValid()) {
         pitch = button->property("pitch").toUInt();
     }
-    emit buttonPushed(pitch, true);
+    if (pitch > 128) {
+        switch (pitch) {
+        case 129:
+            m_button = !m_button;
+            emit buttonPushed(pitch, m_button);
+            break;
+        case 130:
+            m_light = !m_light;
+            emit buttonPushed(pitch, m_light);
+            break;
+        case 131:
+            m_magnet = !m_magnet;
+            emit buttonPushed(pitch, m_magnet);
+            break;
+        case 132:
+            m_motion = !m_motion;
+            emit buttonPushed(pitch, m_motion);
+            break;
+        case 133:
+            m_smoke = !m_smoke;
+            emit buttonPushed(pitch, m_smoke);
+            break;
+        }
+    } else {
+        emit buttonPushed(pitch, true);
+    }
 }
 
 void MidiPanelDialog::killNote()
 {
-    unsigned int pitch = 60;
     auto button = qobject_cast<QPushButton *>(sender());
     button->setDown(true);
-    if (button && button->property("pitch").isValid()) {
-        pitch = button->property("pitch").toUInt();
-    }
-//    emit buttonPushed(pitch, false);
 }
 
-void MidiPanelDialog::activateButton(unsigned int pitch)
+void MidiPanelDialog::activateButton(unsigned int pitch, bool active)
 {
     if (button.contains(pitch)) {
-        button[pitch]->setDown(true);
-        setButtonColor(button[pitch], Qt::darkGreen);
-        if (pitch != previousPitch) {
+        button[pitch]->setDown(active);
+        setButtonColor(button[pitch], (active ? Qt::darkGreen : QColor(53,53,53)));
+        if (pitch != previousPitch && pitch < 128) {
             button[previousPitch]->setDown(false);
             setButtonColor(button[previousPitch], QColor(53,53,53));
         }
-        previousPitch = pitch;
+        if (pitch < 128) {
+            previousPitch = pitch;
+        }
     }
 }
 

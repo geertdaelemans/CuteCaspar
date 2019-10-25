@@ -555,8 +555,8 @@ void MainWindow::on_actionMidi_Panel_triggered()
                 player, SLOT(playNote(unsigned int, bool)));
 
         // Receive activateButton()
-        connect(player, SIGNAL(activateButton(unsigned int)),
-                m_midiPanelDialog, SLOT(activateButton(unsigned int)));
+        connect(player, SIGNAL(activateButton(unsigned int, bool)),
+                m_midiPanelDialog, SLOT(activateButton(unsigned int, bool)));
     }
     if (!m_midiPanelDialog->isVisible()) {
         m_midiPanelDialog->show();

@@ -20,7 +20,7 @@ public:
     ~MidiPanelDialog();
 
 public slots:
-    void activateButton(unsigned int pitch);
+    void activateButton(unsigned int pitch, bool active);
 
 signals:
     void buttonPushed(unsigned int, bool);
@@ -35,6 +35,11 @@ private:
     QMap<unsigned int, QPushButton*> button;
     unsigned int previousPitch = 0;
     void setButtonColor(QPushButton *button, QColor color);
+    bool m_button = false;
+    bool m_light = false;
+    bool m_magnet = false;
+    bool m_motion = false;
+    bool m_smoke = false;
 };
 
 #endif // MIDIPANELDIALOG_H

@@ -73,7 +73,7 @@ private:
 signals:
     void activeClip(int value);
     void activeClipName(QString clipName, bool insert = false);
-    void activateButton(unsigned int);
+    void activateButton(unsigned int pitch, bool active = true);
     void playerStatus(PlayerStatus status, bool recording);
     void insertFinished();
     void newMidiPlaylist(QMap<QString, message> midiPlayList);

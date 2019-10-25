@@ -25,7 +25,7 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="General">
       <property name="enabled">
@@ -57,7 +57,7 @@
            </font>
           </property>
           <property name="text">
-           <string>Raspberry PI</string>
+           <string>Raspberry PI (Halloween: 192.168.0.138)</string>
           </property>
          </widget>
         </item>

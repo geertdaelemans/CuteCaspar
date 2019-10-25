@@ -335,34 +335,19 @@ void Player::playNote(unsigned int pitch, bool noteOn)
     } else if (pitch > 128) {
         switch(pitch) {
         case 129:
-            RaspberryPI::getInstance()->setButtonActive(true);
+            RaspberryPI::getInstance()->setButtonActive(noteOn);
             break;
         case 130:
-            RaspberryPI::getInstance()->setButtonActive(false);
+            RaspberryPI::getInstance()->setLightActive(noteOn);
             break;
         case 131:
-            RaspberryPI::getInstance()->setLightActive(true);
+            RaspberryPI::getInstance()->setMagnetActive(noteOn);
             break;
         case 132:
-            RaspberryPI::getInstance()->setLightActive(false);
+            RaspberryPI::getInstance()->setMotionActive(noteOn);
             break;
         case 133:
-            RaspberryPI::getInstance()->setMagnetActive(true);
-            break;
-        case 134:
-            RaspberryPI::getInstance()->setMagnetActive(false);
-            break;
-        case 135:
-            RaspberryPI::getInstance()->setMotionActive(true);
-            break;
-        case 136:
-            RaspberryPI::getInstance()->setMotionActive(false);
-            break;
-        case 137:
-            RaspberryPI::getInstance()->setSmokeActive(true);
-            break;
-        case 138:
-            RaspberryPI::getInstance()->setSmokeActive(false);
+            RaspberryPI::getInstance()->setSmokeActive(noteOn);
             break;
         }
     }
@@ -382,6 +367,8 @@ void Player::playNote(unsigned int pitch, bool noteOn)
         } else {
             MidiConnection::getInstance()->killNote(pitch);
         }
+    } else {
+        emit activateButton(pitch, noteOn);
     }
     previousPitch = pitch;
 }
