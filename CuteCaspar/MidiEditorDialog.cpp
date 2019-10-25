@@ -23,6 +23,11 @@ MidiEditorDialog::MidiEditorDialog(QWidget *parent) :
     proxyModel->sort(0, Qt::AscendingOrder);
 
     ui->tableView->setModel(proxyModel);
+
+    ui->tableView->setColumnWidth(0, 80);
+    ui->tableView->setColumnWidth(1, 50);
+    ui->tableView->setColumnWidth(2, 150);
+
     ui->tableView->show();
 }
 
@@ -50,6 +55,7 @@ void MidiEditorDialog::newMidiPlaylist(QMap<QString, message> midiPlayList)
 
     EffectsDelegate * cbid = new EffectsDelegate();
 
+    ui->tableView->setItemDelegateForColumn(1, cbid);
     ui->tableView->setItemDelegateForColumn(2, cbid);
 }
 
@@ -104,7 +110,7 @@ void MidiEditorDialog::on_btnAdd_clicked()
     m_model->insertRow(row);
     ui->tableView->selectRow(row);
 
-    m_model->setItem(row, 0, new QStandardItem(Timecode::fromTime((timeAfter + timeBefore)/2.0, 29.97, true)));
+    m_model->setItem(row, 0, new QStandardItem(Timecode::fromTime((timeAfter + timeBefore)/2.0, 29.97, false)));
     m_model->setItem(row, 1, new QStandardItem("ON"));
     m_model->setItem(row, 2, new QStandardItem(MidiNotes::getInstance()->getNoteNameByPitch(0)));
 
