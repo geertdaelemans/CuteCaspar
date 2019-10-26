@@ -27,9 +27,16 @@ MidiPanelDialog::MidiPanelDialog(QWidget *parent) :
                 this, SLOT(playNote()));
         connect(newButton, SIGNAL(released()),
                 this, SLOT(killNote()));
-        ui->theGrid->addWidget(newButton, counter / rows, counter % rows);
+        if (notes[i].pitch < 128) {
+            ui->theGrid->addWidget(newButton, counter / rows, counter % rows);
+            counter++;
+        } else {
+            newButton->setBaseSize(100, 50);
+            newButton->setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Maximum);
+            newButton->setStyleSheet("height: 40px;");
+            ui->theActions->addWidget(newButton);
+        }
         button[notes[i].pitch] = newButton;
-        counter++;
     }
 
     // Timer sequence for notes with a duration

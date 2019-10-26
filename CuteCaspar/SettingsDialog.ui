@@ -39,7 +39,7 @@
         <rect>
          <x>30</x>
          <y>20</y>
-         <width>280</width>
+         <width>360</width>
          <height>114</height>
         </rect>
        </property>
@@ -57,7 +57,7 @@
            </font>
           </property>
           <property name="text">
-           <string>Raspberry PI (Halloween: 192.168.0.138)</string>
+           <string>Raspberry PI</string>
           </property>
          </widget>
         </item>
@@ -157,6 +157,19 @@
        </property>
        <property name="scaledContents">
         <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_2">
+       <property name="geometry">
+        <rect>
+         <x>80</x>
+         <y>240</y>
+         <width>271</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Personal note: 192.168.0.138 -&gt; Halloween</string>
        </property>
       </widget>
      </widget>
