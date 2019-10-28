@@ -4,7 +4,6 @@ void CasparOscListener::ProcessMessage( const osc::ReceivedMessage& m,
         const IpEndpointName& remoteEndpoint )
 {
     (void)remoteEndpoint; // suppress unused parameter warning
-
     try {
         QStringList address = QString(m.AddressPattern()+1).split("/");
         if (address[2] != "mixer") // exclude mixer messages

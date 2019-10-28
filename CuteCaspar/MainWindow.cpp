@@ -52,6 +52,9 @@ MainWindow::MainWindow(QWidget *parent) :
     if (settings.value("auto_connect", true).toBool())
         connectServer();
     settings.endGroup();
+
+    connect(this, SIGNAL(parseMessage(QString)),
+            m_raspberryPI, SLOT(parseMessage(QString)));
 }
 
 /**
@@ -195,7 +198,11 @@ void MainWindow::readyRead()
     QHostAddress sender;
     quint16 senderPort;
     udp.readDatagram(buffer.data(), buffer.size(), &sender, &senderPort);
-    listener.ProcessPacket(buffer.data(), buffer.size(), IpEndpointName(sender.toIPv4Address(), senderPort));
+    if (buffer.mid(0, 5) == "raspi") {
+        emit parseMessage(&buffer.data()[6]);
+    } else {
+        listener.ProcessPacket(buffer.data(), buffer.size(), IpEndpointName(sender.toIPv4Address(), senderPort));
+    }
 }
 
 /**
@@ -206,12 +213,12 @@ void MainWindow::readyRead()
 void MainWindow::processOsc(QStringList address, QStringList values)
 {
     QString adr = address.join("/");
-//    qDebug() << address << values;
     if (adr == "channel/1/stage/layer/0/file/frame") {
         emit currentFrame(values[0].toInt(), values[1].toInt());
-    }
-    if (adr == "channel/1/stage/layer/0/file/time") {
+    } else if (adr == "channel/1/stage/layer/0/file/time") {
         emit currentTime(values[0].toDouble());
+    } else {
+//      qDebug() << address << values;
     }
 }
 

@@ -82,6 +82,7 @@ signals:
     void currentFrame(int frame, int lastFrame);
     void setRecording();
     void setRenew(bool value);
+    void parseMessage(QString msg);
 
 private:
     Ui::MainWindow *ui;

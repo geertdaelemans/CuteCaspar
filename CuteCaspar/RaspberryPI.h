@@ -47,6 +47,7 @@ signals:
 public slots:
     void sendMessage(QString msg);
     void insertFinished();
+    void parseMessage(QString msg);
 
 private slots:
     void processPendingDatagrams();
@@ -59,7 +60,6 @@ private:
     unsigned short m_portIn = 1234;
     unsigned short m_portOut = 1235;
     status m_status;
-    void parseMessage(QString msg);
     void sendStatus();
 };
 
