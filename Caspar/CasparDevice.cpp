@@ -249,6 +249,14 @@ void CasparDevice::playMovie(int channel, int videolayer, const QString& name, c
                      .arg((loop == true) ? "LOOP" : ""));
 }
 
+
+void CasparDevice::callSeek(int channel, int videolayer, int seek)
+{
+    writeMessage(QString("CALL %1-%2 %3")
+                 .arg(channel).arg(videolayer)
+                 .arg((seek > 0) ? QString("SEEK %1").arg(seek) : ""));
+}
+
 void CasparDevice::loadMovie(int channel, int videolayer, const QString& name, const QString& transition, int duration,
                              const QString& easing, const QString& direction, int seek, int length, bool loop,
                              bool freezeOnLoad, bool useAuto)

@@ -532,6 +532,10 @@ void MainWindow::on_actionMIDI_Editor_triggered()
         // Save new MIDI playlist to Player
         connect(m_midiEditorDialog, SIGNAL(saveMidiPlayList(QMap<QString, message>)),
                 player, SLOT(saveMidiPlayList(QMap<QString, message>)));
+
+        // Resume clip starting from specific frame
+        connect(m_midiEditorDialog, SIGNAL(resumeFromFrame(int)),
+                player, SLOT(resumeFromFrame(int)));
     }
     if (!m_midiEditorDialog->isVisible()) {
         m_midiEditorDialog->show();

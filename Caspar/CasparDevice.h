@@ -66,6 +66,8 @@ class CASPARSHARED_EXPORT CasparDevice : public AmcpDevice
         void playMovie(int channel, int videolayer, const QString& name, const QString& transition, int duration, const QString& easing, const QString& direction, int seek, int length, bool loop, bool useAuto);
         void loadMovie(int channel, int videolayer, const QString& name, const QString& transition, int duration, const QString& easing, const QString& direction, int seek, int length, bool loop, bool freezeOnLoad, bool useAuto);
 
+        void callSeek(int channel, int videolayer, int seek);
+
         void playAudio(int channel, int videolayer, const QString& name, const QString& transition, int duration, const QString& easing, const QString& direction, bool loop, bool useAuto);
         void loadAudio(int channel, int videolayer, const QString& name, const QString& transition, int duration, const QString& easing, const QString& direction, bool loop, bool useAuto);
 

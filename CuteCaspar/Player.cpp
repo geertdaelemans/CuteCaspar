@@ -101,11 +101,28 @@ void Player::pausePlayList()
     }
 }
 
+
 /**
  * @brief Player::resumePlayList
  */
 void Player::resumePlayList()
 {
+    m_device->resume(1, 0);
+    if (m_singlePlay) {
+        setStatus(PlayerStatus::CLIP_PLAYING);
+    } else {
+        setStatus(PlayerStatus::PLAYLIST_PLAYING);
+    }
+}
+
+
+/**
+ * @brief Player::resumeFromFrame
+ * @param frames
+ */
+void Player::resumeFromFrame(int frames)
+{
+    m_device->callSeek(1, 0, frames);
     m_device->resume(1, 0);
     if (m_singlePlay) {
         setStatus(PlayerStatus::CLIP_PLAYING);
@@ -181,7 +198,6 @@ void Player::playClip(int clipIndex)
     m_device->playMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false);
     setStatus(PlayerStatus::CLIP_PLAYING);
 }
-
 
 /**
  * @brief Player::getStatus

@@ -44,6 +44,7 @@ public slots:
     void setRenew(bool value);
     void insertPlaylist(QString clipName = "random");
     void saveMidiPlayList(QMap<QString, message> midiPlayList);
+    void resumeFromFrame(int frames);
 
 private:
     CasparDevice* m_device;

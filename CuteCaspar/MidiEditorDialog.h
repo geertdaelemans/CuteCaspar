@@ -26,9 +26,11 @@ private slots:
     void on_btnDelete_clicked();
     void on_btnAdd_clicked();
     void on_btnSave_clicked();
+    void on_btnResume_clicked();
 
 signals:
     void saveMidiPlayList(QMap<QString, message> midiPlayList);
+    void resumeFromFrame(int frame);
 
 private:
     Ui::MidiEditorDialog *ui;

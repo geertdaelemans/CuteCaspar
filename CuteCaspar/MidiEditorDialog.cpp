@@ -150,3 +150,25 @@ void MidiEditorDialog::on_btnSave_clicked()
     }
     emit saveMidiPlayList(output);
 }
+
+
+void MidiEditorDialog::on_btnResume_clicked()
+{
+    QItemSelectionModel *selections = ui->tableView->selectionModel();
+    QModelIndexList selected = selections->selectedIndexes();
+    int row;
+    if (selected.size() != 0) {
+        row = selected.begin()->row();
+    } else {
+        row = 1;
+    }
+    double timeSelected;
+    if (row > 1) {
+        timeSelected = Timecode::toTime(m_model->data(m_model->index(row, 0)).toString(), 29.97);
+    } else {
+        timeSelected = 0.0;
+    }
+    qDebug() << "Frames" << timeSelected * 29.97 << Timecode::fromTime(timeSelected, 29.97, true);
+    emit resumeFromFrame(static_cast<int>(timeSelected * 29.97));
+
+}
