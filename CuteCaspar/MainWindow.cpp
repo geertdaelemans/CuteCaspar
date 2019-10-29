@@ -97,7 +97,8 @@ void MainWindow::connectServer()
             this, SLOT(connectionStateChanged(CasparDevice&)));
 
     device->connectDevice();
-    player = new Player(device);
+    player = Player::getInstance();
+    player->setDevice(device);
 
     connect(midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
             player, SLOT(playNote(unsigned int, bool)));

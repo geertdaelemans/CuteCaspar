@@ -9,13 +9,28 @@
 
 #include "Timecode.h"
 
-Player::Player(CasparDevice* device)
+Player* Player::s_inst = nullptr;
+
+Player::Player()
 {
-    m_device = device;
+    m_device = nullptr;
     m_status = PlayerStatus::IDLE;
 
     midiRead = new MidiReader();
     midiLog = new MidiLogger();
+}
+
+Player* Player::getInstance()
+{
+    if (!s_inst) {
+        s_inst = new Player();
+    }
+    return s_inst;
+}
+
+void Player::setDevice(CasparDevice* device)
+{
+    m_device = device;
 }
 
 

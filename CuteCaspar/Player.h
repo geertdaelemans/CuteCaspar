@@ -24,7 +24,9 @@ class Player : public QObject
     Q_OBJECT
 
 public:
-    Player(CasparDevice* device);
+    Player();
+    static Player *getInstance();
+    void setDevice(CasparDevice *device);
     void loadPlayList();
     void loadClip(QString clipName);
     void playClip(int clipIndex);
@@ -47,6 +49,7 @@ public slots:
     void resumeFromFrame(int frames);
 
 private:
+    static Player* s_inst;
     CasparDevice* m_device;
     QList<QString> m_playlistClips;
     int m_currentClipIndex = 0;
