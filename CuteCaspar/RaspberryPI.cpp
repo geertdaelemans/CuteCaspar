@@ -7,6 +7,7 @@
 #include <QNetworkInterface>
 #include <QTimer>
 #include <QEventLoop>
+#include <QRandomGenerator>
 
 RaspberryPI* RaspberryPI::s_inst = nullptr;
 
@@ -150,10 +151,20 @@ void RaspberryPI::setLightActive(bool lightActive)
     sendStatus();
 }
 
-void RaspberryPI::setMagnetActive(bool magnetActive)
+void RaspberryPI::setMagnetActive(bool magnetActive, bool overRule)
 {
-    sendMessage(magnetActive ? "magnet_on" : "magnet_off");
-    m_status.magnetActive = magnetActive;
+    // Generate a number in de range [1..100]
+    int randomNumber = QRandomGenerator::global()->bounded(100) + 1;
+
+    // When random number is smaller or equal to the probability as set by user
+    // switch the magnet off is active (this can be overruled)
+    if ((randomNumber <= getMagnetProbability() && !magnetActive) || overRule) {
+        sendMessage("magnet_off");
+        m_status.magnetActive = false;
+    } else if (magnetActive) {
+        sendMessage("magnet_on");
+        m_status.magnetActive = true;
+    }
     sendStatus();
 }
 
@@ -169,6 +180,16 @@ void RaspberryPI::setSmokeActive(bool smokeActive)
     sendMessage(smokeActive ? "smoke_on" : "smoke_off");
     m_status.smokeActive = smokeActive;
     sendStatus();
+}
+
+void RaspberryPI::setMagnetProbablilty(int probability)
+{
+    m_status.magnetProbability = probability;
+}
+
+int RaspberryPI::getMagnetProbability() const
+{
+    return m_status.magnetProbability;
 }
 
 void RaspberryPI::reboot()

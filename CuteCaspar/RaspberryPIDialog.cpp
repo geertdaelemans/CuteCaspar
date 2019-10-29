@@ -57,6 +57,9 @@ RaspberryPIDialog::RaspberryPIDialog(QWidget *parent) :
         // Statusbar
         statusBar->showMessage("Raspberry PY not connected");
     }
+
+    // Initialise the magnet probability
+    ui->sldMagnet->setValue(RaspberryPI::getInstance()->getMagnetProbability());
 }
 
 RaspberryPIDialog::~RaspberryPIDialog()
@@ -156,7 +159,7 @@ void RaspberryPIDialog::on_btnMagnet_clicked()
     if (!RaspberryPI::getInstance()->isMagnetActive()) {
         RaspberryPI::getInstance()->setMagnetActive(true);
     } else {
-        RaspberryPI::getInstance()->setMagnetActive(false);
+        RaspberryPI::getInstance()->setMagnetActive(false, true);
     }
 }
 
@@ -178,6 +181,10 @@ void RaspberryPIDialog::on_btnSmoke_clicked()
     }
 }
 
+void RaspberryPIDialog::on_sldMagnet_valueChanged(int value)
+{
+    RaspberryPI::getInstance()->setMagnetProbablilty(value);
+}
 
 /**
  * HELPERS
@@ -200,6 +207,7 @@ void RaspberryPIDialog::refreshUpdate(status stat)
     setButton(ui->btnMagnet, stat.magnetActive);
     setButton(ui->btnMotion, stat.motionActive);
     setButton(ui->btnSmoke, stat.smokeActive);
+    ui->sldMagnet->setValue(stat.magnetProbability);
 }
 
 void RaspberryPIDialog::setButton(QPushButton* button, bool state)

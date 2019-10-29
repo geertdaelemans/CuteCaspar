@@ -31,6 +31,7 @@ private slots:
     void on_btnSmoke_clicked();
     void on_btnReboot_clicked();
     void on_btnShutdown_clicked();
+    void on_sldMagnet_valueChanged(int value);
 
 private:
     Ui::RaspberryPIDialog *ui;

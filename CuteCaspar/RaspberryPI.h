@@ -11,6 +11,7 @@ struct status {
     bool magnetActive = false;
     bool motionActive = false;
     bool smokeActive = false;
+    int magnetProbability = 50;
 };
 
 class RaspberryPI : public QObject
@@ -32,9 +33,11 @@ public:
     bool isSmokeActive() const;
     void setButtonActive(bool buttonActive);
     void setLightActive(bool lightActive);
-    void setMagnetActive(bool magnetActive);
+    void setMagnetActive(bool magnetActive, bool overRule = false);
     void setMotionActive(bool motionActive);
     void setSmokeActive(bool smokeActive);
+    void setMagnetProbablilty(int probability);
+    int getMagnetProbability() const;
     void reboot();
     void shutdown();
 

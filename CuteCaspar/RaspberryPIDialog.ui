@@ -75,6 +75,22 @@
         </widget>
        </item>
        <item>
+        <widget class="QSlider" name="sldMagnet">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="singleStep">
+          <number>5</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btnMotion">
          <property name="enabled">
           <bool>false</bool>
