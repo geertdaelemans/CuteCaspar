@@ -19,6 +19,13 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="lblClipName">
+     <property name="text">
+      <string>No clip selected...</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QTableView" name="tableView">
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
@@ -83,6 +90,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="btnResume">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="text">
         <string>Resume</string>
        </property>

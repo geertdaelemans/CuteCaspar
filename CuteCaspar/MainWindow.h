@@ -73,7 +73,6 @@ private slots:
     void on_pushButton_clicked();
     void on_actionRaspberryPI_triggered();
     void on_actionControl_Panel_triggered();
-
     void on_actionMIDI_Editor_triggered();
 
 signals:
@@ -83,6 +82,7 @@ signals:
     void setRecording();
     void setRenew(bool value);
     void parseMessage(QString msg);
+    void clipNameSelected(QString clipName);
 
 private:
     Ui::MainWindow *ui;

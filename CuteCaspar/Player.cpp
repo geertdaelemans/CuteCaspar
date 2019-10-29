@@ -185,7 +185,6 @@ void Player::insertPlaylist(QString clipName)
 
 void Player::saveMidiPlayList(QMap<QString, message> playList)
 {
-    qDebug() << "Player::saveMidiPlayList";
     midiPlayList = playList;
     if (midiLog->isReady()) {
         qDebug() << "Cannot write";
@@ -212,6 +211,31 @@ void Player::playClip(int clipIndex)
     m_nextClipIndex = clipIndex;
     m_device->playMovie(1, 0, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false);
     setStatus(PlayerStatus::CLIP_PLAYING);
+}
+
+/**
+ * @brief Player::playClip
+ * @param clipName
+ */
+void Player::playClip(QString clipName)
+{
+    m_timecode = 10.0;
+    m_singlePlay = true;
+    m_currentClipIndex = getClipIndexByName(clipName);
+    m_nextClipIndex = m_currentClipIndex;
+    m_device->playMovie(1, 0, clipName, "", 0, "", "", 0, 0, false, false);
+    setStatus(PlayerStatus::CLIP_PLAYING);
+}
+
+int Player::getClipIndexByName(QString ClipName) const
+{
+    for (int i = 0; i < m_playlistClips.size(); i++) {
+        if (m_playlistClips[i].data() == ClipName) {
+            qDebug() << "Found clip" << i;
+            return i;
+        }
+    }
+    return 0;
 }
 
 /**
@@ -256,8 +280,7 @@ void Player::loadNextClip()
         emit activeClip(m_currentClipIndex);
         emit activeClipName(m_playlistClips[m_currentClipIndex]);
         qDebug() << "Playing:" << m_playlistClips[m_currentClipIndex];
-        midiPlayList = midiRead->openLog(m_playlistClips[m_currentClipIndex]);
-        emit newMidiPlaylist(midiPlayList);
+        retrieveMidiPlayList(m_playlistClips[m_currentClipIndex]);
         if (midiRead->isReady()) {
             qDebug("MIDI file found...");
         }
@@ -283,8 +306,7 @@ void Player::loadNextClip()
     } else {
         emit activeClipName(m_interruptedClipName, true);
         qDebug() << "Playing:" << m_interruptedClipName;
-        midiPlayList = midiRead->openLog(m_interruptedClipName);
-        emit newMidiPlaylist(midiPlayList);
+        retrieveMidiPlayList(m_interruptedClipName);
         if (midiRead->isReady()) {
             qDebug("MIDI file found...");
         }
@@ -432,4 +454,10 @@ void Player::setRecording()
 void Player::setRenew(bool value)
 {
     m_renew = value;
+}
+
+void Player::retrieveMidiPlayList(QString clipName)
+{
+    midiPlayList = midiRead->openLog(clipName);
+    emit newMidiPlaylist(midiPlayList);
 }

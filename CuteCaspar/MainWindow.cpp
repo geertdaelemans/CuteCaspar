@@ -338,6 +338,7 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
     currentClip = name.data(Qt::DisplayRole).toString();
     currentClipIndex = index.row();
     ui->statusLabel->setText("Video selected...");
+    emit clipNameSelected(currentClip);
 }
 
 
@@ -537,13 +538,17 @@ void MainWindow::on_actionMIDI_Editor_triggered()
         connect(player, SIGNAL(currentNote(QString, bool, unsigned int)),
                 m_midiEditorDialog, SLOT(currentNote(QString, bool, unsigned int)));
 
-        // Save new MIDI playlist to Player
-        connect(m_midiEditorDialog, SIGNAL(saveMidiPlayList(QMap<QString, message>)),
-                player, SLOT(saveMidiPlayList(QMap<QString, message>)));
+        // Action when new clip is being played
+        connect(player, SIGNAL(activeClipName(QString, bool)),
+                m_midiEditorDialog, SLOT(activeClipName(QString, bool)));
 
-        // Resume clip starting from specific frame
-        connect(m_midiEditorDialog, SIGNAL(resumeFromFrame(int)),
-                player, SLOT(resumeFromFrame(int)));
+        // Action when new clip is selected
+        connect(this, SIGNAL(clipNameSelected(QString)),
+                m_midiEditorDialog, SLOT(setClipName(QString)));
+
+        // Players reports status
+        connect(player, SIGNAL(playerStatus(PlayerStatus, bool)),
+                m_midiEditorDialog, SLOT(playerStatus(PlayerStatus, bool)));
     }
     if (!m_midiEditorDialog->isVisible()) {
         m_midiEditorDialog->show();
@@ -551,6 +556,7 @@ void MainWindow::on_actionMIDI_Editor_triggered()
     } else {
         m_midiEditorDialog->hide();
     }
+    emit clipNameSelected(currentClip);
 }
 
 

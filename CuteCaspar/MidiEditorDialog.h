@@ -21,6 +21,9 @@ public:
 public slots:
     void newMidiPlaylist(QMap<QString, message> midiPlayList);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
+    void setClipName(QString clipName, bool insert = false);
+    void activeClipName(QString clipName, bool insert = false);
+    void playerStatus(PlayerStatus status, bool recording);
 
 private slots:
     void on_btnDelete_clicked();
@@ -28,16 +31,14 @@ private slots:
     void on_btnSave_clicked();
     void on_btnResume_clicked();
 
-signals:
-    void saveMidiPlayList(QMap<QString, message> midiPlayList);
-    void resumeFromFrame(int frame);
-
 private:
     Ui::MidiEditorDialog *ui;
     QStandardItemModel* m_model = nullptr;
     QMap<QString, message> m_newMidiPlaylist;
     void addNewNote(QString timecode, bool noteOn, unsigned int pitch);
     int m_currentIndex = 0;
+    QString m_clipName;
+    PlayerStatus m_playerStatus;
 };
 
 #endif // MIDIEDITORDIALOG_H

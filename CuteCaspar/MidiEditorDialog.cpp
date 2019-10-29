@@ -29,6 +29,10 @@ MidiEditorDialog::MidiEditorDialog(QWidget *parent) :
     ui->tableView->setColumnWidth(2, 150);
 
     ui->tableView->show();
+
+    if (Player::getInstance()->getStatus() == PlayerStatus::READY) {
+        ui->btnResume->setText("Play");
+    }
 }
 
 MidiEditorDialog::~MidiEditorDialog()
@@ -51,7 +55,6 @@ void MidiEditorDialog::newMidiPlaylist(QMap<QString, message> midiPlayList)
         m_model->setItem(row, 2, new QStandardItem(midiNotes->getNoteNameByPitch(midiPlayList.value(time).pitch)));
         row++;
     }
-
 
     EffectsDelegate * cbid = new EffectsDelegate();
 
@@ -148,27 +151,75 @@ void MidiEditorDialog::on_btnSave_clicked()
         newNote.pitch = MidiNotes::getInstance()->getNotePitchByName(m_model->data(m_model->index(i,2)).toString());
         output[m_model->data(m_model->index(i,0)).toString()] = newNote;
     }
-    emit saveMidiPlayList(output);
+    Player::getInstance()->saveMidiPlayList(output);
 }
 
 
 void MidiEditorDialog::on_btnResume_clicked()
 {
-    QItemSelectionModel *selections = ui->tableView->selectionModel();
-    QModelIndexList selected = selections->selectedIndexes();
-    int row;
-    if (selected.size() != 0) {
-        row = selected.begin()->row();
-    } else {
-        row = 1;
+    switch(m_playerStatus) {
+    case PlayerStatus::IDLE:
+    case PlayerStatus::READY:
+        Player::getInstance()->playClip(m_clipName);
+        break;
+    case PlayerStatus::CLIP_PLAYING:
+    case PlayerStatus::PLAYLIST_PLAYING:
+    case PlayerStatus::PLAYLIST_INSERT:
+        Player::getInstance()->pausePlayList();
+        break;
+    case PlayerStatus::CLIP_PAUSED:
+    case PlayerStatus::PLAYLIST_PAUSED:
+        QItemSelectionModel *selections = ui->tableView->selectionModel();
+        QModelIndexList selected = selections->selectedIndexes();
+        double timeSelected;
+        if (selected.size() != 0) {
+            int row = selected.begin()->row();
+            timeSelected = Timecode::toTime(m_model->data(m_model->index(row, 0)).toString(), 29.97);
+        } else {
+            timeSelected = Timecode::toTime("00:00:00:01", 29.97);
+        }
+        Player::getInstance()->resumeFromFrame(static_cast<int>(timeSelected * 29.97));
+        break;
     }
-    double timeSelected;
-    if (row > 1) {
-        timeSelected = Timecode::toTime(m_model->data(m_model->index(row, 0)).toString(), 29.97);
-    } else {
-        timeSelected = 0.0;
-    }
-    qDebug() << "Frames" << timeSelected * 29.97 << Timecode::fromTime(timeSelected, 29.97, true);
-    emit resumeFromFrame(static_cast<int>(timeSelected * 29.97));
+}
 
+void MidiEditorDialog::setClipName(QString clipName, bool insert)
+{
+    Q_UNUSED(insert)
+    if (m_clipName != clipName && m_playerStatus != PlayerStatus::IDLE && m_playerStatus != PlayerStatus::PLAYLIST_INSERT) {
+        Player::getInstance()->stopPlayList();
+    }
+    m_clipName = clipName;
+    if (m_clipName != "") {
+        ui->lblClipName->setText(m_clipName);
+    }
+    Player::getInstance()->retrieveMidiPlayList(m_clipName);
+}
+
+
+void MidiEditorDialog::activeClipName(QString clipName, bool insert)
+{
+    Q_UNUSED(insert)
+    setClipName(clipName);
+}
+
+void MidiEditorDialog::playerStatus(PlayerStatus status, bool recording)
+{
+    Q_UNUSED(recording)
+    m_playerStatus = status;
+    switch(m_playerStatus) {
+    case PlayerStatus::IDLE:
+    case PlayerStatus::READY:
+        ui->btnResume->setText("Play");
+        break;
+    case PlayerStatus::CLIP_PLAYING:
+    case PlayerStatus::PLAYLIST_PLAYING:
+    case PlayerStatus::PLAYLIST_INSERT:
+        ui->btnResume->setText("Pause");
+        break;
+    case PlayerStatus::CLIP_PAUSED:
+    case PlayerStatus::PLAYLIST_PAUSED:
+        ui->btnResume->setText("Resume");
+        break;
+    }
 }

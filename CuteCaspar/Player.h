@@ -33,8 +33,12 @@ public:
     void startPlayList(int clipIndex);
     void pausePlayList();
     void resumePlayList();
+    void resumeFromFrame(int frames);
     void stopPlayList();
     PlayerStatus getStatus() const;
+    void retrieveMidiPlayList(QString clipName);
+    void saveMidiPlayList(QMap<QString, message> midiPlayList);
+    void playClip(QString clipName);
 
 public slots:
     void loadNextClip();
@@ -45,8 +49,6 @@ public slots:
     void setRecording();
     void setRenew(bool value);
     void insertPlaylist(QString clipName = "random");
-    void saveMidiPlayList(QMap<QString, message> midiPlayList);
-    void resumeFromFrame(int frames);
 
 private:
     static Player* s_inst;
@@ -73,6 +75,7 @@ private:
     QString m_randomScare;
     int m_currentFrame;
     int m_lastFrame;
+    int getClipIndexByName(QString ClipName) const;
 
 signals:
     void activeClip(int value);
