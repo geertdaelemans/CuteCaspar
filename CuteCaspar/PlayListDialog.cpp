@@ -1,7 +1,6 @@
 #include "PlayListDialog.h"
 #include "ui_PlayList.h"
 
-#include <QSqlQueryModel>
 #include <QSqlQuery>
 #include <QtSql>
 
@@ -60,18 +59,18 @@ void PlayList::refreshMediaList()
 
 void PlayList::refreshPlayList()
 {
-    QSqlQueryModel * model = new QSqlQueryModel();
+    modelPlayList = new QSqlQueryModel();
 
     QSqlQuery* qry = new QSqlQuery();
 
     qry->prepare(QString("select Id, Name, TypeId, Timecode, Fps from %1").arg(m_playlist));
     qry->exec();
 
-    model->setQuery(*qry);
+    modelPlayList->setQuery(*qry);
 
     // Set proxy model to enable sorting columns:
     QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(model);
+    proxyModel->setSourceModel(modelPlayList);
     proxyModel->sort(0, Qt::AscendingOrder);
 
     ui->playList->setModel(proxyModel);
@@ -107,6 +106,29 @@ void PlayList::on_clearPlaylistButton_clicked()
     refreshPlayList();
 }
 
+void PlayList::deleteRow(int row)
+{
+    QSqlQuery query;
+    if (!query.prepare(QString("DELETE FROM %1 WHERE Id = %2").arg(m_playlist).arg(row)))
+        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
+    query.exec();
+
+    refreshPlayList();
+}
+
+void PlayList::swapRows(int rowA, int rowB)
+{
+    QSqlQuery query;
+    if (!query.prepare(QString("UPDATE %1 SET Id = (CASE WHEN Id = %2 THEN -%3 ELSE -%2 END) WHERE Id IN (%2, %3)").arg(m_playlist).arg(QString::number(rowA), QString::number(rowB))))
+        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
+    query.exec();
+    if (!query.prepare(QString("UPDATE %1 SET Id = -Id WHERE Id < 0").arg(m_playlist)))
+        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
+    query.exec();
+    refreshPlayList();
+}
+
+
 void PlayList::on_clipList_clicked(const QModelIndex &index)
 {
     const QString clipName = index.siblingAtColumn(0).data(Qt::DisplayRole).toString();
@@ -116,4 +138,49 @@ void PlayList::on_cmbPlaylists_currentIndexChanged(int index)
 {
     m_playlist = ui->cmbPlaylists->itemData(index).toString();
     refreshPlayList();
+}
+
+void PlayList::on_btnUp_clicked()
+{
+    QItemSelectionModel *selections = ui->playList->selectionModel();
+    QModelIndexList selected = selections->selectedIndexes();
+    if (selected.size() != 0 && selected.begin()->row() != 0) {
+        int rowA = selected.begin()->row() - 1;
+        int rowB = selected.begin()->row();
+        int indexA = modelPlayList->data(modelPlayList->index(rowA, 0)).toInt();
+        int indexB = modelPlayList->data(modelPlayList->index(rowB, 0)).toInt();
+        swapRows(indexA, indexB);
+        ui->playList->selectRow(rowA);
+    }
+}
+
+void PlayList::on_btnDown_clicked()
+{
+    QItemSelectionModel *selections = ui->playList->selectionModel();
+    QModelIndexList selected = selections->selectedIndexes();
+    if (selected.size() != 0 && selected.begin()->row() != modelPlayList->rowCount() - 1) {
+        int rowA = selected.begin()->row();
+        int rowB = selected.begin()->row() + 1;
+        int indexA = modelPlayList->data(modelPlayList->index(rowA, 0)).toInt();
+        int indexB = modelPlayList->data(modelPlayList->index(rowB, 0)).toInt();
+        swapRows(indexA, indexB);
+        ui->playList->selectRow(rowB);
+    }
+}
+
+void PlayList::on_btnDelete_clicked()
+{
+    QItemSelectionModel *selections = ui->playList->selectionModel();
+    QModelIndexList selected = selections->selectedIndexes();
+    if (selected.size() != 0) {
+        int row = selected.begin()->row();
+        int index = modelPlayList->data(modelPlayList->index(row, 0)).toInt();
+        deleteRow(index);
+        refreshPlayList();
+        if (row < modelPlayList->rowCount()) {
+            ui->playList->selectRow(row);
+        } else {
+            ui->playList->selectRow(row - 1);
+        }
+    }
 }

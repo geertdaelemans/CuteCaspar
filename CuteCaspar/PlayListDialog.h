@@ -2,6 +2,7 @@
 #define PLAYLIST_H
 
 #include <QDialog>
+#include <QSqlQueryModel>
 
 namespace Ui {
 class PlayList;
@@ -22,6 +23,9 @@ private slots:
     void on_clearPlaylistButton_clicked();
     void on_clipList_clicked(const QModelIndex &index);
     void on_cmbPlaylists_currentIndexChanged(int index);
+    void on_btnUp_clicked();
+    void on_btnDown_clicked();
+    void on_btnDelete_clicked();
 
 signals:
     void playlistChanged();
@@ -29,6 +33,9 @@ signals:
 private:
     Ui::PlayList *ui;
     QString m_playlist = "Playlist";
+    QSqlQueryModel * modelPlayList = nullptr;
+    void deleteRow(int row);
+    void swapRows(int rowA, int rowB);
 };
 
 #endif // PLAYLIST_H
