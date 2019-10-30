@@ -40,9 +40,15 @@ public:
     void saveMidiPlayList(QMap<QString, message> midiPlayList);
     void playClip(QString clipName);
 
+    // SoundScape Calls
+    void startSoundScape(QString clipName);
+    void pauseSoundScape() const;
+    void resumeSoundScape() const;
+    void stopSoundScape();
+
 public slots:
     void loadNextClip();
-    void timecode(double time);
+    void timecode(double time, int videoLayer);
     void currentFrame(int frame, int lastFrame);
     void playNote(unsigned int pitch = 128, bool noteOne = true);
     void killNote();
@@ -61,6 +67,7 @@ private:
     MidiReader* midiRead;
     MidiLogger* midiLog;
     QMap<QString, message> midiPlayList;
+    QMap<QString, message> midiSoundScape;
     QMap<QString, message>::iterator i;
     bool m_singlePlay = false;
     bool m_recording = false;
@@ -76,6 +83,10 @@ private:
     int m_currentFrame;
     int m_lastFrame;
     int getClipIndexByName(QString ClipName) const;
+    int m_defaultLayer = 2;
+    int m_soundScapeLayer = 1;
+    bool m_soundScapeActive;
+    void retrieveMidiSoundScape(QString clipName);
 
 signals:
     void activeClip(int value);

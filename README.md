@@ -18,6 +18,9 @@ Good to know:
 * Only tested on Windows 10
 * Tested with Raspberry PI v2
 * Only works with old CasparCG releases (2.0.7)
+* Includes Python 3 example code for Raspberry PI
+* Uses SQlite database
+* Note/MIDI assignments imported through .csv file
 
 PLEASE BEWARE
 
@@ -28,3 +31,5 @@ Still to do/resolve:
 * Open and closing of panels does not get noticed by MainWindow
 * Manipulating items in a playlist
 * Need to clean-up loadNextClip()
+* Move to latest CasparCG release
+* List of CasparCG clips only updated after dis/connection

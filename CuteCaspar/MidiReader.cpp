@@ -14,11 +14,9 @@ QMap<QString, message> MidiReader::openLog(QString videoFile)
     m_ready = false;
     QMap<QString, message> output;
     QFile logFile(QString("%1.midi").arg(videoFile.replace("/","-")));
-    if (logFile.open(QIODevice::ReadOnly))
-    {
+    if (logFile.open(QIODevice::ReadOnly)) {
        QTextStream in(&logFile);
-       while (!in.atEnd())
-       {
+       while (!in.atEnd()) {
           QString line = in.readLine();
           QStringList list = line.split(",");
           message message;
@@ -28,7 +26,9 @@ QMap<QString, message> MidiReader::openLog(QString videoFile)
           output[list.at(0)] = message;
        }
        logFile.close();
-       m_ready = true;
+       if (output.size() != 0) {
+            m_ready = true;
+       }
     }
     return output;
 }

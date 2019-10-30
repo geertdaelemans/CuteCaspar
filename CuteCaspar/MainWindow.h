@@ -48,7 +48,7 @@ public slots:
     void processOsc(QStringList address, QStringList values);
     void listMedia();
     void setCurrentClip(int index);
-    void setTimeCode(double time);
+    void setTimeCode(double time, int videoLayer);
     void activeClipName(QString clipName, bool insert = false);
     void playerStatus(PlayerStatus status, bool isRecording);
 
@@ -77,7 +77,7 @@ private slots:
 
 signals:
     void nextClip();
-    void currentTime(double time);
+    void currentTime(double time, int videoLayer);
     void currentFrame(int frame, int lastFrame);
     void setRecording();
     void setRenew(bool value);

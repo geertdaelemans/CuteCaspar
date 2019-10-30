@@ -110,14 +110,14 @@ void MainWindow::connectServer()
     connect(this, SIGNAL(nextClip()),
             player, SLOT(loadNextClip()));
 
-    connect(this, SIGNAL(currentTime(double)),
-            player, SLOT(timecode(double)));
+    connect(this, SIGNAL(currentTime(double, int)),
+            player, SLOT(timecode(double, int)));
 
     connect(this, SIGNAL(currentFrame(int, int)),
             player, SLOT(currentFrame(int, int)));
 
-    connect(this, SIGNAL(currentTime(double)),
-            this, SLOT(setTimeCode(double)));
+    connect(this, SIGNAL(currentTime(double, int)),
+            this, SLOT(setTimeCode(double, int)));
 
     connect(player, SIGNAL(activeClipName(QString, bool)),
             this, SLOT(activeClipName(QString, bool)));
@@ -214,10 +214,10 @@ void MainWindow::readyRead()
 void MainWindow::processOsc(QStringList address, QStringList values)
 {
     QString adr = address.join("/");
-    if (adr == "channel/1/stage/layer/0/file/frame") {
+    if (adr == "channel/1/stage/layer/2/file/frame") {  // TO DO: this only needs default video frames, must become parameter
         emit currentFrame(values[0].toInt(), values[1].toInt());
-    } else if (adr == "channel/1/stage/layer/0/file/time") {
-        emit currentTime(values[0].toDouble());
+    } else if (QRegularExpression("channel/1/stage/layer/./file/time").match(adr).hasMatch()) {
+        emit currentTime(values[0].toDouble(), address[4].toInt());
     } else {
 //      qDebug() << address << values;
     }
@@ -396,10 +396,12 @@ void MainWindow::setCurrentClip(int index)
     ui->tableView->selectRow(index);
 }
 
-void MainWindow::setTimeCode(double time)
+void MainWindow::setTimeCode(double time, int videoLayer)
 {
-    timecode = Timecode::fromTime(time, 29.97, false);
-    ui->timeCode->setText(timecode);
+    if (videoLayer == 2) {    // TO DO: this is the default video layer, should become parameter
+        timecode = Timecode::fromTime(time, 29.97, false);
+        ui->timeCode->setText(timecode);
+    }
 }
 
 void MainWindow::activeClipName(QString clipName, bool insert)
