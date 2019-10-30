@@ -13,11 +13,18 @@ Features:
 * Communication with CasparCG through configurable ports
 * Communication with Raspberry PI through configurable ports
 
+Good to know:
+* Written in Qt 5.13.1
+* Only tested on Windows 10
+* Tested with Raspberry PI v2
+* Only works with old CasparCG releases (2.0.7)
+
 PLEASE BEWARE
 
 This software is currently in full development. No guarantees.
 
 Still to do/resolve:
+* Running CuteCaspar without a connection to CasparCG sometimes crashes
 * Open and closing of panels does not get noticed by MainWindow
 * Manipulating items in a playlist
 * Need to clean-up loadNextClip()
