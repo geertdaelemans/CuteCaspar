@@ -36,6 +36,7 @@ private:
     QSqlQueryModel * modelPlayList = nullptr;
     void deleteRow(int row);
     void swapRows(int rowA, int rowB);
+    bool isMidiPresent(QString clipName);
 };
 
 #endif // PLAYLIST_H

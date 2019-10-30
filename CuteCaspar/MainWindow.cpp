@@ -313,7 +313,7 @@ void MainWindow::refreshMediaList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("select Timecode, TypeId, Fps, Name from Playlist");
+    qry->prepare("select Timecode, TypeId, Fps, Name, Midi from Playlist");
     qry->exec();
 
     model->setQuery(*qry);
@@ -324,6 +324,10 @@ void MainWindow::refreshMediaList()
     proxyModel->sort(1, Qt::AscendingOrder);
 
     ui->tableView->setModel(proxyModel);
+    ui->tableView->setColumnWidth(0, 100);
+    ui->tableView->hideColumn(1);
+    ui->tableView->hideColumn(2);
+    ui->tableView->setColumnWidth(3, 400);
     ui->tableView->selectRow(0);
 
     currentClipIndex = ui->tableView->selectionModel()->currentIndex().row();

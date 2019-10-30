@@ -63,7 +63,7 @@ void PlayList::refreshPlayList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare(QString("select Id, Name, TypeId, Timecode, Fps from %1").arg(m_playlist));
+    qry->prepare(QString("select Id, Name, TypeId, Timecode, Fps, Midi from %1").arg(m_playlist));
     qry->exec();
 
     modelPlayList->setQuery(*qry);
@@ -75,6 +75,7 @@ void PlayList::refreshPlayList()
 
     ui->playList->setModel(proxyModel);
     ui->playList->hideColumn(0);
+    ui->playList->setColumnWidth(1, 400);
     ui->playList->hideColumn(2);
     ui->playList->hideColumn(3);
     ui->playList->hideColumn(4);
@@ -85,15 +86,28 @@ void PlayList::refreshPlayList()
 void PlayList::on_clipList_doubleClicked(const QModelIndex &index)
 {
     QSqlQuery query;
-    if (!query.prepare(QString("INSERT INTO %1 (Name, TypeId, Timecode, Fps) VALUES (:name, :typeid, :timecode, :fps)").arg(m_playlist)))
+    if (!query.prepare(QString("INSERT INTO %1 (Name, TypeId, Timecode, Fps, Midi) VALUES (:name, :typeid, :timecode, :fps, :midi)").arg(m_playlist)))
         qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
     query.bindValue(":name", index.siblingAtColumn(0).data(Qt::DisplayRole).toString());
     query.bindValue(":typeid", index.siblingAtColumn(1).data(Qt::DisplayRole).toString());
     query.bindValue(":timecode", index.siblingAtColumn(2).data(Qt::DisplayRole).toString());
     query.bindValue(":fps", index.siblingAtColumn(3).data(Qt::DisplayRole).toString());
+    int midiBool = (isMidiPresent(index.siblingAtColumn(0).data(Qt::DisplayRole).toString()) ? 1 : 0);
+    query.bindValue(":midi", QString::number(midiBool));
     query.exec();
 
     refreshPlayList();
+}
+
+bool PlayList::isMidiPresent(QString clipName)
+{
+    QFileInfo midiFile(QString("%1.midi").arg(clipName.replace("/","-")));
+    if (midiFile.exists()) {
+        if (midiFile.size() > 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void PlayList::on_clearPlaylistButton_clicked()

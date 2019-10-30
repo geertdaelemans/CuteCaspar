@@ -6,6 +6,8 @@
 
 MidiConnection* MidiConnection::s_inst = nullptr;
 
+const bool LOG_MIDI_NOTE_OFF = false;
+
 MidiConnection::MidiConnection()
 {
     // Prepare MIDI connection
@@ -138,14 +140,18 @@ void MidiConnection::messageReceived(QMidiMessage* msg)
     switch (msg->getStatus()) {
     case MIDI_NOTE_ON:
         if (msg->getVelocity() == 0) {
-            emit midiMessageReceived(msg->getPitch(), false);
+            if (LOG_MIDI_NOTE_OFF) {
+                emit midiMessageReceived(msg->getPitch(), false);
+            }
         } else {
             // For Yamaha interpretation of MIDI_NOTE_ON with velocity 0
             emit midiMessageReceived(msg->getPitch(), true);
         }
         break;
     case MIDI_NOTE_OFF:
-        emit midiMessageReceived(msg->getPitch(), false);
+        if (LOG_MIDI_NOTE_OFF) {
+            emit midiMessageReceived(msg->getPitch(), false);
+        }
         break;
     default:
         qDebug() << "Not supported" << msg->getRawMessage();
