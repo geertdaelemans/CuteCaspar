@@ -27,6 +27,7 @@ public:
     Player();
     static Player *getInstance();
     void setDevice(CasparDevice *device);
+    void setRandom(bool random);
     void loadPlayList();
     void loadClip(QString clipName);
     void playClip(int clipIndex);
@@ -39,6 +40,7 @@ public:
     void retrieveMidiPlayList(QString clipName);
     void saveMidiPlayList(QMap<QString, message> midiPlayList);
     void playClip(QString clipName);
+    void setTriggersActive(bool value);
 
     // SoundScape Calls
     void startSoundScape(QString clipName);
@@ -48,12 +50,11 @@ public:
 
 public slots:
     void loadNextClip();
-    void timecode(double time, int videoLayer);
+    void timecode(double time, double duration, int videoLayer);
     void currentFrame(int frame, int lastFrame);
     void playNote(unsigned int pitch = 128, bool noteOne = true);
     void killNote();
     void setRecording();
-    void setRenew(bool value);
     void insertPlaylist(QString clipName = "random");
 
 private:
@@ -71,7 +72,7 @@ private:
     QMap<QString, message>::iterator i;
     bool m_singlePlay = false;
     bool m_recording = false;
-    bool m_renew = false;
+    bool m_triggersActive = true;
     bool m_interrupted = false;
     QString m_interruptedClipName;
     void setStatus(PlayerStatus status);
@@ -87,10 +88,11 @@ private:
     int m_soundScapeLayer = 1;
     bool m_soundScapeActive;
     void retrieveMidiSoundScape(QString clipName);
+    bool m_random = true;
 
 signals:
     void activeClip(int value);
-    void activeClipName(QString clipName, bool insert = false);
+    void activeClipName(QString clipName, QString upcoming = "None", bool insert = false);
     void activateButton(unsigned int pitch, bool active = true);
     void playerStatus(PlayerStatus status, bool recording);
     void insertFinished();

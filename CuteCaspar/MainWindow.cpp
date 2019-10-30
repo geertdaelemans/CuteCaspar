@@ -110,23 +110,20 @@ void MainWindow::connectServer()
     connect(this, SIGNAL(nextClip()),
             player, SLOT(loadNextClip()));
 
-    connect(this, SIGNAL(currentTime(double, int)),
-            player, SLOT(timecode(double, int)));
+    connect(this, SIGNAL(currentTime(double, double, int)),
+            player, SLOT(timecode(double, double, int)));
 
     connect(this, SIGNAL(currentFrame(int, int)),
             player, SLOT(currentFrame(int, int)));
 
-    connect(this, SIGNAL(currentTime(double, int)),
-            this, SLOT(setTimeCode(double, int)));
+    connect(this, SIGNAL(currentTime(double, double, int)),
+            this, SLOT(setTimeCode(double, double, int)));
 
-    connect(player, SIGNAL(activeClipName(QString, bool)),
-            this, SLOT(activeClipName(QString, bool)));
+    connect(player, SIGNAL(activeClipName(QString, QString, bool)),
+            this, SLOT(activeClipName(QString, QString, bool)));
 
     connect(this, SIGNAL(setRecording()),
             player, SLOT(setRecording()));
-
-    connect(this, SIGNAL(setRenew(bool)),
-            player, SLOT(setRenew(bool)));
 
     connect(player, SIGNAL(playerStatus(PlayerStatus, bool)),
             this, SLOT(playerStatus(PlayerStatus, bool)));
@@ -217,7 +214,7 @@ void MainWindow::processOsc(QStringList address, QStringList values)
     if (adr == "channel/1/stage/layer/2/file/frame") {  // TO DO: this only needs default video frames, must become parameter
         emit currentFrame(values[0].toInt(), values[1].toInt());
     } else if (QRegularExpression("channel/1/stage/layer/./file/time").match(adr).hasMatch()) {
-        emit currentTime(values[0].toDouble(), address[4].toInt());
+        emit currentTime(values[0].toDouble(), values[1].toDouble(), address[4].toInt());
     } else {
 //      qDebug() << address << values;
     }
@@ -396,15 +393,17 @@ void MainWindow::setCurrentClip(int index)
     ui->tableView->selectRow(index);
 }
 
-void MainWindow::setTimeCode(double time, int videoLayer)
+void MainWindow::setTimeCode(double time, double duration, int videoLayer)
 {
     if (videoLayer == 2) {    // TO DO: this is the default video layer, should become parameter
         timecode = Timecode::fromTime(time, 29.97, false);
         ui->timeCode->setText(timecode);
+        ui->lblDuration->setText(Timecode::fromTime(duration - time, 29.97, false));
+        ui->progressBar->setValue(static_cast<int>(100 - (duration - time)/duration * 100));
     }
 }
 
-void MainWindow::activeClipName(QString clipName, bool insert)
+void MainWindow::activeClipName(QString clipName, QString upcoming, bool insert)
 {
     currentClip = clipName;
     if (!insert) {
@@ -414,6 +413,11 @@ void MainWindow::activeClipName(QString clipName, bool insert)
         ui->clipName->setStyleSheet("QLabel { color : red; }");
         ui->clipName->setText("INSERT\n" + clipName);
     }
+    if (upcoming == clipName) {
+        ui->lblUpcomingClip->setText("---");
+    } else {
+        ui->lblUpcomingClip->setText(upcoming);
+    }
 }
 
 void MainWindow::on_btnRecording_clicked()
@@ -421,9 +425,14 @@ void MainWindow::on_btnRecording_clicked()
     emit setRecording();
 }
 
-void MainWindow::on_renewCheckBox_stateChanged(int arg1)
+void MainWindow::on_chkRandom_stateChanged(int random)
 {
-    emit setRenew(arg1);
+    Player::getInstance()->setRandom(random);
+}
+
+void MainWindow::on_chkTriggers_stateChanged(int triggers)
+{
+    Player::getInstance()->setTriggersActive(triggers);
 }
 
 void MainWindow::playerStatus(PlayerStatus status, bool isRecording)
@@ -545,8 +554,8 @@ void MainWindow::on_actionMIDI_Editor_triggered()
                 m_midiEditorDialog, SLOT(currentNote(QString, bool, unsigned int)));
 
         // Action when new clip is being played
-        connect(player, SIGNAL(activeClipName(QString, bool)),
-                m_midiEditorDialog, SLOT(activeClipName(QString, bool)));
+        connect(player, SIGNAL(activeClipName(QString, QString, bool)),
+                m_midiEditorDialog, SLOT(activeClipName(QString, QString, bool)));
 
         // Action when new clip is selected
         connect(this, SIGNAL(clipNameSelected(QString)),

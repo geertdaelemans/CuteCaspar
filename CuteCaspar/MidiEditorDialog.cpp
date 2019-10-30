@@ -197,9 +197,10 @@ void MidiEditorDialog::setClipName(QString clipName, bool insert)
 }
 
 
-void MidiEditorDialog::activeClipName(QString clipName, bool insert)
+void MidiEditorDialog::activeClipName(QString clipName, QString upcoming, bool insert)
 {
     Q_UNUSED(insert)
+    Q_UNUSED(upcoming)
     setClipName(clipName);
 }
 

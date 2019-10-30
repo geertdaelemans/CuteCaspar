@@ -48,8 +48,8 @@ public slots:
     void processOsc(QStringList address, QStringList values);
     void listMedia();
     void setCurrentClip(int index);
-    void setTimeCode(double time, int videoLayer);
-    void activeClipName(QString clipName, bool insert = false);
+    void setTimeCode(double time, double duration, int videoLayer);
+    void activeClipName(QString clipName, QString upcoming, bool insert = false);
     void playerStatus(PlayerStatus status, bool isRecording);
 
 private slots:
@@ -67,7 +67,8 @@ private slots:
     void on_btnStartPlaylist_clicked();
     void on_btnStopPlaylist_clicked();
     void on_btnRecording_clicked();
-    void on_renewCheckBox_stateChanged(int arg1);
+    void on_chkRandom_stateChanged(int random);
+    void on_chkTriggers_stateChanged(int triggers);
     void on_btnPlayClip_clicked();
     void on_actionMidi_Panel_triggered();
     void on_pushButton_clicked();
@@ -75,12 +76,13 @@ private slots:
     void on_actionControl_Panel_triggered();
     void on_actionMIDI_Editor_triggered();
 
+
 signals:
     void nextClip();
-    void currentTime(double time, int videoLayer);
+    void currentTime(double time, double duration, int videoLayer);
     void currentFrame(int frame, int lastFrame);
     void setRecording();
-    void setRenew(bool value);
+//    void setRenew(bool value);
     void parseMessage(QString msg);
     void clipNameSelected(QString clipName);
 

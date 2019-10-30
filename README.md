@@ -21,6 +21,7 @@ Good to know:
 * Includes Python 3 example code for Raspberry PI
 * Uses SQlite database
 * Note/MIDI assignments imported through .csv file
+* SoundScape clip runs in background for extra audio and MIDI actions
 
 PLEASE BEWARE
 
@@ -33,3 +34,4 @@ Still to do/resolve:
 * Need to clean-up loadNextClip()
 * Move to latest CasparCG release
 * List of CasparCG clips only updated after dis/connection
+* SoundScape clipName is hardcoded

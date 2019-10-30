@@ -33,6 +33,11 @@ void Player::setDevice(CasparDevice* device)
     m_device = device;
 }
 
+void Player::setRandom(bool random)
+{
+    m_random = random;
+}
+
 
 /**
  * @brief Player::loadPlayList
@@ -94,14 +99,18 @@ void Player::updateRandomClip()
 void Player::startPlayList(int clipIndex)
 {
     m_device->stop(1, m_defaultLayer);
-    m_currentClipIndex = clipIndex;
-    m_nextClipIndex = clipIndex;
+    if (m_random) {
+        m_currentClipIndex = QRandomGenerator::global()->bounded(m_playlistClips.size());
+    } else {
+        m_currentClipIndex = clipIndex;
+    }
+    m_nextClipIndex = m_currentClipIndex;
     m_timecode = 100;  // By faking the present timecode, the start of the clip (follows) will trigger loadNextClip()
     m_device->playMovie(1, m_defaultLayer, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false);
     m_singlePlay = false;
     emit activeClip(m_currentClipIndex);
     setStatus(PlayerStatus::PLAYLIST_PLAYING);
-    startSoundScape("EXTRAS/SOUNDSCAPE");
+    startSoundScape("EXTRAS/SOUNDSCAPE");  // TODO: SoundScape cLip name should not be hardcoded
 }
 
 /**
@@ -314,7 +323,6 @@ void Player::loadNextClip()
     if (!m_interrupted) {
         m_currentClipIndex = m_nextClipIndex;
         emit activeClip(m_currentClipIndex);
-        emit activeClipName(m_playlistClips[m_currentClipIndex]);
         qDebug() << "Playing:" << m_playlistClips[m_currentClipIndex];
         retrieveMidiPlayList(m_playlistClips[m_currentClipIndex]);
         if (midiRead->isReady()) {
@@ -329,7 +337,13 @@ void Player::loadNextClip()
             midiLog->openMidiLog(m_playlistClips[m_currentClipIndex]);
         }
         if (!m_singlePlay) {
-            if (m_currentClipIndex > (m_playlistClips.size()-2)) {
+            if (m_random) {
+                int randomNumber = QRandomGenerator::global()->bounded(m_playlistClips.size());
+                while (randomNumber == m_nextClipIndex) {
+                    randomNumber = QRandomGenerator::global()->bounded(m_playlistClips.size());
+                }
+                m_nextClipIndex = randomNumber;
+            } else if (m_currentClipIndex > (m_playlistClips.size()-2)) {
                 m_nextClipIndex = 0;
             } else {
                 m_nextClipIndex++;
@@ -341,8 +355,9 @@ void Player::loadNextClip()
             emit insertFinished();
             m_insert = false;
         }
+        emit activeClipName(m_playlistClips[m_currentClipIndex], m_playlistClips[m_nextClipIndex]);
     } else {
-        emit activeClipName(m_interruptedClipName, true);
+        emit activeClipName(m_interruptedClipName, m_playlistClips[m_nextClipIndex], true);
         qDebug() << "Playing:" << m_interruptedClipName;
         retrieveMidiPlayList(m_interruptedClipName);
         if (midiRead->isReady()) {
@@ -365,8 +380,10 @@ void Player::loadNextClip()
  * @brief Player::timecode
  * @param time
  */
-void Player::timecode(double time, int videoLayer)
+void Player::timecode(double time, double duration, int videoLayer)
 {
+    Q_UNUSED(duration)
+
     if (videoLayer == m_defaultLayer) {
         double prev_timecode = m_timecode;
         m_timecode = time;
@@ -394,7 +411,7 @@ void Player::timecode(double time, int videoLayer)
     //            i++;
     //        }
     //    }
-        if (!m_renew && midiPlayList.contains(timecode)) {
+        if (m_triggersActive && midiPlayList.contains(timecode)) {
             if (midiPlayList[timecode].type == "ON") {
                 playNote(midiPlayList[timecode].pitch, true);
             } else {
@@ -403,7 +420,7 @@ void Player::timecode(double time, int videoLayer)
         }
     } else if (videoLayer == m_soundScapeLayer && m_soundScapeActive) {
         QString timecode = Timecode::fromTime(time, 29.97, false);
-        if (midiSoundScape.contains(timecode)) {
+        if (m_triggersActive && midiSoundScape.contains(timecode)) {
             if (midiSoundScape[timecode].type == "ON") {
                 playNote(midiSoundScape[timecode].pitch, true);
             } else {
@@ -500,9 +517,9 @@ void Player::setRecording()
     setStatus(m_status);
 }
 
-void Player::setRenew(bool value)
+void Player::setTriggersActive(bool value)
 {
-    m_renew = value;
+    m_triggersActive = value;
 }
 
 void Player::retrieveMidiPlayList(QString clipName)
