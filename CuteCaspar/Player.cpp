@@ -170,6 +170,12 @@ void Player::stopPlayList()
     stopSoundScape();
 }
 
+
+void Player::nextClip()
+{
+    m_device->play(1, m_defaultLayer);
+}
+
 void Player::insertPlaylist(QString clipName)
 {
     pauseSoundScape();
@@ -389,9 +395,9 @@ void Player::timecode(double time, double duration, int videoLayer)
         m_timecode = time;
         if (prev_timecode > m_timecode && m_timecode < 1.0) {
             loadNextClip();
-    //        i = midiPlayList.begin();   // EXPERIMENT WITH ITERATOR
+            i = midiPlayList.begin();   // EXPERIMENT WITH ITERATOR
         } if (qFabs(prev_timecode - m_timecode) < 0.001) {
-            qDebug() << "Clip stopped";
+            qDebug() << "Clip stopped" << videoLayer << time;
             if (m_insert) {
                 emit insertFinished();
                 if (!m_singlePlay)
@@ -405,19 +411,23 @@ void Player::timecode(double time, double duration, int videoLayer)
             }
         }
         QString timecode = Timecode::fromTime(time, 29.97, false);
-    //    if (i != midiPlayList.end()) {                   // EXPERIMENT WITH ITERATOR
-    //        if (i->timeCode <= timecode) {
-    //            qDebug() << "Bang" << i->timeCode;
-    //            i++;
-    //        }
-    //    }
-        if (m_triggersActive && midiPlayList.contains(timecode)) {
-            if (midiPlayList[timecode].type == "ON") {
-                playNote(midiPlayList[timecode].pitch, true);
-            } else {
-                playNote(midiPlayList[timecode].pitch, false);
+        if (m_triggersActive && i != midiPlayList.end()) {                   // EXPERIMENT WITH ITERATOR
+            if (i->timeCode <= timecode) {
+                if (midiPlayList[i->timeCode].type == "ON") {
+                    playNote(midiPlayList[i->timeCode].pitch, true);
+                } else {
+                    playNote(midiPlayList[i->timeCode].pitch, false);
+                }
+                i++;
             }
         }
+//        if (m_triggersActive && midiPlayList.contains(timecode)) {
+//            if (midiPlayList[timecode].type == "ON") {
+//                playNote(midiPlayList[timecode].pitch, true);
+//            } else {
+//                playNote(midiPlayList[timecode].pitch, false);
+//            }
+//        }
     } else if (videoLayer == m_soundScapeLayer && m_soundScapeActive) {
         QString timecode = Timecode::fromTime(time, 29.97, false);
         if (m_triggersActive && midiSoundScape.contains(timecode)) {

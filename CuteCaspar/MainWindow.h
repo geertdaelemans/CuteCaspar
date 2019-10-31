@@ -77,6 +77,8 @@ private slots:
     void on_actionMIDI_Editor_triggered();
 
 
+    void on_btnNext_clicked();
+
 signals:
     void nextClip();
     void currentTime(double time, double duration, int videoLayer);

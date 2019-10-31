@@ -199,6 +199,7 @@ void MainWindow::readyRead()
     if (buffer.mid(0, 5) == "raspi") {
         emit parseMessage(&buffer.data()[6]);
     } else {
+        qDebug() << "hier" << buffer.data();
         listener.ProcessPacket(buffer.data(), buffer.size(), IpEndpointName(sender.toIPv4Address(), senderPort));
     }
 }
@@ -622,4 +623,9 @@ void MainWindow::on_actionRaspberryPI_triggered()
     } else {
         m_raspberryPIDialog->hide();
     }
+}
+
+void MainWindow::on_btnNext_clicked()
+{
+    Player::getInstance()->nextClip();
 }

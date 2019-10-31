@@ -40,6 +40,7 @@ public:
     void retrieveMidiPlayList(QString clipName);
     void saveMidiPlayList(QMap<QString, message> midiPlayList);
     void playClip(QString clipName);
+    void nextClip();
     void setTriggersActive(bool value);
 
     // SoundScape Calls
