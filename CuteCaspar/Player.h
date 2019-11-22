@@ -70,7 +70,7 @@ private:
     MidiLogger* midiLog;
     QMap<QString, message> midiPlayList;
     QMap<QString, message> midiSoundScape;
-    QMap<QString, message>::iterator i;
+    QMap<QString, message>::iterator midiPlayListIterator;
     bool m_singlePlay = false;
     bool m_recording = false;
     bool m_triggersActive = true;

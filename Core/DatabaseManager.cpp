@@ -123,8 +123,6 @@ void DatabaseManager::reset()
 {
     QMutexLocker locker(&mutex);
 
-    qDebug() << "Count" << QSqlDatabase::database().tables().count();
-
     QSqlQuery sql("DELETE FROM Library");
     if (!sql.exec())
         qDebug("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));

@@ -395,7 +395,6 @@ void Player::timecode(double time, double duration, int videoLayer)
         m_timecode = time;
         if (prev_timecode > m_timecode && m_timecode < 1.0) {
             loadNextClip();
-            i = midiPlayList.begin();   // EXPERIMENT WITH ITERATOR
         } if (qFabs(prev_timecode - m_timecode) < 0.001) {
             qDebug() << "Clip stopped" << videoLayer << time;
             if (m_insert) {
@@ -411,23 +410,16 @@ void Player::timecode(double time, double duration, int videoLayer)
             }
         }
         QString timecode = Timecode::fromTime(time, 29.97, false);
-        if (m_triggersActive && i != midiPlayList.end()) {                   // EXPERIMENT WITH ITERATOR
-            if (i->timeCode <= timecode) {
-                if (midiPlayList[i->timeCode].type == "ON") {
-                    playNote(midiPlayList[i->timeCode].pitch, true);
+        if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
+            if (midiPlayListIterator->timeCode <= timecode) {
+                if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
+                    playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
                 } else {
-                    playNote(midiPlayList[i->timeCode].pitch, false);
+                    playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
                 }
-                i++;
+                midiPlayListIterator++;
             }
         }
-//        if (m_triggersActive && midiPlayList.contains(timecode)) {
-//            if (midiPlayList[timecode].type == "ON") {
-//                playNote(midiPlayList[timecode].pitch, true);
-//            } else {
-//                playNote(midiPlayList[timecode].pitch, false);
-//            }
-//        }
     } else if (videoLayer == m_soundScapeLayer && m_soundScapeActive) {
         QString timecode = Timecode::fromTime(time, 29.97, false);
         if (m_triggersActive && midiSoundScape.contains(timecode)) {
@@ -535,6 +527,7 @@ void Player::setTriggersActive(bool value)
 void Player::retrieveMidiPlayList(QString clipName)
 {
     midiPlayList = midiRead->openLog(clipName);
+    midiPlayListIterator = midiPlayList.begin();
     emit newMidiPlaylist(midiPlayList);
 }
 

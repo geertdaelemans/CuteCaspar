@@ -199,7 +199,6 @@ void MainWindow::readyRead()
     if (buffer.mid(0, 5) == "raspi") {
         emit parseMessage(&buffer.data()[6]);
     } else {
-        qDebug() << "hier" << buffer.data();
         listener.ProcessPacket(buffer.data(), buffer.size(), IpEndpointName(sender.toIPv4Address(), senderPort));
     }
 }
