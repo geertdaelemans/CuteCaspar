@@ -657,7 +657,8 @@ void CasparDevice::sendNotification()
 
                 QString timecode;
                 double fps = 0.0;
-                if (response.split("\" ").at(1).trimmed().split(" ").count() > 5)
+                QStringList respList = response.split("\" ").at(1).trimmed().replace("  "," ").split(" ");
+                if (respList.count() >= 5)
                 {
                     // Format:
                     // "AMB"  MOVIE  6445960 20121101160514 643 1/60
@@ -665,8 +666,8 @@ void CasparDevice::sendNotification()
                     // "GO1080P25"  MOVIE  16694084 20121101150514 445 1/25
                     // "WIPE"  MOVIE  1268784 20121101150514 31 1/25
                     // "HOOLOOVOO"  MOVIE  1111111 22222222222222 333 100/2997
-                    QString totalFrames = response.split("\" ").at(1).trimmed().split(" ").at(4);
-                    QStringList timebase = response.split("\" ").at(1).trimmed().split(" ").at(5).split("/");
+                    QString totalFrames = respList.at(3);
+                    QStringList timebase = respList.at(4).split("/");
 
                     int frames = totalFrames.toInt();
                     fps = timebase.at(1).toDouble() / timebase.at(0).toDouble();
@@ -674,6 +675,7 @@ void CasparDevice::sendNotification()
                     double time = frames * (1.0 / fps);
                     timecode = Timecode::fromTime(time, fps, false);
                 }
+                //items.push_back(CasparMedia(name, type, timecode, qRound(fps * 100)/100.0));
                 items.push_back(CasparMedia(name, type, timecode, fps));
             }
             qDebug() << "emit mediaChanged()";

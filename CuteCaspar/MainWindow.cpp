@@ -215,6 +215,8 @@ void MainWindow::processOsc(QStringList address, QStringList values)
         emit currentFrame(values[0].toInt(), values[1].toInt());
     } else if (QRegularExpression("channel/1/stage/layer/./file/time").match(adr).hasMatch()) {
         emit currentTime(values[0].toDouble(), values[1].toDouble(), address[4].toInt());
+    } else if (QRegularExpression("channel/1/stage/layer/./foreground/file/time").match(adr).hasMatch()) {
+        emit currentTime(values[0].toDouble(), values[1].toDouble(), address[4].toInt());
     } else {
 //      qDebug() << address << values;
     }
