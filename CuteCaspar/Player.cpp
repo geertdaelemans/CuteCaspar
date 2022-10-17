@@ -81,15 +81,19 @@ int Player::getNumberOfClips(QString playlist) const
 void Player::updateRandomClip()
 {
     int amount = getNumberOfClips("Scares");
-    int id = QRandomGenerator::global()->bounded(amount) + 1;
-    QSqlQuery query;
-    if (!query.prepare(QString("SELECT Name FROM Scares WHERE id = %1").arg(id)))
-        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
-    query.exec();
-    while (query.next()) {
-        m_randomScare = query.value(0).toString();
+    qDebug("Random scares: %d", amount);
+    if (amount > 0) {
+        int id = QRandomGenerator::global()->bounded(amount) + 1;
+        QSqlQuery query;
+        if (!query.prepare(QString("SELECT Name FROM Scares WHERE id = %1").arg(id)))
+            qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
+        query.exec();
+        while (query.next()) {
+            m_randomScare = query.value(0).toString();
+            qDebug("Set random scare (m_randomScare) to: %s", qPrintable(m_randomScare));
+        }
+        query.finish();
     }
-    query.finish();
 }
 
 
