@@ -102,7 +102,9 @@ void Player::updateRandomClip()
  */
 void Player::startPlayList(int clipIndex)
 {
-    m_device->stop(1, m_defaultLayer);
+    if (m_singlePlay) {
+        m_device->stop(1, m_defaultLayer);
+    }
     if (m_random) {
         m_currentClipIndex = QRandomGenerator::global()->bounded(m_playlistClips.size());
     } else {
@@ -229,8 +231,9 @@ void Player::saveMidiPlayList(QMap<QString, message> playList)
  */
 void Player::playClip(int clipIndex)
 {
-    m_timecode = 10.0;
+    m_timecode = -1;
     m_singlePlay = true;
+    stopPlayList();
     m_currentClipIndex = clipIndex;
     m_nextClipIndex = clipIndex;
     m_device->playMovie(1, m_defaultLayer, m_playlistClips[m_currentClipIndex], "", 0, "", "", 0, 0, false, false);
@@ -243,8 +246,9 @@ void Player::playClip(int clipIndex)
  */
 void Player::playClip(QString clipName)
 {
-    m_timecode = 10.0;
+    m_timecode = -1;
     m_singlePlay = true;
+    stopPlayList();
     m_currentClipIndex = getClipIndexByName(clipName);
     m_nextClipIndex = m_currentClipIndex;
     m_device->playMovie(1, m_defaultLayer, clipName, "", 0, "", "", 0, 0, false, false);
@@ -399,7 +403,8 @@ void Player::timecode(double time, double duration, int videoLayer)
         m_timecode = time;
         if (prev_timecode > m_timecode && m_timecode < 1.0) {
             loadNextClip();
-        } if (qFabs(prev_timecode - m_timecode) < 0.001) {
+        }
+        if (qFabs(prev_timecode - m_timecode) < 0.001 && !m_singlePlay) {
             qDebug() << "Clip stopped" << videoLayer << time;
             if (m_insert) {
                 emit insertFinished();
@@ -408,23 +413,23 @@ void Player::timecode(double time, double duration, int videoLayer)
                 m_insert = false;
             }
             midiLog->closeMidiLog();
-            if (m_singlePlay) {
-                qDebug() << "stopPlayList()";
-                stopPlayList();
-            }
         }
-        QString timecode = Timecode::fromTime(time, 29.97, false);
-        if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
-            if (midiPlayListIterator->timeCode <= timecode) {
-                if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
-                    playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
-                } else {
-                    playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+        if (midiPlayList.count() > 0) {
+            QString timecode = Timecode::fromTime(time, 29.97, false);
+            if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
+                if (midiPlayListIterator.key().length() > 0) {
+                    if (midiPlayListIterator->timeCode <= timecode) {
+                        if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
+                            playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
+                        } else {
+                            playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+                        }
+                        midiPlayListIterator++;
+                    }
                 }
-                midiPlayListIterator++;
             }
         }
-    } else if (videoLayer == m_soundScapeLayer && m_soundScapeActive) {
+    } else if (videoLayer == m_soundScapeLayer && m_soundScapeActive && midiSoundScape.count()>0) {
         QString timecode = Timecode::fromTime(time, 29.97, false);
         if (m_triggersActive && midiSoundScape.contains(timecode)) {
             if (midiSoundScape[timecode].type == "ON") {

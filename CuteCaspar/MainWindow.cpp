@@ -380,12 +380,12 @@ void MainWindow::on_btnStopPlaylist_clicked()
 
 void MainWindow::on_btnPlayClip_clicked()
 {
-    if (player->getStatus() == PlayerStatus::READY) {
-        player->playClip(currentClipIndex);
-    } else if (player->getStatus() == PlayerStatus::CLIP_PLAYING) {
+    if (player->getStatus() == PlayerStatus::CLIP_PLAYING) {
         player->pausePlayList();
     } else if (player->getStatus() == PlayerStatus::CLIP_PAUSED) {
         player->resumePlayList();
+    } else {
+        player->playClip(currentClipIndex);
     }
 }
 
