@@ -31,13 +31,13 @@ void ControlDialog::setup()
     query.exec();
     int counter = 0;
     clips.clear();
+    ClipInfo newClip;
     while (query.next()) {
-        clip clip;
-        clip.id = query.value(0).toInt();
-        clip.name = query.value(1).toString();
-        clips.append(clip);
+        newClip.setId(query.value(0).toInt());
+        newClip.setName(query.value(1).toString());
+        clips.append(newClip);
         counter++;
-        qDebug() << clip.id << clip.name;
+        qDebug() << newClip.getId() << newClip.getName();
     }
     query.finish();
 
@@ -58,9 +58,9 @@ void ControlDialog::setup()
     for (int i = 0; i < clips.length(); i++) {
         QPushButton* newButton = new QPushButton();
         newButton->setFocusPolicy(Qt::NoFocus);
-        newButton->setProperty("name", clips[i].name);
+        newButton->setProperty("name", clips[i].getName());
         newButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        QLabel* label = new QLabel(clips[i].name, newButton);
+        QLabel* label = new QLabel(clips[i].getName(), newButton);
         label->setWordWrap(true);
         QHBoxLayout* layout = new QHBoxLayout(newButton);
         layout->addWidget(label, 0, Qt::AlignCenter);

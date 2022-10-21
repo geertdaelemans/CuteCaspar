@@ -26,6 +26,7 @@ CONFIG += c++11
 
 SOURCES += \
         CasparOSCListener.cpp \
+        ClipInfo.cpp \
         ControlDialog.cpp \
         DeviceDialog.cpp \
         EffectsDelegate.cpp \
@@ -52,6 +53,7 @@ SOURCES += \
 
 HEADERS += \
         CasparOSCListener.h \
+        ClipInfo.h \
         ControlDialog.h \
         DeviceDialog.h \
         EffectsDelegate.h \

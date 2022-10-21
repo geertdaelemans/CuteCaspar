@@ -5,6 +5,7 @@
 
 #include "MidiReader.h"
 #include "MidiLogger.h"
+#include "ClipInfo.h"
 
 enum class PlayerStatus
 {
@@ -16,7 +17,6 @@ enum class PlayerStatus
     CLIP_PLAYING,
     CLIP_PAUSED
 };
-
 
 class Player : public QObject
 {
@@ -44,7 +44,7 @@ public:
     void setTriggersActive(bool value);
 
     // SoundScape Calls
-    void startSoundScape(QString clipName);
+    void startSoundScape();
     void pauseSoundScape() const;
     void resumeSoundScape() const;
     void stopSoundScape();
@@ -61,7 +61,7 @@ public slots:
 private:
     static Player* s_inst;
     CasparDevice* m_device;
-    QList<QString> m_playlistClips;
+    QList<ClipInfo> m_playlistClips;
     int m_currentClipIndex = 0;
     int m_nextClipIndex = 0;
     double m_timecode;
@@ -90,6 +90,7 @@ private:
     bool m_soundScapeActive;
     void retrieveMidiSoundScape(QString clipName);
     bool m_random = true;
+    ClipInfo m_soundScapeClip;
 
 signals:
     void activeClip(int value);

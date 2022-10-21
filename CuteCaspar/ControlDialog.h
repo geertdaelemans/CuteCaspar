@@ -3,14 +3,11 @@
 
 #include <QDialog>
 
+#include "ClipInfo.h"
+
 namespace Ui {
 class ControlDialog;
 }
-
-struct clip {
-    int id;
-    QString name;
-};
 
 class ControlDialog : public QDialog
 {
@@ -23,7 +20,7 @@ public:
 
 private:
     Ui::ControlDialog *ui;
-    QList<clip> clips;
+    QList<ClipInfo> clips;
 
 signals:
     void insertPlaylist(QString clipName);
