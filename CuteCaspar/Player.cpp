@@ -6,6 +6,7 @@
 
 #include "MidiConnection.h"
 #include "RaspberryPI.h"
+#include "DatabaseManager.h"
 
 #include "Timecode.h"
 
@@ -54,6 +55,11 @@ void Player::loadPlayList()
         newClip.setId(query.value(0).toInt());
         newClip.setName(query.value(1).toString());
         newClip.setFps(query.value(2).toDouble());
+        midiRead->openLog(query.value(1).toString());
+        if (midiRead->isReady()) {
+            newClip.setMidi(true);
+            DatabaseManager::getInstance().updateMidiStatus(query.value(1).toString(), true);
+        }
         m_playlistClips.append(newClip);
     }
     query.finish();
@@ -135,12 +141,8 @@ void Player::startPlayList(int clipIndex)
 void Player::pausePlayList()
 {
     m_device->pause(1, m_defaultLayer);
-    if (m_singlePlay) {
-        setStatus(PlayerStatus::CLIP_PAUSED);
-    } else {
-        setStatus(PlayerStatus::PLAYLIST_PAUSED);
-    }
     pauseSoundScape();
+    setStatus(PlayerStatus::PLAYLIST_PAUSED);
 }
 
 
@@ -184,6 +186,7 @@ void Player::stopPlayList()
     midiLog->closeMidiLog();
     setStatus(PlayerStatus::READY);
     stopSoundScape();
+    stopOverlay();
 }
 
 
@@ -205,18 +208,19 @@ void Player::insertPlaylist(QString clipName)
         m_interruptedClipName = clipName;
     }
     pauseSoundScape();
-    m_device->stop(1, m_defaultLayer);
-    int frameStopped = m_currentFrame;
-    m_interrupted = true;
-    if (getStatus() != PlayerStatus::PLAYLIST_PLAYING && getStatus() != PlayerStatus::PLAYLIST_INSERT) {
-        m_timecode = 10.0;
-        m_singlePlay = true;
+    m_device-> pause(1, m_defaultLayer);
+    m_activeVideoLayer = m_overlayLayer;
+    m_device->playMovie(1, m_overlayLayer, m_interruptedClipName, "", 0, "", "", 0, 0, false, false);
+    emit activeClipName(m_interruptedClipName, m_playlistClips[m_currentClipIndex].getName(), true);
+    qDebug() << "Playing interrupt clip:" << m_interruptedClipName;
+    retrieveMidiPlayList(m_interruptedClipName);
+    if (midiRead->isReady()) {
+        qDebug("MIDI file found...");
+    } else {
+        qDebug("No MIDI file found...");
     }
-    m_nextClipIndex = m_currentClipIndex;
-    qDebug() << "Interrupted" << m_playlistClips[m_currentClipIndex].getName();
-    m_device->playMovie(1, m_defaultLayer, m_interruptedClipName, "", 0, "", "", 0, 0, false, false);
-    if (!m_singlePlay) {
-        m_device->loadMovie(1, m_defaultLayer, m_playlistClips[m_currentClipIndex].getName(), "", 0, "", "", frameStopped, 0, false, false, true);
+    if (m_recording) {
+        midiLog->openMidiLog(m_interruptedClipName);
     }
     setStatus(PlayerStatus::PLAYLIST_INSERT);
     if (clipName == "random") {
@@ -246,13 +250,10 @@ void Player::saveMidiPlayList(QMap<QString, message> playList)
  */
 void Player::playClip(int clipIndex)
 {
-    m_timecode = -1;
-    m_singlePlay = true;
-    pausePlayList();
+    m_device->loadMovie(1, m_defaultLayer, m_playlistClips[clipIndex].getName(), "", 0, "", "", 0, 0, false, false, true);
     m_currentClipIndex = clipIndex;
-    m_nextClipIndex = clipIndex;
-    m_device->playMovie(1, m_defaultLayer, m_playlistClips[m_currentClipIndex].getName(), "", 0, "", "", 0, 0, false, false);
-    setStatus(PlayerStatus::CLIP_PLAYING);
+    m_insertedClip = true;
+    nextClip();
 }
 
 /**
@@ -261,13 +262,11 @@ void Player::playClip(int clipIndex)
  */
 void Player::playClip(QString clipName)
 {
-    m_timecode = -1;
-    m_singlePlay = true;
-    pausePlayList();
-    m_currentClipIndex = getClipIndexByName(clipName);
-    m_nextClipIndex = m_currentClipIndex;
-    m_device->playMovie(1, m_defaultLayer, clipName, "", 0, "", "", 0, 0, false, false);
-    setStatus(PlayerStatus::CLIP_PLAYING);
+    int clipIndex = getClipIndexByName(clipName);
+    m_device->loadMovie(1, m_defaultLayer, m_playlistClips[clipIndex].getName(), "", 0, "", "", 0, 0, false, false, true);
+    m_currentClipIndex = clipIndex;
+    m_insertedClip = true;
+    nextClip();
 }
 
 int Player::getClipIndexByName(QString clipName) const
@@ -312,6 +311,13 @@ void Player::stopSoundScape()
     m_soundScapeActive = false;
 }
 
+void Player::stopOverlay()
+{
+    qDebug() << "stopOverlay";
+    m_device->stop(1, m_overlayLayer);
+    m_activeVideoLayer = m_defaultLayer;
+}
+
 /**
  * @brief Player::getStatus
  * @return
@@ -349,8 +355,7 @@ void Player::loadClip(QString clipName)
  */
 void Player::loadNextClip()
 {
-    qDebug() << "loadNextClip";
-    if (!m_interrupted) {
+    if (!m_singlePlay && !m_insertedClip) {
         m_currentClipIndex = m_nextClipIndex;
         emit activeClip(m_currentClipIndex);
         qDebug() << "Playing:" << m_playlistClips[m_currentClipIndex].getName();
@@ -379,27 +384,31 @@ void Player::loadNextClip()
         }
         loadClip(m_playlistClips[m_nextClipIndex].getName());
         setStatus(PlayerStatus::PLAYLIST_PLAYING);
-        if (m_insert) {
-            emit insertFinished();
-            m_insert = false;
-        }
         emit activeClipName(m_playlistClips[m_currentClipIndex].getName(), m_playlistClips[m_nextClipIndex].getName());
-    } else {
-        emit activeClipName(m_interruptedClipName, m_playlistClips[m_nextClipIndex].getName(), true);
-        qDebug() << "Playing interrupt clip:" << m_interruptedClipName;
-        retrieveMidiPlayList(m_interruptedClipName);
+    }
+    if (m_singlePlay) {
+        emit activeClip(m_currentClipIndex);
+        m_singlePlay = false;
+    }
+    if (m_insertedClip) {
+        emit activeClip(m_currentClipIndex);
+        qDebug() << "Playing:" << m_playlistClips[m_currentClipIndex].getName();
+        retrieveMidiPlayList(m_playlistClips[m_currentClipIndex].getName());
         if (midiRead->isReady()) {
             qDebug("MIDI file found...");
+            pauseSoundScape();
         }
         else {
             qDebug("No MIDI file found...");
+            resumeSoundScape();
         }
         if (m_recording) {
-            midiLog->openMidiLog(m_interruptedClipName);
+            midiLog->openMidiLog(m_playlistClips[m_currentClipIndex].getName());
         }
-        m_interrupted = false;
-        m_insert = true;
-        setStatus(PlayerStatus::PLAYLIST_INSERT);
+        loadClip(m_playlistClips[m_nextClipIndex].getName());
+        setStatus(PlayerStatus::PLAYLIST_PLAYING);
+        m_insertedClip = false;
+        emit activeClipName(m_playlistClips[m_currentClipIndex].getName(), m_playlistClips[m_nextClipIndex].getName());
     }
 }
 
@@ -411,50 +420,93 @@ void Player::loadNextClip()
 void Player::timecode(double time, double duration, int videoLayer)
 {
     Q_UNUSED(duration)
-
-    if (videoLayer == m_defaultLayer && time > 0.0) {
-        double prev_timecode = m_timecode;
-        m_timecode = time;
-        // Next clip has started automatically (Playlist)
-        if (prev_timecode > m_timecode && m_timecode < 1.0) {
-            qDebug() << "NEXT CLIP HAS STARTED AUTOMATICALLY";
-            qDebug() << " singlePlay=" << m_singlePlay << " insert=" << m_insert << " interrupt=" << m_interrupted;
-            loadNextClip();
-        }
-        // Previous clip has just stopped
-        if (qFabs(prev_timecode - m_timecode) < 0.001) {
-            qDebug() << "PREVIOUS CLIP HAS JUST STOPPED";
-            qDebug() << " singlePlay=" << m_singlePlay << " insert=" << m_insert << " interrupt=" << m_interrupted;
-            if (m_insert) {
-                emit insertFinished();
-                m_insert = false;
+    if (videoLayer == m_defaultLayer) {
+        if (time > 0.0 && m_endOfClipDetected) {
+            double prev_timecode = m_timecode;
+            m_timecode = time;
+            if (prev_timecode - m_timecode > 0.1) {
+                m_endOfClipDetected = false;
+                qDebug() << "m_endOfClipDetected = false";
             }
-            loadNextClip();
-            midiLog->closeMidiLog();
-        }
-        if (midiPlayList.count() > 0) {
-            double fps = m_playlistClips[m_currentClipIndex].getFps();
-            QString timecode = Timecode::fromTime(time, fps, false);
-            if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
-                if (midiPlayListIterator.key().length() > 0) {
-                    if (midiPlayListIterator->timeCode <= timecode) {
-                        if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
-                            playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
-                        } else {
-                            playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+        } else if (time > 0.0 && getStatus() != PlayerStatus::PLAYLIST_PAUSED && getStatus() != PlayerStatus::PLAYLIST_INSERT && !m_endOfClipDetected) {
+            double prev_timecode = m_timecode;
+            m_timecode = time;
+            // Next clip has started automatically (Playlist)
+            if (prev_timecode > m_timecode && m_timecode < 1.0) {
+                qDebug() << "NEXT CLIP HAS STARTED AUTOMATICALLY" << prev_timecode << " - " << m_timecode;
+                qDebug() << " singlePlay=" << m_singlePlay;
+                loadNextClip();
+            }
+            // Previous clip has just stopped
+            if (qFabs(prev_timecode - m_timecode) < 0.001) {
+                qDebug() << "PREVIOUS CLIP HAS JUST STOPPED" << prev_timecode << " - " << m_timecode;;
+                qDebug() << " singlePlay=" << m_singlePlay << " insertedClip=" << m_insertedClip;
+                m_endOfClipDetected = true;
+                qDebug() << "m_endOfClipDetected = true";
+                loadNextClip();
+                midiLog->closeMidiLog();
+            }
+            if (midiPlayList.count() > 0) {
+                double fps = m_playlistClips[m_currentClipIndex].getFps();
+                QString timecode = Timecode::fromTime(time, fps, false);
+                if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
+                    if (midiPlayListIterator.key().length() > 0) {
+                        if (midiPlayListIterator->timeCode <= timecode) {
+                            if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
+                                playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
+                            } else {
+                                playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+                            }
+                            midiPlayListIterator++;
                         }
-                        midiPlayListIterator++;
                     }
                 }
             }
         }
-    } else if (videoLayer == m_soundScapeLayer && m_soundScapeActive && midiSoundScape.count()>0) {
-        QString timecode = Timecode::fromTime(time, m_soundScapeClip.getFps(), false);
-        if (m_triggersActive && midiSoundScape.contains(timecode)) {
-            if (midiSoundScape[timecode].type == "ON") {
-                playNote(midiSoundScape[timecode].pitch, true);
-            } else {
-                playNote(midiSoundScape[timecode].pitch, false);
+    } else if (videoLayer == m_overlayLayer) {
+        if (time > 0.0 && m_activeVideoLayer == m_overlayLayer) {
+            double prev_timecode = m_timecodeOverlayLayer;
+            m_timecodeOverlayLayer = time;
+            // Inserted clip has just stopped
+            if (qFabs(prev_timecode - m_timecodeOverlayLayer) < 0.001) {
+                qDebug() << "INSERTED CLIP HAS STOPPED";
+                stopOverlay();
+                emit activeClipName(m_playlistClips[m_currentClipIndex].getName(), m_playlistClips[m_nextClipIndex].getName(), false);
+                resumePlayList();
+                emit insertFinished();
+            }
+            if (midiPlayList.count() > 0) {
+                double fps = m_playlistClips[m_currentClipIndex].getFps();
+                QString timecode = Timecode::fromTime(time, fps, false);
+                if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
+                    if (midiPlayListIterator.key().length() > 0) {
+                        if (midiPlayListIterator->timeCode <= timecode) {
+                            if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
+                                playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
+                            } else {
+                                playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+                            }
+                            midiPlayListIterator++;
+                        }
+                    }
+                }
+            }
+        }
+    } else if (videoLayer == m_soundScapeLayer) {
+        if (m_soundScapeActive && midiSoundScape.count() > 0) {
+            double fps = m_soundScapeClip.getFps();
+            QString timecode = Timecode::fromTime(time, fps, false);
+            if (m_triggersActive && midiSoundScapeIterator != midiSoundScape.end()) {
+                if (midiSoundScapeIterator.key().length() > 0) {
+                    if (midiSoundScapeIterator->timeCode <= timecode) {
+                        if (midiSoundScape[midiSoundScapeIterator->timeCode].type == "ON") {
+                            playNote(midiSoundScape[midiSoundScapeIterator->timeCode].pitch, true);
+                        } else {
+                            playNote(midiSoundScape[midiSoundScapeIterator->timeCode].pitch, false);
+                        }
+                        midiSoundScapeIterator++;
+                    }
+                }
             }
         }
     }
@@ -562,4 +614,5 @@ void Player::retrieveMidiPlayList(QString clipName)
 void Player::retrieveMidiSoundScape(QString clipName)
 {
     midiSoundScape = midiRead->openLog(clipName);
+    midiSoundScapeIterator = midiSoundScape.begin();
 }

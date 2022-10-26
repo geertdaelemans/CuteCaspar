@@ -380,13 +380,7 @@ void MainWindow::on_btnStopPlaylist_clicked()
 
 void MainWindow::on_btnPlayClip_clicked()
 {
-    if (player->getStatus() == PlayerStatus::CLIP_PLAYING) {
-        player->pausePlayList();
-    } else if (player->getStatus() == PlayerStatus::CLIP_PAUSED) {
-        player->resumePlayList();
-    } else {
-        player->playClip(currentClipIndex);
-    }
+    player->playClip(currentClipIndex);
 }
 
 
@@ -397,7 +391,7 @@ void MainWindow::setCurrentClip(int index)
 
 void MainWindow::setTimeCode(double time, double duration, int videoLayer)
 {
-    if (videoLayer == 2) {    // TO DO: this is the default video layer, should become parameter
+    if (videoLayer == player->getActiveVideoLayer()) {
         timecode = Timecode::fromTime(time, 29.97, false);
         ui->timeCode->setText(timecode);
         ui->lblDuration->setText(Timecode::fromTime(duration - time, 29.97, false));
@@ -465,10 +459,6 @@ void MainWindow::playerStatus(PlayerStatus status, bool isRecording)
             ui->btnRecording->setText(tr("Not Recording"));
             setButtonColor(ui->btnRecording, QColor(53,53,53));
         }
-        break;
-    case PlayerStatus::CLIP_PAUSED:
-        ui->statusLabel->setText("CLIP PAUSED");
-        ui->btnPlayClip->setText(tr("Resume Clip"));
         break;
     case PlayerStatus::PLAYLIST_PLAYING:
         ui->statusLabel->setText("PLAYLIST PLAYING");

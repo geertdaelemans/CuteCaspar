@@ -42,12 +42,15 @@ public:
     void playClip(QString clipName);
     void nextClip();
     void setTriggersActive(bool value);
+    int getActiveVideoLayer() {return m_activeVideoLayer;};
 
     // SoundScape Calls
     void startSoundScape();
     void pauseSoundScape() const;
     void resumeSoundScape() const;
     void stopSoundScape();
+
+    void stopOverlay();
 
 public slots:
     void loadNextClip();
@@ -62,23 +65,26 @@ private:
     static Player* s_inst;
     CasparDevice* m_device;
     QList<ClipInfo> m_playlistClips;
+    int m_activeVideoLayer = 2;
     int m_currentClipIndex = 0;
     int m_nextClipIndex = 0;
     double m_timecode;
+    double m_timecodeOverlayLayer;
     PlayerStatus m_status;
     MidiReader* midiRead;
     MidiLogger* midiLog;
     QMap<QString, message> midiPlayList;
     QMap<QString, message> midiSoundScape;
     QMap<QString, message>::iterator midiPlayListIterator;
+    QMap<QString, message>::iterator midiSoundScapeIterator;
     bool m_singlePlay = false;
     bool m_recording = false;
     bool m_triggersActive = true;
-    bool m_interrupted = false;
     QString m_interruptedClipName;
     void setStatus(PlayerStatus status);
     unsigned int previousPitch;
-    bool m_insert = false;
+    bool m_insertedClip = false;
+    bool m_endOfClipDetected = false;
     int getNumberOfClips(QString playlist) const;
     void updateRandomClip();
     QString m_randomScare;
@@ -87,6 +93,7 @@ private:
     int getClipIndexByName(QString ClipName) const;
     int m_defaultLayer = 2;
     int m_soundScapeLayer = 1;
+    int m_overlayLayer = 3;
     bool m_soundScapeActive;
     void retrieveMidiSoundScape(QString clipName);
     bool m_random = true;

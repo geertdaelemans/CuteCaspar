@@ -333,6 +333,25 @@ void DatabaseManager::updateDevice(const DeviceModel& model)
 }
 
 
+void DatabaseManager::updateMidiStatus(QString clipName, bool midiActive)
+{
+    QMutexLocker locker(&mutex);
+
+    QSqlDatabase::database().transaction();
+
+    QSqlQuery sql;
+    sql.prepare("UPDATE Playlist SET Midi = :Midi "
+                "WHERE Name = :Name");
+    sql.bindValue(":Name", clipName);
+    sql.bindValue(":Midi", midiActive);
+
+    if (!sql.exec())
+       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
+    QSqlDatabase::database().commit();
+}
+
+
 /**
  * @brief DatabaseManager::deleteDevice
  * Remove the device from the Device, Thumbnail and Library database

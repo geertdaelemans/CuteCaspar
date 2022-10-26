@@ -167,7 +167,6 @@ void MidiEditorDialog::on_btnResume_clicked()
     case PlayerStatus::PLAYLIST_INSERT:
         Player::getInstance()->pausePlayList();
         break;
-    case PlayerStatus::CLIP_PAUSED:
     case PlayerStatus::PLAYLIST_PAUSED:
         QItemSelectionModel *selections = ui->tableView->selectionModel();
         QModelIndexList selected = selections->selectedIndexes();
@@ -218,7 +217,6 @@ void MidiEditorDialog::playerStatus(PlayerStatus status, bool recording)
     case PlayerStatus::PLAYLIST_INSERT:
         ui->btnResume->setText("Pause");
         break;
-    case PlayerStatus::CLIP_PAUSED:
     case PlayerStatus::PLAYLIST_PAUSED:
         ui->btnResume->setText("Resume");
         break;

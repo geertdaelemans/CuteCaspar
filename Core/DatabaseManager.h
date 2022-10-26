@@ -25,6 +25,7 @@ public:
     void insertDevice(const DeviceModel &model);
     void updateDevice(const DeviceModel &model);
     void deleteDevice(int id);
+    void updateMidiStatus(QString clipName, bool midiActive);
 
 
 
