@@ -151,6 +151,7 @@ void Player::pausePlayList()
  */
 void Player::resumePlayList()
 {
+    emit activeClipName(m_playlistClips[m_currentClipIndex].getName(), m_playlistClips[m_nextClipIndex].getName(), false);
     m_device->resume(1, m_defaultLayer);
     if (m_singlePlay) {
         setStatus(PlayerStatus::CLIP_PLAYING);
@@ -192,7 +193,12 @@ void Player::stopPlayList()
 
 void Player::nextClip()
 {
-    m_device->play(1, m_defaultLayer);
+    if (m_activeVideoLayer != m_defaultLayer) {
+        stopOverlay();
+        resumePlayList();
+    } else {
+        m_device->play(1, m_defaultLayer);
+    }
 }
 
 void Player::insertPlaylist(QString clipName)
@@ -316,6 +322,7 @@ void Player::stopOverlay()
     qDebug() << "stopOverlay";
     m_device->stop(1, m_overlayLayer);
     m_activeVideoLayer = m_defaultLayer;
+    emit insertFinished();
 }
 
 /**
@@ -471,9 +478,7 @@ void Player::timecode(double time, double duration, int videoLayer)
             if (qFabs(prev_timecode - m_timecodeOverlayLayer) < 0.001) {
                 qDebug() << "INSERTED CLIP HAS STOPPED";
                 stopOverlay();
-                emit activeClipName(m_playlistClips[m_currentClipIndex].getName(), m_playlistClips[m_nextClipIndex].getName(), false);
                 resumePlayList();
-                emit insertFinished();
             }
             if (midiPlayList.count() > 0) {
                 double fps = m_playlistClips[m_currentClipIndex].getFps();
