@@ -503,6 +503,12 @@ void Player::timecode(double time, double duration, int videoLayer)
     } else if (videoLayer == m_soundScapeLayer) {
         if (m_soundScapeActive && midiSoundScape.count() > 0) {
             double fps = m_soundScapeClip.getFps();
+            double prev_timecode = m_timecodeSoundScapeLayer;
+            m_timecodeSoundScapeLayer = time;
+            if (prev_timecode > m_timecodeSoundScapeLayer) {
+                midiSoundScapeIterator = midiSoundScape.begin();
+                qDebug() << "Soundscape restarted";
+            }
             QString timecode = Timecode::fromTime(time, fps, false);
             if (m_triggersActive && midiSoundScapeIterator != midiSoundScape.end()) {
                 if (midiSoundScapeIterator.key().length() > 0) {

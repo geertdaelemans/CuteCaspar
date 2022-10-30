@@ -71,6 +71,7 @@ private:
     int m_nextClipIndex = 0;
     double m_timecode;
     double m_timecodeOverlayLayer;
+    double m_timecodeSoundScapeLayer;
     PlayerStatus m_status;
     MidiReader* midiRead;
     MidiLogger* midiLog;
