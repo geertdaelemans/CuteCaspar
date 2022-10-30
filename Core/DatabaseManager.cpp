@@ -333,7 +333,7 @@ void DatabaseManager::updateDevice(const DeviceModel& model)
 }
 
 
-void DatabaseManager::updateMidiStatus(QString clipName, bool midiActive)
+void DatabaseManager::updateMidiStatus(QString clipName, int midiNotes)
 {
     QMutexLocker locker(&mutex);
 
@@ -343,7 +343,7 @@ void DatabaseManager::updateMidiStatus(QString clipName, bool midiActive)
     sql.prepare("UPDATE Playlist SET Midi = :Midi "
                 "WHERE Name = :Name");
     sql.bindValue(":Name", clipName);
-    sql.bindValue(":Midi", midiActive);
+    sql.bindValue(":Midi", midiNotes);
 
     if (!sql.exec())
        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));

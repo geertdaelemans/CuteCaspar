@@ -14,8 +14,7 @@ enum class PlayerStatus
     PLAYLIST_PLAYING,
     PLAYLIST_PAUSED,
     PLAYLIST_INSERT,
-    CLIP_PLAYING,
-    CLIP_PAUSED
+    CLIP_PLAYING
 };
 
 class Player : public QObject
@@ -109,6 +108,7 @@ signals:
     void insertFinished();
     void newMidiPlaylist(QMap<QString, message> midiPlayList);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
+    void refreshMediaList();
 };
 
 #endif // PLAYER_H

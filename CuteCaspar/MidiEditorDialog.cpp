@@ -4,6 +4,7 @@
 #include "MidiNotes.h"
 #include "Timecode.h"
 #include "EffectsDelegate.h"
+#include "DatabaseManager.h"
 
 
 MidiEditorDialog::MidiEditorDialog(QWidget *parent) :
@@ -151,6 +152,7 @@ void MidiEditorDialog::on_btnSave_clicked()
         newNote.pitch = MidiNotes::getInstance()->getNotePitchByName(m_model->data(m_model->index(i,2)).toString());
         output[m_model->data(m_model->index(i,0)).toString()] = newNote;
     }
+    DatabaseManager::getInstance().updateMidiStatus(m_clipName, numberOfRows);
     Player::getInstance()->saveMidiPlayList(output);
 }
 

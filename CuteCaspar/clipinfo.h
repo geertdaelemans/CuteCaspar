@@ -14,7 +14,7 @@ private:
     double  m_fps;
     int     m_id;
     double  m_duration;
-    bool    m_midi = false;
+    int     m_midi = 0;
 public:
     QString getName() const {return m_name;}
     double  getFps();
@@ -26,7 +26,7 @@ public:
     void    setFps(double fps);
     void    setId(int id) {m_id = id;}
     void    setDuration(double dur) {m_duration = dur;}
-    void    setMidi(bool midi) {m_midi = midi;}
+    void    setMidi(int midi) {m_midi = midi;}
 };
 
 #endif // CLIPINFO_H

@@ -13,9 +13,6 @@
 
 #include "Timecode.h"
 
-#include "qmidiin.h"
-#include "qmidiout.h"
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -127,6 +124,10 @@ void MainWindow::connectServer()
 
     connect(player, SIGNAL(playerStatus(PlayerStatus, bool)),
             this, SLOT(playerStatus(PlayerStatus, bool)));
+
+    // Player wants to refresh playlist
+    connect(player, SIGNAL(refreshMediaList()),
+            this, SLOT(refreshMediaList()));
 
     connect(m_raspberryPI, SIGNAL(insertPlaylist(QString)),
             player, SLOT(insertPlaylist(QString)));

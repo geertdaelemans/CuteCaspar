@@ -55,18 +55,19 @@ void Player::loadPlayList()
         newClip.setId(query.value(0).toInt());
         newClip.setName(query.value(1).toString());
         newClip.setFps(query.value(2).toDouble());
-        midiRead->openLog(query.value(1).toString());
+        QMap<QString, message> midiList = midiRead->openLog(query.value(1).toString());
+        int numberOfNotes = 0;
         if (midiRead->isReady()) {
-            newClip.setMidi(true);
-            DatabaseManager::getInstance().updateMidiStatus(query.value(1).toString(), true);
+            numberOfNotes = midiList.count();
         }
+        newClip.setMidi(numberOfNotes);
+        DatabaseManager::getInstance().updateMidiStatus(query.value(1).toString(), numberOfNotes);
         m_playlistClips.append(newClip);
     }
     query.finish();
     setStatus(PlayerStatus::READY);
     updateRandomClip();
 }
-
 
 /**
  * @brief Player::getNumberOfClips
@@ -153,11 +154,7 @@ void Player::resumePlayList()
 {
     emit activeClipName(m_playlistClips[m_currentClipIndex].getName(), m_playlistClips[m_nextClipIndex].getName(), false);
     m_device->resume(1, m_defaultLayer);
-    if (m_singlePlay) {
-        setStatus(PlayerStatus::CLIP_PLAYING);
-    } else {
-        setStatus(PlayerStatus::PLAYLIST_PLAYING);
-    }
+    setStatus(PlayerStatus::PLAYLIST_PLAYING);
     resumeSoundScape();
 }
 
@@ -170,11 +167,7 @@ void Player::resumeFromFrame(int frames)
 {
     m_device->callSeek(1, m_defaultLayer, frames);
     m_device->resume(1, m_defaultLayer);
-    if (m_singlePlay) {
-        setStatus(PlayerStatus::CLIP_PLAYING);
-    } else {
-        setStatus(PlayerStatus::PLAYLIST_PLAYING);
-    }
+    setStatus(PlayerStatus::PLAYLIST_PLAYING);
 }
 
 
@@ -250,6 +243,7 @@ void Player::saveMidiPlayList(QMap<QString, message> playList)
         }
         midiLog->closeMidiLog();
     }
+    emit refreshMediaList();
 }
 
 
@@ -444,13 +438,11 @@ void Player::timecode(double time, double duration, int videoLayer)
             // Next clip has started automatically (Playlist)
             if (prev_timecode > m_timecode && m_timecode < 1.0) {
                 qDebug() << "NEXT CLIP HAS STARTED AUTOMATICALLY" << prev_timecode << " - " << m_timecode;
-                qDebug() << " singlePlay=" << m_singlePlay;
                 delayedLoadNextClip(100); //delay in ms
             }
             // Previous clip has just stopped
             if (qFabs(prev_timecode - m_timecode) < 0.001) {
                 qDebug() << "PREVIOUS CLIP HAS JUST STOPPED" << prev_timecode << " - " << m_timecode;;
-                qDebug() << " singlePlay=" << m_singlePlay << " insertedClip=" << m_insertedClip;
                 m_endOfClipDetected = true;
                 qDebug() << "m_endOfClipDetected = true";
                 delayedLoadNextClip(100); //delay in ms
