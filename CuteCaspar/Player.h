@@ -51,7 +51,7 @@ public:
     void stopSoundScape();
 
     void stopOverlay();
-
+    void delayedLoadNextClip(int timeout);
 public slots:
     void loadNextClip();
     void timecode(double time, double duration, int videoLayer);
@@ -60,6 +60,7 @@ public slots:
     void killNote();
     void setRecording();
     void insertPlaylist(QString clipName = "random");
+    void onTimer_LoadNextClip();
 
 private:
     static Player* s_inst;

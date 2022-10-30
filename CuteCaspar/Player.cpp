@@ -197,6 +197,9 @@ void Player::nextClip()
         stopOverlay();
         resumePlayList();
     } else {
+        if (!m_insertedClip) {
+            loadClip(m_playlistClips[m_nextClipIndex].getName());
+        }
         m_device->play(1, m_defaultLayer);
     }
 }
@@ -442,7 +445,7 @@ void Player::timecode(double time, double duration, int videoLayer)
             if (prev_timecode > m_timecode && m_timecode < 1.0) {
                 qDebug() << "NEXT CLIP HAS STARTED AUTOMATICALLY" << prev_timecode << " - " << m_timecode;
                 qDebug() << " singlePlay=" << m_singlePlay;
-                loadNextClip();
+                delayedLoadNextClip(100); //delay in ms
             }
             // Previous clip has just stopped
             if (qFabs(prev_timecode - m_timecode) < 0.001) {
@@ -450,7 +453,7 @@ void Player::timecode(double time, double duration, int videoLayer)
                 qDebug() << " singlePlay=" << m_singlePlay << " insertedClip=" << m_insertedClip;
                 m_endOfClipDetected = true;
                 qDebug() << "m_endOfClipDetected = true";
-                loadNextClip();
+                delayedLoadNextClip(100); //delay in ms
                 midiLog->closeMidiLog();
             }
             if (midiPlayList.count() > 0) {
@@ -620,4 +623,17 @@ void Player::retrieveMidiSoundScape(QString clipName)
 {
     midiSoundScape = midiRead->openLog(clipName);
     midiSoundScapeIterator = midiSoundScape.begin();
+}
+
+void Player::delayedLoadNextClip(int timeout)
+{
+    QTimer::singleShot(timeout, this, SLOT(onTimer_LoadNextClip()));
+}
+
+//----------------------------------------------------------------
+//timer slots
+//----------------------------------------------------------------
+void Player::onTimer_LoadNextClip()
+{
+    loadNextClip();
 }
