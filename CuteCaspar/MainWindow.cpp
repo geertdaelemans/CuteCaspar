@@ -37,9 +37,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&listener, SIGNAL(messageAvailable(QStringList,QStringList)),
             this, SLOT(processOsc(QStringList,QStringList)));
 
-    // Refresh the Media ListView when new data is available
+    // Refresh the Library ListView when new data is available
     connect(this, SIGNAL(mediaListUpdated()),
-            this, SLOT(refreshMediaList()));
+            this, SLOT(refreshLibraryList()));
 
     midiCon = MidiConnection::getInstance();
     m_raspberryPI = RaspberryPI::getInstance();
@@ -142,6 +142,7 @@ void MainWindow::connectionStateChanged(CasparDevice& device) {
         ui->actionDisconnect->setEnabled(true);
         log("Server connected");
         listMedia();
+        refreshMediaList();
     } else {
         ui->actionConnect->setEnabled(true);
         ui->actionDisconnect->setEnabled(false);
@@ -313,7 +314,7 @@ void MainWindow::refreshMediaList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("select Timecode, TypeId, Fps, Name, Midi from Playlist");
+    qry->prepare("SELECT Timecode, TypeId, Fps, Name, Midi FROM Playlist");
     qry->exec();
 
     model->setQuery(*qry);
@@ -334,6 +335,29 @@ void MainWindow::refreshMediaList()
     currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(3).data(Qt::DisplayRole).toString();
 
     player->loadPlayList();
+}
+
+void MainWindow::refreshLibraryList()
+{
+    QSqlQueryModel* model = new QSqlQueryModel();
+
+    QSqlQuery* qry = new QSqlQuery();
+
+    qry->prepare("SELECT Name, Timecode, Fps FROM Library");
+    qry->exec();
+
+    model->setQuery(*qry);
+
+    // Set proxy model to enable sorting columns:
+    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
+    proxyModel->setSourceModel(model);
+    proxyModel->sort(0, Qt::AscendingOrder);
+
+    ui->tableViewLibrary->setModel(proxyModel);
+    ui->tableViewLibrary->setColumnWidth(0, 400);
+    ui->tableViewLibrary->setColumnWidth(1, 100);
+    ui->tableViewLibrary->setColumnWidth(2, 100);
+    ui->tableViewLibrary->selectRow(0);
 }
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
@@ -610,3 +634,9 @@ void MainWindow::on_btnNext_clicked()
 {
     Player::getInstance()->nextClip();
 }
+
+void MainWindow::on_btnReloadLibrary_clicked()
+{
+    listMedia();
+}
+

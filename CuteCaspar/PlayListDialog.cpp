@@ -39,7 +39,7 @@ void PlayList::refreshMediaList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("select Name, TypeId, Timecode, Fps from Library");
+    qry->prepare("SELECT Name, TypeId, Timecode, Fps FROM Library");
     qry->exec();
 
     model->setQuery(*qry);
@@ -63,7 +63,7 @@ void PlayList::refreshPlayList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare(QString("select Id, Name, TypeId, Timecode, Fps, Midi from %1").arg(m_playlist));
+    qry->prepare(QString("SELECT Id, Name, TypeId, Timecode, Fps, Midi FROM %1").arg(m_playlist));
     qry->exec();
 
     modelPlayList->setQuery(*qry);

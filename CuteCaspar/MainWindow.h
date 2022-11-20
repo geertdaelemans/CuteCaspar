@@ -60,6 +60,7 @@ private slots:
     void connectionStateChanged(CasparDevice &);
     void mediaChanged(const QList<CasparMedia> &mediaItems, CasparDevice &device);
     void refreshMediaList();
+    void refreshLibraryList();
     void on_tableView_clicked(const QModelIndex &index);
     void on_actionSettings_triggered();
     void on_actionPreview_toggled(bool visible);
@@ -78,6 +79,8 @@ private slots:
 
 
     void on_btnNext_clicked();
+
+    void on_btnReloadLibrary_clicked();
 
 signals:
     void nextClip();
