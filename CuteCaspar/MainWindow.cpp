@@ -450,17 +450,6 @@ void MainWindow::playerStatus(PlayerStatus status, bool isRecording)
             setButtonColor(ui->btnRecording, QColor(53,53,53));
         }
         break;
-    case PlayerStatus::CLIP_PLAYING:
-        ui->statusLabel->setText("CLIP PLAYING");
-        ui->btnPlayClip->setText(tr("Pause Clip"));
-        if (isRecording) {
-            ui->btnRecording->setText(tr("Recording"));
-            setButtonColor(ui->btnRecording, Qt::red);
-        } else {
-            ui->btnRecording->setText(tr("Not Recording"));
-            setButtonColor(ui->btnRecording, QColor(53,53,53));
-        }
-        break;
     case PlayerStatus::PLAYLIST_PLAYING:
         ui->statusLabel->setText("PLAYLIST PLAYING");
         ui->btnStartPlaylist->setText(tr("Pause Playlist"));

@@ -164,7 +164,6 @@ void MidiEditorDialog::on_btnResume_clicked()
     case PlayerStatus::READY:
         Player::getInstance()->playClip(m_clipName);
         break;
-    case PlayerStatus::CLIP_PLAYING:
     case PlayerStatus::PLAYLIST_PLAYING:
     case PlayerStatus::PLAYLIST_INSERT:
         Player::getInstance()->pausePlayList();
@@ -214,7 +213,6 @@ void MidiEditorDialog::playerStatus(PlayerStatus status, bool recording)
     case PlayerStatus::READY:
         ui->btnResume->setText("Play");
         break;
-    case PlayerStatus::CLIP_PLAYING:
     case PlayerStatus::PLAYLIST_PLAYING:
     case PlayerStatus::PLAYLIST_INSERT:
         ui->btnResume->setText("Pause");

@@ -199,6 +199,9 @@ void Player::nextClip()
 
 void Player::insertPlaylist(QString clipName)
 {
+    if (TRIGGER_PLAYLIST_AFTER_SCARE && getStatus() == PlayerStatus::READY) {
+        startPlayList(m_currentClipIndex);
+    }
     if (clipName == "random") {
         if (m_randomScare != "") {
             m_interruptedClipName = m_randomScare;

@@ -14,7 +14,6 @@ enum class PlayerStatus
     PLAYLIST_PLAYING,
     PLAYLIST_PAUSED,
     PLAYLIST_INSERT,
-    CLIP_PLAYING
 };
 
 class Player : public QObject
@@ -23,6 +22,7 @@ class Player : public QObject
     Q_OBJECT
 
 public:
+    const bool TRIGGER_PLAYLIST_AFTER_SCARE = false;
     Player();
     static Player *getInstance();
     void setDevice(CasparDevice *device);
