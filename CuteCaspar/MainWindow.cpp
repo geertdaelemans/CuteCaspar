@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "qmenu.h"
 #include "ui_MainWindow.h"
 
 #include <QSqlQueryModel>
@@ -41,8 +42,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(mediaListUpdated()),
             this, SLOT(refreshLibraryList()));
 
-    midiCon = MidiConnection::getInstance();
+    m_midiCon = MidiConnection::getInstance();
     m_raspberryPI = RaspberryPI::getInstance();
+    m_player = Player::getInstance();
+
+    refreshPlayList();
 
     // When AutoConnect is active connect immediately to server
     settings.beginGroup("Configuration");
@@ -88,51 +92,50 @@ void MainWindow::connectServer()
     QString address = settings.value("host", "127.0.0.1").toString();
     quint16 port = static_cast<quint16>(settings.value("port", "5250").toInt());
     settings.endGroup();
-    device = new CasparDevice(address, port);
+    m_device = new CasparDevice(address, port);
 
-    connect(device, SIGNAL(connectionStateChanged(CasparDevice&)),
+    connect(m_device, SIGNAL(connectionStateChanged(CasparDevice&)),
             this, SLOT(connectionStateChanged(CasparDevice&)));
 
-    device->connectDevice();
-    player = Player::getInstance();
-    player->setDevice(device);
+    m_device->connectDevice();
+    m_player->setDevice(m_device);
 
-    connect(midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
-            player, SLOT(playNote(unsigned int, bool)));
+    connect(m_midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
+            m_player, SLOT(playNote(unsigned int, bool)));
 
-    connect(player, SIGNAL(activeClip(int)),
+    connect(m_player, SIGNAL(activeClip(int)),
             this, SLOT(setCurrentClip(int)));
 
     // Playlist: when next clip has started, load the following clip
     connect(this, SIGNAL(nextClip()),
-            player, SLOT(loadNextClip()));
+            m_player, SLOT(loadNextClip()));
 
     connect(this, SIGNAL(currentTime(double, double, int)),
-            player, SLOT(timecode(double, double, int)));
+            m_player, SLOT(timecode(double, double, int)));
 
     connect(this, SIGNAL(currentFrame(int, int)),
-            player, SLOT(currentFrame(int, int)));
+            m_player, SLOT(currentFrame(int, int)));
 
     connect(this, SIGNAL(currentTime(double, double, int)),
             this, SLOT(setTimeCode(double, double, int)));
 
-    connect(player, SIGNAL(activeClipName(QString, QString, bool)),
+    connect(m_player, SIGNAL(activeClipName(QString, QString, bool)),
             this, SLOT(activeClipName(QString, QString, bool)));
 
     connect(this, SIGNAL(setRecording()),
-            player, SLOT(setRecording()));
+            m_player, SLOT(setRecording()));
 
-    connect(player, SIGNAL(playerStatus(PlayerStatus, bool)),
+    connect(m_player, SIGNAL(playerStatus(PlayerStatus, bool)),
             this, SLOT(playerStatus(PlayerStatus, bool)));
 
     // Player wants to refresh playlist
-    connect(player, SIGNAL(refreshMediaList()),
-            this, SLOT(refreshMediaList()));
+    connect(m_player, SIGNAL(refreshPlayList()),
+            this, SLOT(refreshPlayList()));
 
     connect(m_raspberryPI, SIGNAL(insertPlaylist(QString)),
-            player, SLOT(insertPlaylist(QString)));
+            m_player, SLOT(insertPlaylist(QString)));
 
-    connect(player, SIGNAL(insertFinished()),
+    connect(m_player, SIGNAL(insertFinished()),
             m_raspberryPI, SLOT(insertFinished()));
 }
 
@@ -142,7 +145,7 @@ void MainWindow::connectionStateChanged(CasparDevice& device) {
         ui->actionDisconnect->setEnabled(true);
         log("Server connected");
         listMedia();
-        refreshMediaList();
+        refreshPlayList();
     } else {
         ui->actionConnect->setEnabled(true);
         ui->actionDisconnect->setEnabled(false);
@@ -156,13 +159,13 @@ void MainWindow::connectionStateChanged(CasparDevice& device) {
  */
 void MainWindow::disconnectServer()
 {
-    device->stop(1, 0);
-    device->disconnectDevice();
+    m_device->stop(1, 0);
+    m_device->disconnectDevice();
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     DatabaseManager::getInstance().reset();
-    refreshMediaList();
-    delete device;
+    refreshPlayList();
+    delete m_device;
     log("Disconnected from server");
 }
 
@@ -226,8 +229,8 @@ void MainWindow::processOsc(QStringList address, QStringList values)
 
 void MainWindow::listMedia()
 {
-    device->refreshMedia();
-    connect(device, SIGNAL(mediaChanged(const QList<CasparMedia>&, CasparDevice&)),
+    m_device->refreshMedia();
+    connect(m_device, SIGNAL(mediaChanged(const QList<CasparMedia>&, CasparDevice&)),
             this, SLOT(mediaChanged(const QList<CasparMedia>&, CasparDevice&)), Qt::UniqueConnection);
 }
 
@@ -308,7 +311,7 @@ void MainWindow::on_actionDisconnect_triggered()
     disconnectServer();
 }
 
-void MainWindow::refreshMediaList()
+void MainWindow::refreshPlayList()
 {
     QSqlQueryModel* model = new QSqlQueryModel();
 
@@ -334,7 +337,7 @@ void MainWindow::refreshMediaList()
     currentClipIndex = ui->tableView->selectionModel()->currentIndex().row();
     currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(3).data(Qt::DisplayRole).toString();
 
-    player->loadPlayList();
+    m_player->loadPlayList();
 }
 
 void MainWindow::refreshLibraryList()
@@ -358,6 +361,10 @@ void MainWindow::refreshLibraryList()
     ui->tableViewLibrary->setColumnWidth(1, 100);
     ui->tableViewLibrary->setColumnWidth(2, 100);
     ui->tableViewLibrary->selectRow(0);
+    ui->tableViewLibrary->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(ui->tableViewLibrary, SIGNAL(customContextMenuRequested(QPoint)), SLOT(customMenuRequested(QPoint)));
+
 }
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
@@ -381,31 +388,31 @@ void MainWindow::on_actionPlaylist_triggered()
 {
     PlayList* playlistDialog = new PlayList(this);
     playlistDialog->exec();
-    refreshMediaList();
+    refreshPlayList();
 }
 
 
 void MainWindow::on_btnStartPlaylist_clicked()
 {
-    if (player->getStatus() == PlayerStatus::READY) {
-        player->startPlayList(currentClipIndex);
-    } else if (player->getStatus() == PlayerStatus::PLAYLIST_PLAYING) {
-        player->pausePlayList();
-    } else if (player->getStatus() == PlayerStatus::PLAYLIST_PAUSED) {
-        player->resumePlayList();
+    if (m_player->getStatus() == PlayerStatus::READY) {
+        m_player->startPlayList(currentClipIndex);
+    } else if (m_player->getStatus() == PlayerStatus::PLAYLIST_PLAYING) {
+        m_player->pausePlayList();
+    } else if (m_player->getStatus() == PlayerStatus::PLAYLIST_PAUSED) {
+        m_player->resumePlayList();
     }
 }
 
 
 void MainWindow::on_btnStopPlaylist_clicked()
 {
-    player->stopPlayList();
+    m_player->stopPlayList();
 }
 
 
 void MainWindow::on_btnPlayClip_clicked()
 {
-    player->playClip(currentClipIndex);
+    m_player->playClip(currentClipIndex);
 }
 
 
@@ -416,7 +423,7 @@ void MainWindow::setCurrentClip(int index)
 
 void MainWindow::setTimeCode(double time, double duration, int videoLayer)
 {
-    if (videoLayer == player->getActiveVideoLayer()) {
+    if (videoLayer == m_player->getActiveVideoLayer()) {
         timecode = Timecode::fromTime(time, 29.97, false);
         ui->timeCode->setText(timecode);
         ui->lblDuration->setText(Timecode::fromTime(duration - time, 29.97, false));
@@ -495,6 +502,67 @@ void MainWindow::playerStatus(PlayerStatus status, bool isRecording)
     }
 }
 
+void MainWindow::customMenuRequested(QPoint pos)
+{
+    QModelIndex index = ui->tableViewLibrary->indexAt(pos);
+    QString data = ui->tableViewLibrary->model()->index(index.row(), 0).data().toString();
+    QMenu *menu = new QMenu(this);
+    QVariant addon;
+
+    // Prepare QAction for adding to Playlist
+    QAction *copyToPlaylist = new QAction("Add to Playlist", this);
+    QMap<QString, QString> *dataPlaylist = new QMap<QString, QString>;
+    dataPlaylist->insert("clipName", data);
+    dataPlaylist->insert("tableName", "Playlist");
+    addon = qVariantFromValue((void *) dataPlaylist);
+    copyToPlaylist->setData(addon);
+
+    // Prepare QAction for adding to Scares
+    QAction *copyToScares = new QAction("Add to Scares", this);
+    QMap<QString, QString> *dataScares = new QMap<QString, QString>;
+    dataScares->insert("clipName", data);
+    dataScares->insert("tableName", "Scares");
+    addon = qVariantFromValue((void *) dataScares);
+    copyToScares->setData(addon);
+
+    // Prepare QAction for adding to Extras
+    QAction *copyToExtras = new QAction("Add to Extras", this);
+    QMap<QString, QString> *dataExtras = new QMap<QString, QString>;
+    dataExtras->insert("clipName", data);
+    dataExtras->insert("tableName", "Extras");
+    addon = qVariantFromValue((void *) dataExtras);
+    copyToExtras->setData(addon);
+
+    // Add items to drop down menu
+    menu->addAction(copyToPlaylist);
+    menu->addAction(copyToScares);
+    menu->addAction(copyToExtras);
+
+    // Connect the action triggers
+    connect(copyToPlaylist, SIGNAL(triggered()), this, SLOT(copyToList()));
+    connect(copyToScares, SIGNAL(triggered()), this, SLOT(copyToList()));
+    connect(copyToExtras, SIGNAL(triggered()), this, SLOT(copyToList()));
+
+    // Display the drop down menu
+    menu->popup(ui->tableViewLibrary->viewport()->mapToGlobal(pos));
+}
+
+void MainWindow::copyToList()
+{
+    // Retrieve the side car data
+    QAction *act = qobject_cast<QAction *>(sender());
+    QVariant v = act->data();
+    QMap<QString, QString> *input = (QMap<QString, QString>*) v.value<void *>();
+
+    // Call the DatabaseManeger function to insert the clip into the list
+    DatabaseManager::getInstance().copyClipTo(input->value("clipName"), input->value("tableName"));
+
+    // Refresh the display
+    if (input->value("tableName") == "Playlist") {
+        refreshPlayList();
+    }
+}
+
 void MainWindow::setButtonColor(QPushButton* button, QColor color)
 {
     QPalette pal = button->palette();
@@ -505,7 +573,7 @@ void MainWindow::setButtonColor(QPushButton* button, QColor color)
 
 void MainWindow::on_pushButton_clicked()
 {
-    player->insertPlaylist();
+    m_player->insertPlaylist();
 }
 
 /**************************************************************
@@ -531,7 +599,7 @@ void MainWindow::on_actionControl_Panel_triggered()
 
         // Send selected clips to Player
         connect(m_controlDialog, SIGNAL(insertPlaylist(QString)),
-                player, SLOT(insertPlaylist(QString)));
+                m_player, SLOT(insertPlaylist(QString)));
     }
     if (!m_controlDialog->isVisible()) {
         m_controlDialog->setup();
@@ -552,15 +620,15 @@ void MainWindow::on_actionMIDI_Editor_triggered()
         m_midiEditorDialog = new MidiEditorDialog();
 
         // Retrieve current MIDI playlist from Player
-        connect(player, SIGNAL(newMidiPlaylist(QMap<QString, message>)),
+        connect(m_player, SIGNAL(newMidiPlaylist(QMap<QString, message>)),
                 m_midiEditorDialog, SLOT(newMidiPlaylist(QMap<QString, message>)));
 
         // Actual note being played at the moment
-        connect(player, SIGNAL(currentNote(QString, bool, unsigned int)),
+        connect(m_player, SIGNAL(currentNote(QString, bool, unsigned int)),
                 m_midiEditorDialog, SLOT(currentNote(QString, bool, unsigned int)));
 
         // Action when new clip is being played
-        connect(player, SIGNAL(activeClipName(QString, QString, bool)),
+        connect(m_player, SIGNAL(activeClipName(QString, QString, bool)),
                 m_midiEditorDialog, SLOT(activeClipName(QString, QString, bool)));
 
         // Action when new clip is selected
@@ -568,7 +636,7 @@ void MainWindow::on_actionMIDI_Editor_triggered()
                 m_midiEditorDialog, SLOT(setClipName(QString)));
 
         // Players reports status
-        connect(player, SIGNAL(playerStatus(PlayerStatus, bool)),
+        connect(m_player, SIGNAL(playerStatus(PlayerStatus, bool)),
                 m_midiEditorDialog, SLOT(playerStatus(PlayerStatus, bool)));
     }
     if (!m_midiEditorDialog->isVisible()) {
@@ -591,10 +659,10 @@ void MainWindow::on_actionMidi_Panel_triggered()
 
         // Send notes to player
         connect(m_midiPanelDialog, SIGNAL(buttonPushed(unsigned int, bool)),
-                player, SLOT(playNote(unsigned int, bool)));
+                m_player, SLOT(playNote(unsigned int, bool)));
 
         // Receive activateButton()
-        connect(player, SIGNAL(activateButton(unsigned int, bool)),
+        connect(m_player, SIGNAL(activateButton(unsigned int, bool)),
                 m_midiPanelDialog, SLOT(activateButton(unsigned int, bool)));
     }
     if (!m_midiPanelDialog->isVisible()) {
@@ -639,4 +707,3 @@ void MainWindow::on_btnReloadLibrary_clicked()
 {
     listMedia();
 }
-

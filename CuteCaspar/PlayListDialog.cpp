@@ -23,7 +23,7 @@ PlayList::PlayList(QWidget *parent) :
     ui->cmbPlaylists->addItem("Scares Playlist", "Scares");
     ui->cmbPlaylists->addItem("Extra Playlist", "Extras");
 
-    refreshMediaList();
+    refreshLibraryList();
     refreshPlayList();
 }
 
@@ -33,7 +33,7 @@ PlayList::~PlayList()
 }
 
 
-void PlayList::refreshMediaList()
+void PlayList::refreshLibraryList()
 {
     QSqlQueryModel * model = new QSqlQueryModel();
 

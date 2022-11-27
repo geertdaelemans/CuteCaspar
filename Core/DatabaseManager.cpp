@@ -353,6 +353,52 @@ void DatabaseManager::updateMidiStatus(QString clipName, int midiNotes)
 
 
 /**
+ * @brief DatabaseManager::copyClipTo
+ * Copy the clip data into another table
+ * @param clipName the name of clip to be copied
+ * @param tableName the destination table
+ */
+void DatabaseManager::copyClipTo(QString clipName, QString tableName)
+{
+    QMutexLocker locker(&mutex);
+
+    QSqlQuery sql;
+    sql.prepare("SELECT d.DeviceId, d.typeId, d.ThumbnailId, Timecode, Fps FROM Library d "
+                "WHERE d.Name = :Name");
+    sql.bindValue(":Name", clipName);
+
+    if (!sql.exec())
+       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
+    sql.first();
+
+    QString deviceId = sql.value(0).toString();
+    QString typeId = sql.value(1).toString();
+    QString thumbnailId = sql.value(2).toString();
+    QString timeCode = sql.value(3).toString();
+    QString fps = sql.value(4).toString();
+
+    QSqlDatabase::database().transaction();
+
+    sql.prepare("INSERT INTO " + tableName + " (Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps) "
+                "VALUES(:Name, :DeviceId, :TypeId, :ThumbnailId, :Timecode, :Fps)");
+    sql.bindValue(":Name", clipName);
+    sql.bindValue(":DeviceId", deviceId);
+    sql.bindValue(":TypeId", typeId);
+    sql.bindValue(":ThumbnailId", thumbnailId);
+    sql.bindValue(":Timecode", timeCode);
+    sql.bindValue(":Fps", fps);
+
+    if (!sql.exec())
+       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
+    QSqlDatabase::database().commit();
+
+    qDebug() << "Copying" << clipName << "to" << tableName;
+}
+
+
+/**
  * @brief DatabaseManager::deleteDevice
  * Remove the device from the Device, Thumbnail and Library database
  * @param id of the device

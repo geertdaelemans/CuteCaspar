@@ -108,7 +108,7 @@ signals:
     void insertFinished();
     void newMidiPlaylist(QMap<QString, message> midiPlayList);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
-    void refreshMediaList();
+    void refreshPlayList();
 };
 
 #endif // PLAYER_H

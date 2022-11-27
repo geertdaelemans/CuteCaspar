@@ -51,6 +51,8 @@ public slots:
     void setTimeCode(double time, double duration, int videoLayer);
     void activeClipName(QString clipName, QString upcoming, bool insert = false);
     void playerStatus(PlayerStatus status, bool isRecording);
+    void customMenuRequested(QPoint pos);
+    void copyToList();
 
 private slots:
     void disconnectServer();
@@ -59,7 +61,7 @@ private slots:
     void on_actionDisconnect_triggered();
     void connectionStateChanged(CasparDevice &);
     void mediaChanged(const QList<CasparMedia> &mediaItems, CasparDevice &device);
-    void refreshMediaList();
+    void refreshPlayList();
     void refreshLibraryList();
     void on_tableView_clicked(const QModelIndex &index);
     void on_actionSettings_triggered();
@@ -98,7 +100,7 @@ private:
     int playCurVFrame, playLastVFrame, playFps;
     void log(QString message);
     CasparOscListener listener;
-    CasparDevice* device = nullptr;
+    CasparDevice* m_device = nullptr;
     MidiEditorDialog* m_midiEditorDialog = nullptr;
     MidiPanelDialog* m_midiPanelDialog = nullptr;
     RaspberryPIDialog* m_raspberryPIDialog = nullptr;
@@ -107,8 +109,8 @@ private:
     QString currentClip;
     QString timecode;
     int currentClipIndex = 0;
-    Player* player = nullptr;
-    MidiConnection* midiCon = nullptr;
+    Player* m_player = nullptr;
+    MidiConnection* m_midiCon = nullptr;
     void setButtonColor(QPushButton *button, QColor color);
 };
 

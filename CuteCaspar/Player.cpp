@@ -246,7 +246,7 @@ void Player::saveMidiPlayList(QMap<QString, message> playList)
         }
         midiLog->closeMidiLog();
     }
-    emit refreshMediaList();
+    emit refreshPlayList();
 }
 
 

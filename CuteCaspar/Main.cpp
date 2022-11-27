@@ -45,6 +45,10 @@ void loadDatabase()
 
 int main(int argc, char *argv[])
 {
+
+    loadDatabase();
+    DatabaseManager::getInstance().initialize();
+
     QApplication application(argc, argv);
     application.setApplicationName("Cute Caspar");
     application.setApplicationVersion(QString("%1.%2.%3.%4").arg(MAJOR_VERSION).arg(MINOR_VERSION).arg(REVISION_VERSION).arg(BUILD_VERSION));
@@ -76,9 +80,6 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     w.show();
-
-    loadDatabase();
-    DatabaseManager::getInstance().initialize();
 
     return application.exec();
 }

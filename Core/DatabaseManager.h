@@ -26,8 +26,7 @@ public:
     void updateDevice(const DeviceModel &model);
     void deleteDevice(int id);
     void updateMidiStatus(QString clipName, int midiNotes);
-
-
+    void copyClipTo(QString clipName, QString tableName);
 
 private:
     QMutex mutex;

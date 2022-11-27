@@ -15,7 +15,7 @@ class PlayList : public QDialog
 public:
     explicit PlayList(QWidget *parent = nullptr);
     ~PlayList();
-    void refreshMediaList();
+    void refreshLibraryList();
     void refreshPlayList();
 
 private slots:
