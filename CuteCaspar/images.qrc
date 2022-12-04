@@ -12,6 +12,11 @@
         <file>Images/File MIDI.png</file>
         <file>Images/File Video Clip.png</file>
         <file>Images/Control Panel.png</file>
+        <file>Images/Add.png</file>
+        <file>Images/AddHover.png</file>
+        <file>Images/Remove.png</file>
+        <file>Images/RemoveHover.png</file>
+        <file>Images/script.png</file>
     </qresource>
     <qresource prefix="/Graphics"/>
 </RCC>

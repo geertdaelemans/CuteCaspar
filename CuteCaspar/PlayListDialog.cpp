@@ -85,17 +85,7 @@ void PlayList::refreshPlayList()
 
 void PlayList::on_clipList_doubleClicked(const QModelIndex &index)
 {
-    QSqlQuery query;
-    if (!query.prepare(QString("INSERT INTO %1 (Name, TypeId, Timecode, Fps, Midi) VALUES (:name, :typeid, :timecode, :fps, :midi)").arg(m_playlist)))
-        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
-    query.bindValue(":name", index.siblingAtColumn(0).data(Qt::DisplayRole).toString());
-    query.bindValue(":typeid", index.siblingAtColumn(1).data(Qt::DisplayRole).toString());
-    query.bindValue(":timecode", index.siblingAtColumn(2).data(Qt::DisplayRole).toString());
-    query.bindValue(":fps", index.siblingAtColumn(3).data(Qt::DisplayRole).toString());
-    int midiBool = (isMidiPresent(index.siblingAtColumn(0).data(Qt::DisplayRole).toString()) ? 1 : 0);
-    query.bindValue(":midi", QString::number(midiBool));
-    query.exec();
-
+    DatabaseManager::getInstance().copyClipTo(index.siblingAtColumn(0).data(Qt::DisplayRole).toString(), m_playlist);
     refreshPlayList();
 }
 
@@ -114,16 +104,6 @@ void PlayList::on_clearPlaylistButton_clicked()
 {
     QSqlQuery query;
     if (!query.prepare(QString("DELETE FROM %1").arg(m_playlist)))
-        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
-    query.exec();
-
-    refreshPlayList();
-}
-
-void PlayList::deleteRow(int row)
-{
-    QSqlQuery query;
-    if (!query.prepare(QString("DELETE FROM %1 WHERE Id = %2").arg(m_playlist).arg(row)))
         qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
     query.exec();
 
@@ -189,7 +169,7 @@ void PlayList::on_btnDelete_clicked()
     if (selected.size() != 0) {
         int row = selected.begin()->row();
         int index = modelPlayList->data(modelPlayList->index(row, 0)).toInt();
-        deleteRow(index);
+        DatabaseManager::getInstance().removeClipFromList(index, m_playlist);
         refreshPlayList();
         if (row < modelPlayList->rowCount()) {
             ui->playList->selectRow(row);

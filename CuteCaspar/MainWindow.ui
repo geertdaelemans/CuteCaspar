@@ -538,6 +538,7 @@
    <addaction name="actionControl_Panel"/>
    <addaction name="actionMidi_Panel"/>
    <addaction name="separator"/>
+   <addaction name="actionPlaylist"/>
    <addaction name="actionMIDI_Editor"/>
    <addaction name="actionRaspberryPI"/>
   </widget>
@@ -592,6 +593,10 @@
    </property>
   </action>
   <action name="actionPlaylist">
+   <property name="icon">
+    <iconset resource="images.qrc">
+     <normaloff>:/Images/script.png</normaloff>:/Images/script.png</iconset>
+   </property>
    <property name="text">
     <string>Playlist</string>
    </property>

@@ -24,6 +24,7 @@ ControlDialog::~ControlDialog()
 
 void ControlDialog::setup()
 {
+    qDebug() << "Clip setup";
     // Get "Extras" playlist
     QSqlQuery query;
     if (!query.prepare("SELECT Id, Name FROM Extras"))
@@ -43,6 +44,13 @@ void ControlDialog::setup()
 
     // Magically calculate the number of rows
     int rows = qCeil(qSqrt(static_cast<qreal>(counter + 1)));
+
+    // Remove all items
+    QLayoutItem* item;
+    while ((item = ui->theGrid->layout()->takeAt(0)) != NULL) {
+        delete item->widget();
+        delete item;
+    }
 
     // Add first 'Random Scare' button
     QPushButton* newButton = new QPushButton("Random Scare");
