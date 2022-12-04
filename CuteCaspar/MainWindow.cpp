@@ -313,11 +313,18 @@ void MainWindow::on_actionDisconnect_triggered()
 
 void MainWindow::refreshPlayList()
 {
+    int activeRowIndex = 0;
+    if (ui->tableView->selectionModel()) {
+        QModelIndexList selectionIndexes = ui->tableView->selectionModel()->selection().indexes();
+        activeRowIndex = selectionIndexes.first().row();
+    }
+
     QSqlQueryModel* model = new QSqlQueryModel();
+    model = new QSqlQueryModel();
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("SELECT Timecode, TypeId, Fps, Name, Midi FROM Playlist");
+    qry->prepare("SELECT Id, Timecode, TypeId, Fps, Name, Midi FROM Playlist");
     qry->exec();
 
     model->setQuery(*qry);
@@ -325,17 +332,28 @@ void MainWindow::refreshPlayList()
     // Set proxy model to enable sorting columns:
     QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
-    proxyModel->sort(1, Qt::AscendingOrder);
+    proxyModel->sort(0, Qt::AscendingOrder);
 
     ui->tableView->setModel(proxyModel);
-    ui->tableView->setColumnWidth(0, 100);
-    ui->tableView->hideColumn(1);
-    ui->tableView->hideColumn(2);
-    ui->tableView->setColumnWidth(3, 400);
-    ui->tableView->selectRow(0);
+    if (activeRowIndex == 0) {
+        ui->tableView->hideColumn(0);
+        ui->tableView->setColumnWidth(1, 100);
+        ui->tableView->hideColumn(2);
+        ui->tableView->hideColumn(3);
+        ui->tableView->setColumnWidth(4, 400);
+        ui->tableView->selectRow(0);
+        ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+    }
+
+    if (activeRowIndex > ui->tableView->model()->rowCount() - 1) {
+        activeRowIndex = ui->tableView->model()->rowCount() - 1;
+    }
+    ui->tableView->selectRow(activeRowIndex);
 
     currentClipIndex = ui->tableView->selectionModel()->currentIndex().row();
     currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(3).data(Qt::DisplayRole).toString();
+
+    connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), SLOT(playlistContextMenu(QPoint)), Qt::UniqueConnection);
 
     m_player->loadPlayList();
 }
@@ -363,7 +381,7 @@ void MainWindow::refreshLibraryList()
     ui->tableViewLibrary->selectRow(0);
     ui->tableViewLibrary->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    connect(ui->tableViewLibrary, SIGNAL(customContextMenuRequested(QPoint)), SLOT(customMenuRequested(QPoint)));
+    connect(ui->tableViewLibrary, SIGNAL(customContextMenuRequested(QPoint)), SLOT(libraryContextMenu(QPoint)));
 
 }
 
@@ -502,11 +520,11 @@ void MainWindow::playerStatus(PlayerStatus status, bool isRecording)
     }
 }
 
-void MainWindow::customMenuRequested(QPoint pos)
+void MainWindow::libraryContextMenu(QPoint pos)
 {
     QModelIndex index = ui->tableViewLibrary->indexAt(pos);
     QString data = ui->tableViewLibrary->model()->index(index.row(), 0).data().toString();
-    QMenu *menu = new QMenu(this);
+    QMenu *contextMenu = new QMenu(this);
     QVariant addon;
 
     // Prepare QAction for adding to Playlist
@@ -534,9 +552,9 @@ void MainWindow::customMenuRequested(QPoint pos)
     copyToExtras->setData(addon);
 
     // Add items to drop down menu
-    menu->addAction(copyToPlaylist);
-    menu->addAction(copyToScares);
-    menu->addAction(copyToExtras);
+    contextMenu->addAction(copyToPlaylist);
+    contextMenu->addAction(copyToScares);
+    contextMenu->addAction(copyToExtras);
 
     // Connect the action triggers
     connect(copyToPlaylist, SIGNAL(triggered()), this, SLOT(copyToList()));
@@ -544,7 +562,32 @@ void MainWindow::customMenuRequested(QPoint pos)
     connect(copyToExtras, SIGNAL(triggered()), this, SLOT(copyToList()));
 
     // Display the drop down menu
-    menu->popup(ui->tableViewLibrary->viewport()->mapToGlobal(pos));
+    contextMenu->popup(ui->tableViewLibrary->viewport()->mapToGlobal(pos));
+}
+
+void MainWindow::playlistContextMenu(QPoint pos)
+{
+    QModelIndex index = ui->tableView->indexAt(pos);
+    int clipId = ui->tableView->model()->index(index.row(), 0).data().toInt();
+    QMenu *contextMenu = new QMenu(this);
+    QVariant addon;
+
+    // Prepare QAction for adding to Playlist
+    QAction *deleteClip = new QAction("Delete Clip", this);
+    QMap<QString, QString> *dataDeleteClip = new QMap<QString, QString>;
+    dataDeleteClip->insert("clipId", QString::number(clipId));
+    dataDeleteClip->insert("tableName", "Playlist");
+    addon = qVariantFromValue((void *) dataDeleteClip);
+    deleteClip->setData(addon);
+
+    // Add items to drop down menu
+    contextMenu->addAction(deleteClip);
+
+    // Connect the action triggers
+    connect(deleteClip, SIGNAL(triggered()), this, SLOT(removeClipFromList()));
+
+    // Display the drop down menu
+    contextMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
 }
 
 void MainWindow::copyToList()
@@ -556,6 +599,22 @@ void MainWindow::copyToList()
 
     // Call the DatabaseManeger function to insert the clip into the list
     DatabaseManager::getInstance().copyClipTo(input->value("clipName"), input->value("tableName"));
+
+    // Refresh the display
+    if (input->value("tableName") == "Playlist") {
+        refreshPlayList();
+    }
+}
+
+void MainWindow::removeClipFromList()
+{
+    // Retrieve the side car data
+    QAction *act = qobject_cast<QAction *>(sender());
+    QVariant v = act->data();
+    QMap<QString, QString> *input = (QMap<QString, QString>*) v.value<void *>();
+
+    // Call the DatabaseManeger function remove the clip from the list
+    DatabaseManager::getInstance().removeClipFromList(input->value("clipId").toInt(), input->value("tableName"));
 
     // Refresh the display
     if (input->value("tableName") == "Playlist") {

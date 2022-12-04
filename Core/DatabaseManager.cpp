@@ -399,6 +399,30 @@ void DatabaseManager::copyClipTo(QString clipName, QString tableName)
 
 
 /**
+ * @brief DatabaseManager::removeClipFromList
+ * Simply remove a clip from a certain table
+ * @param clipId the id of the clip to be removed
+ * @param tableName the table name the clip has to be removed from
+ */
+void DatabaseManager::removeClipFromList(int clipId, QString tableName)
+{
+    QMutexLocker locker(&mutex);
+
+    QSqlDatabase::database().transaction();
+
+    QSqlQuery sql;
+    sql.prepare("DELETE FROM " + tableName + " "
+                "WHERE Id = :Id");
+    sql.bindValue(":Id", clipId);
+
+    if (!sql.exec())
+       qCritical("Failed to execute removeClipFromList query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
+    QSqlDatabase::database().commit();
+}
+
+
+/**
  * @brief DatabaseManager::deleteDevice
  * Remove the device from the Device, Thumbnail and Library database
  * @param id of the device

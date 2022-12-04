@@ -7,6 +7,7 @@
 #include <QSettings>
 #include <QListWidgetItem>
 #include <QDateTime>
+#include <QSqlQueryModel>
 
 #include "AmcpDevice.h"
 #include "CasparOSCListener.h"
@@ -51,8 +52,10 @@ public slots:
     void setTimeCode(double time, double duration, int videoLayer);
     void activeClipName(QString clipName, QString upcoming, bool insert = false);
     void playerStatus(PlayerStatus status, bool isRecording);
-    void customMenuRequested(QPoint pos);
+    void libraryContextMenu(QPoint pos);
+    void playlistContextMenu(QPoint pos);
     void copyToList();
+    void removeClipFromList();
 
 private slots:
     void disconnectServer();
