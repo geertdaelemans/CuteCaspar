@@ -7,48 +7,9 @@
 #include <QDir>
 #include <QtSql/QSqlDatabase>
 
-#include "DatabaseManager.h"
-
-
-void loadDatabase()
-{
-    QString path = QString("%1/.CasparCG/ClientNew").arg(QDir::homePath());
-
-    QDir directory(path);
-    if (!directory.exists())
-        directory.mkpath(".");
-
-    const bool dbmemory = false;
-
-    QSqlDatabase database;
-    if (dbmemory)
-    {
-        qDebug("Using SQLite in memory database");
-
-        database = QSqlDatabase::addDatabase("QSQLITE");
-        database.setDatabaseName(":memory:");
-    }
-    else
-    {
-        qDebug("Using SQLite database");
-
-        database = QSqlDatabase::addDatabase("QSQLITE");
-        QString databaseLocation = QString("%1/Database.s3db").arg(path);
-
-        database.setDatabaseName(databaseLocation);
-    }
-
-    if (!database.open())
-        qCritical("Unable to open database");
-}
-
 
 int main(int argc, char *argv[])
 {
-
-    loadDatabase();
-    DatabaseManager::getInstance().initialize();
-
     QApplication application(argc, argv);
     application.setApplicationName("Cute Caspar");
     application.setApplicationVersion(QString("%1.%2.%3.%4").arg(MAJOR_VERSION).arg(MINOR_VERSION).arg(REVISION_VERSION).arg(BUILD_VERSION));

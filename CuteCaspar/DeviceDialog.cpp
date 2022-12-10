@@ -115,7 +115,7 @@ void DeviceDialog::accept()
 
     if (!this->editMode)
     {
-        DeviceModel model = DatabaseManager::getInstance().getDeviceByName(this->lineEditDeviceName->text());
+        DeviceModel model = DatabaseManager::getInstance()->getDeviceByName(this->lineEditDeviceName->text());
         if (!model.getName().isEmpty())
         {
             QMessageBox box(this);
@@ -134,7 +134,7 @@ void DeviceDialog::accept()
         }
 
         /*
-        model = DatabaseManager::getInstance().getDeviceByAddress(this->lineEditAddress->text());
+        model = DatabaseManager::getInstance()->getDeviceByAddress(this->lineEditAddress->text());
         if (!model.getName().isEmpty())
         {
             QMessageBox box(this);

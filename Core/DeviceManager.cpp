@@ -14,7 +14,7 @@ DeviceManager& DeviceManager::getInstance()
 
 void DeviceManager::initialize()
 {
-    QList<DeviceModel> models = DatabaseManager::getInstance().getDevice();
+    QList<DeviceModel> models = DatabaseManager::getInstance()->getDevice();
     foreach (const DeviceModel& model, models)
     {
         QSharedPointer<CasparDevice> device(new CasparDevice(model.getAddress(), model.getPort()));

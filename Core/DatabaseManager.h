@@ -8,15 +8,19 @@
 #include "Models/LibraryModel.h"
 
 
-class CORESHARED_EXPORT DatabaseManager
+class CORESHARED_EXPORT DatabaseManager : public QObject
 {
+
+    Q_OBJECT
+
 public:
     explicit DatabaseManager();
 
-    static DatabaseManager& getInstance();
+    static DatabaseManager* getInstance();
 
     void initialize();
     void reset();
+    void loadDatabase();
     void updateLibraryMedia(const QList<LibraryModel>& insertModels);
 
     QList<DeviceModel> getDevice();
@@ -34,6 +38,9 @@ private:
     void createDatabase();
     void deleteDatabase();
     void upgradeDatabase();
+
+signals:
+    void databaseUpdated(QString table);
 };
 
 #endif // DATABASEMANAGER_H

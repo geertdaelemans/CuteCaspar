@@ -13,6 +13,7 @@
 #include "CasparOSCListener.h"
 #include "CasparDevice.h"
 #include "RaspberryPI.h"
+#include "DatabaseManager.h"
 
 #include "SettingsDialog.h"
 #include "MidiEditorDialog.h"
@@ -38,9 +39,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
-    Q_SIGNAL void mediaListUpdated();
-
     void connectServer();    
 
 public slots:
@@ -56,6 +54,7 @@ public slots:
     void playlistContextMenu(QPoint pos);
     void copyToList();
     void removeClipFromList();
+    void databaseUpdated(QString table);
 
 private slots:
     void disconnectServer();

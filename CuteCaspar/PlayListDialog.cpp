@@ -15,7 +15,7 @@ PlayList::PlayList(QWidget *parent) :
 
     ui->setupUi(this);
 
-    DatabaseManager::getInstance().getDevice();
+    DatabaseManager::getInstance()->getDevice();
 
     m_playlist = "Playlist";
 
@@ -85,7 +85,7 @@ void PlayList::refreshPlayList()
 
 void PlayList::on_clipList_doubleClicked(const QModelIndex &index)
 {
-    DatabaseManager::getInstance().copyClipTo(index.siblingAtColumn(0).data(Qt::DisplayRole).toString(), m_playlist);
+    DatabaseManager::getInstance()->copyClipTo(index.siblingAtColumn(0).data(Qt::DisplayRole).toString(), m_playlist);
     refreshPlayList();
 }
 
@@ -169,7 +169,7 @@ void PlayList::on_btnDelete_clicked()
     if (selected.size() != 0) {
         int row = selected.begin()->row();
         int index = modelPlayList->data(modelPlayList->index(row, 0)).toInt();
-        DatabaseManager::getInstance().removeClipFromList(index, m_playlist);
+        DatabaseManager::getInstance()->removeClipFromList(index, m_playlist);
         refreshPlayList();
         if (row < modelPlayList->rowCount()) {
             ui->playList->selectRow(row);

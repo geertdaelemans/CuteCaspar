@@ -71,7 +71,7 @@ void SettingsDialog::loadDevice()
     ui->treeWidgetDevice->setColumnWidth(1, 25);
     ui->treeWidgetDevice->setColumnWidth(4, 50);
 
-    QList<DeviceModel> models = DatabaseManager::getInstance().getDevice();
+    QList<DeviceModel> models = DatabaseManager::getInstance()->getDevice();
     foreach (DeviceModel model, models)
     {
         QTreeWidgetItem* treeItem = new QTreeWidgetItem(ui->treeWidgetDevice);
@@ -125,7 +125,7 @@ void SettingsDialog::showAddDeviceDialog()
     DeviceDialog* dialog = new DeviceDialog(this);
     if (dialog->exec() == QDialog::Accepted)
     {
-        DatabaseManager::getInstance().insertDevice(DeviceModel(0, dialog->getName(), dialog->getAddress(),
+        DatabaseManager::getInstance()->insertDevice(DeviceModel(0, dialog->getName(), dialog->getAddress(),
                                                                 dialog->getPort().toInt(), dialog->getUsername(),
                                                                 dialog->getPassword(), dialog->getDescription(),
                                                                 "", dialog->getShadow(), 0, "", dialog->getPreviewChannel(),
@@ -146,7 +146,7 @@ void SettingsDialog::removeDevice()
     if (ui->treeWidgetDevice->selectedItems().count() == 0)
         return;
 
-    DatabaseManager::getInstance().deleteDevice(ui->treeWidgetDevice->currentItem()->text(0).toInt());
+    DatabaseManager::getInstance()->deleteDevice(ui->treeWidgetDevice->currentItem()->text(0).toInt());
     delete ui->treeWidgetDevice->currentItem();
 
     loadDevice();
@@ -159,13 +159,13 @@ void SettingsDialog::deviceItemDoubleClicked(QTreeWidgetItem* current, int index
 {
     Q_UNUSED(index)
 
-    DeviceModel model = DatabaseManager::getInstance().getDeviceById(current->text(0).toInt());
+    DeviceModel model = DatabaseManager::getInstance()->getDeviceById(current->text(0).toInt());
 
     DeviceDialog* dialog = new DeviceDialog(this);
     dialog->setDeviceModel(model);
     if (dialog->exec() == QDialog::Accepted)
     {
-        DatabaseManager::getInstance().updateDevice(DeviceModel(model.getId(), dialog->getName(), dialog->getAddress(),
+        DatabaseManager::getInstance()->updateDevice(DeviceModel(model.getId(), dialog->getName(), dialog->getAddress(),
                                                                 dialog->getPort().toInt(), dialog->getUsername(),
                                                                 dialog->getPassword(), dialog->getDescription(),
                                                                 model.getVersion(), dialog->getShadow(),

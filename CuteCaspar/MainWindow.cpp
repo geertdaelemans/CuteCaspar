@@ -27,6 +27,13 @@ MainWindow::MainWindow(QWidget *parent) :
     oscPort = static_cast<unsigned short>(settings.value("osc_port", 6250).toInt());
     settings.endGroup();
 
+    DatabaseManager::getInstance()->loadDatabase();
+    DatabaseManager::getInstance()->initialize();
+
+    // Handle updates coming from the SQL database
+    connect(DatabaseManager::getInstance(), SIGNAL(databaseUpdated(QString)),
+            this, SLOT(databaseUpdated(QString)));
+
     // Set-up UDP connection with device
     udp.bind(QHostAddress::Any, oscPort);
 
@@ -37,10 +44,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // CasparCG OSC listener received data
     connect(&listener, SIGNAL(messageAvailable(QStringList,QStringList)),
             this, SLOT(processOsc(QStringList,QStringList)));
-
-    // Refresh the Library ListView when new data is available
-    connect(this, SIGNAL(mediaListUpdated()),
-            this, SLOT(refreshLibraryList()));
 
     m_midiCon = MidiConnection::getInstance();
     m_raspberryPI = RaspberryPI::getInstance();
@@ -145,7 +148,6 @@ void MainWindow::connectionStateChanged(CasparDevice& device) {
         ui->actionDisconnect->setEnabled(true);
         log("Server connected");
         listMedia();
-        refreshPlayList();
     } else {
         ui->actionConnect->setEnabled(true);
         ui->actionDisconnect->setEnabled(false);
@@ -163,9 +165,9 @@ void MainWindow::disconnectServer()
     m_device->disconnectDevice();
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
-    DatabaseManager::getInstance().reset();
-    refreshPlayList();
+    DatabaseManager::getInstance()->reset();
     delete m_device;
+    refreshLibraryList();
     log("Disconnected from server");
 }
 
@@ -245,13 +247,13 @@ void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice
 //            ui->listMedia->addItem(mediaItems[i].getName());
 //            mediaItems[i].getType();
 //            mediaItems[i].getTimecode();
-//            DatabaseManager::getInstance().updateLibraryMedia(mediaItems[i].getName());
+//            DatabaseManager::getInstance()->updateLibraryMedia(mediaItems[i].getName());
 //        }
 //    }
 
     QList<LibraryModel> insertModels;
     QList<LibraryModel> deleteModels;
-//    QList<LibraryModel> libraryModels = DatabaseManager::getInstance().getLibraryMediaByDeviceAddress(device.getAddress());
+//    QList<LibraryModel> libraryModels = DatabaseManager::getInstance()->getLibraryMediaByDeviceAddress(device.getAddress());
 
 //    DatabaseManager::getInstance
 
@@ -280,17 +282,23 @@ void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice
 //                found = true;
 //        }
 
-        if (!found)
-            insertModels.push_back(LibraryModel(0, mediaItem.getName(), mediaItem.getName(), "", mediaItem.getType(), 0, mediaItem.getTimecode(), mediaItem.getFPS()));
+        if (!found) {
+            int numberOfNotes = 0;
+            MidiReader *midiRead = new MidiReader();
+            QMap<QString, message> midiList = midiRead->openLog(mediaItem.getName());
+            if (midiRead->isReady()) {
+                numberOfNotes = midiList.count();
+            }
+            insertModels.push_back(LibraryModel(0, mediaItem.getName(), mediaItem.getName(), "", mediaItem.getType(), 0, mediaItem.getTimecode(), mediaItem.getFPS(), numberOfNotes));
+        }
     }
 
     if (deleteModels.count() > 0 || insertModels.count() > 0)
     {
-//        DatabaseManager::getInstance().updateLibraryMedia(device.getAddress(), deleteModels, insertModels);
-        DatabaseManager::getInstance().updateLibraryMedia(insertModels);
+//        DatabaseManager::getInstance()->updateLibraryMedia(device.getAddress(), deleteModels, insertModels);
+        DatabaseManager::getInstance()->updateLibraryMedia(insertModels);
 
 //        EventManager::getInstance().fireMediaChangedEvent(MediaChangedEvent());
-        emit mediaListUpdated();
     }
 
         qDebug("LibraryManager::mediaChanged %d msec", time.elapsed());
@@ -316,7 +324,8 @@ void MainWindow::refreshPlayList()
     int activeRowIndex = 0;
     if (ui->tableView->selectionModel()) {
         QModelIndexList selectionIndexes = ui->tableView->selectionModel()->selection().indexes();
-        activeRowIndex = selectionIndexes.first().row();
+        if (!selectionIndexes.empty())
+            activeRowIndex = selectionIndexes.first().row();
     }
 
     QSqlQueryModel* model = new QSqlQueryModel();
@@ -364,7 +373,7 @@ void MainWindow::refreshLibraryList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("SELECT Name, Timecode, Fps FROM Library");
+    qry->prepare("SELECT Name, Timecode, Fps, Midi FROM Library");
     qry->exec();
 
     model->setQuery(*qry);
@@ -378,10 +387,11 @@ void MainWindow::refreshLibraryList()
     ui->tableViewLibrary->setColumnWidth(0, 400);
     ui->tableViewLibrary->setColumnWidth(1, 100);
     ui->tableViewLibrary->setColumnWidth(2, 100);
+    ui->tableViewLibrary->setColumnWidth(3, 100);
     ui->tableViewLibrary->selectRow(0);
     ui->tableViewLibrary->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    connect(ui->tableViewLibrary, SIGNAL(customContextMenuRequested(QPoint)), SLOT(libraryContextMenu(QPoint)));
+    connect(ui->tableViewLibrary, SIGNAL(customContextMenuRequested(QPoint)), SLOT(libraryContextMenu(QPoint)), Qt::UniqueConnection);
 
 }
 
@@ -406,7 +416,6 @@ void MainWindow::on_actionPlaylist_triggered()
 {
     PlayList* playlistDialog = new PlayList(this);
     playlistDialog->exec();
-    refreshPlayList();
 }
 
 
@@ -598,12 +607,7 @@ void MainWindow::copyToList()
     QMap<QString, QString> *input = (QMap<QString, QString>*) v.value<void *>();
 
     // Call the DatabaseManeger function to insert the clip into the list
-    DatabaseManager::getInstance().copyClipTo(input->value("clipName"), input->value("tableName"));
-
-    // Refresh the display
-    if (input->value("tableName") == "Playlist") {
-        refreshPlayList();
-    }
+    DatabaseManager::getInstance()->copyClipTo(input->value("clipName"), input->value("tableName"));
 }
 
 void MainWindow::removeClipFromList()
@@ -614,10 +618,15 @@ void MainWindow::removeClipFromList()
     QMap<QString, QString> *input = (QMap<QString, QString>*) v.value<void *>();
 
     // Call the DatabaseManeger function remove the clip from the list
-    DatabaseManager::getInstance().removeClipFromList(input->value("clipId").toInt(), input->value("tableName"));
+    DatabaseManager::getInstance()->removeClipFromList(input->value("clipId").toInt(), input->value("tableName"));
+}
 
-    // Refresh the display
-    if (input->value("tableName") == "Playlist") {
+void MainWindow::databaseUpdated(QString table)
+{
+    qDebug() << "Database updated - table" << table;
+    if (table == "Library") {
+        refreshLibraryList();
+    } else if (table == "Playlist") {
         refreshPlayList();
     }
 }

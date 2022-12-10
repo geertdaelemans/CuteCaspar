@@ -675,8 +675,8 @@ void CasparDevice::sendNotification()
                     double time = frames * (1.0 / fps);
                     timecode = Timecode::fromTime(time, fps, false);
                 }
-                //items.push_back(CasparMedia(name, type, timecode, qRound(fps * 100)/100.0));
-                items.push_back(CasparMedia(name, type, timecode, fps));
+                items.push_back(CasparMedia(name, type, timecode, qRound(fps * 100)/100.0));
+//                items.push_back(CasparMedia(name, type, timecode, fps));
             }
             qDebug() << "emit mediaChanged()";
             emit mediaChanged(items, *this);

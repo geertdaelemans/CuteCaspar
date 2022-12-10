@@ -10,7 +10,7 @@
 
 #include "Timecode.h"
 
-Player* Player::s_inst = nullptr;
+Q_GLOBAL_STATIC(Player, s_player)
 
 Player::Player()
 {
@@ -23,10 +23,7 @@ Player::Player()
 
 Player* Player::getInstance()
 {
-    if (!s_inst) {
-        s_inst = new Player();
-    }
-    return s_inst;
+    return s_player;
 }
 
 void Player::setDevice(CasparDevice* device)
@@ -46,7 +43,7 @@ void Player::setRandom(bool random)
 void Player::loadPlayList()
 {
     QSqlQuery query;
-    if (!query.prepare("SELECT Id, Name, Fps FROM Playlist"))
+    if (!query.prepare("SELECT Id, Name, Fps, Midi FROM Playlist"))
         qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
     query.exec();
     m_playlistClips.clear();
@@ -55,13 +52,7 @@ void Player::loadPlayList()
         newClip.setId(query.value(0).toInt());
         newClip.setName(query.value(1).toString());
         newClip.setFps(query.value(2).toDouble());
-        QMap<QString, message> midiList = midiRead->openLog(query.value(1).toString());
-        int numberOfNotes = 0;
-        if (midiRead->isReady()) {
-            numberOfNotes = midiList.count();
-        }
-        newClip.setMidi(numberOfNotes);
-        DatabaseManager::getInstance().updateMidiStatus(query.value(1).toString(), numberOfNotes);
+        newClip.setMidi(query.value(3).toInt());
         m_playlistClips.append(newClip);
     }
     query.finish();

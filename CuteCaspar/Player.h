@@ -2,7 +2,7 @@
 #define PLAYER_H
 
 #include "CasparDevice.h"
-
+#include "DatabaseManager.h"
 #include "MidiReader.h"
 #include "MidiLogger.h"
 #include "ClipInfo.h"
@@ -62,7 +62,6 @@ public slots:
     void onTimer_LoadNextClip();
 
 private:
-    static Player* s_inst;
     CasparDevice* m_device;
     QList<ClipInfo> m_playlistClips;
     int m_activeVideoLayer = 2;

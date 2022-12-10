@@ -11,16 +11,48 @@
 
 #include "Models/LibraryModel.h"
 
-Q_GLOBAL_STATIC(DatabaseManager, databaseManager)
+Q_GLOBAL_STATIC(DatabaseManager, s_databaseManager)
 
 DatabaseManager::DatabaseManager()
     : mutex(QMutex::Recursive)
 {
 }
 
-DatabaseManager& DatabaseManager::getInstance()
+DatabaseManager* DatabaseManager::getInstance()
 {
-    return *databaseManager();
+    return s_databaseManager();
+}
+
+void DatabaseManager::loadDatabase()
+{
+    QString path = QString("%1/.CasparCG/ClientNew").arg(QDir::homePath());
+
+    QDir directory(path);
+    if (!directory.exists())
+        directory.mkpath(".");
+
+    const bool dbmemory = false;
+
+    QSqlDatabase database;
+    if (dbmemory)
+    {
+        qDebug("Using SQLite in memory database");
+
+        database = QSqlDatabase::addDatabase("QSQLITE");
+        database.setDatabaseName(":memory:");
+    }
+    else
+    {
+        qDebug("Using SQLite database");
+
+        database = QSqlDatabase::addDatabase("QSQLITE");
+        QString databaseLocation = QString("%1/Database.s3db").arg(path);
+
+        database.setDatabaseName(databaseLocation);
+    }
+
+    if (!database.open())
+        qCritical("Unable to open database");
 }
 
 void DatabaseManager::initialize()
@@ -143,14 +175,16 @@ void DatabaseManager::deleteDatabase()
 
 void DatabaseManager::updateLibraryMedia(const QList<LibraryModel>& insertModels)
 {
-    QMutexLocker locker(&mutex);
+    if (insertModels.count() > 0) {
+
+        QMutexLocker locker(&mutex);
 
 //    int deviceId = getDeviceByAddress(address).getId();
 //    QList<TypeModel> typeModels = getType();
 
-    QSqlDatabase::database().transaction();
+        QSqlDatabase::database().transaction();
 
-    QSqlQuery sql;
+        QSqlQuery sql;
 
 //    if (deleteModels.count() > 0)
 //    {
@@ -165,14 +199,10 @@ void DatabaseManager::updateLibraryMedia(const QList<LibraryModel>& insertModels
 //        }
 //    }
 
-    if (insertModels.count() > 0)
-    {
         if (!sql.exec("DELETE FROM Library"))
            qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
-//        int typeId = 0;
-        for (int i = 0; i < insertModels.count(); i++)
-        {
+        for (int i = 0; i < insertModels.count(); i++) {
 //            if (insertModels.at(i).getType() == Rundown::AUDIO)
 //                typeId = std::find_if(typeModels.begin(), typeModels.end(), TypeModel::ByName(Rundown::AUDIO))->getId();
 //            else if (insertModels.at(i).getType() == Rundown::MOVIE)
@@ -180,22 +210,23 @@ void DatabaseManager::updateLibraryMedia(const QList<LibraryModel>& insertModels
 //            else if (insertModels.at(i).getType() == Rundown::STILL)
 //                typeId = std::find_if(typeModels.begin(), typeModels.end(), TypeModel::ByName(Rundown::STILL))->getId();
 
-            sql.prepare("INSERT INTO Library (Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps) "
-                        "VALUES(:Name, :DeviceId, :TypeId, :ThumbnailId, :Timecode, :Fps)");
+            sql.prepare("INSERT INTO Library (Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps, Midi) "
+                        "VALUES(:Name, :DeviceId, :TypeId, :ThumbnailId, :Timecode, :Fps, :Midi)");
             sql.bindValue(":Name", insertModels.at(i).getName());
 //            sql.bindValue(":DeviceId", deviceId);
-//            sql.bindValue(":TypeId", typeId);
             sql.bindValue(":TypeId", insertModels.at(i).getType());
             sql.bindValue(":ThumbnailId", insertModels.at(i).getThumbnailId());
             sql.bindValue(":Timecode", insertModels.at(i).getTimecode());
             sql.bindValue(":Fps", insertModels.at(i).getFPS());
+            sql.bindValue(":Midi", insertModels.at(i).getMidi());
 
             if (!sql.exec())
                qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
         }
-    }
+        QSqlDatabase::database().commit();
 
-    QSqlDatabase::database().commit();
+        emit databaseUpdated("Library");
+    }
 }
 
 
@@ -349,6 +380,8 @@ void DatabaseManager::updateMidiStatus(QString clipName, int midiNotes)
        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
+
+    emit databaseUpdated("Playlist");
 }
 
 
@@ -363,7 +396,7 @@ void DatabaseManager::copyClipTo(QString clipName, QString tableName)
     QMutexLocker locker(&mutex);
 
     QSqlQuery sql;
-    sql.prepare("SELECT d.DeviceId, d.typeId, d.ThumbnailId, Timecode, Fps FROM Library d "
+    sql.prepare("SELECT d.DeviceId, d.typeId, d.ThumbnailId, Timecode, Fps, Midi FROM Library d "
                 "WHERE d.Name = :Name");
     sql.bindValue(":Name", clipName);
 
@@ -377,24 +410,26 @@ void DatabaseManager::copyClipTo(QString clipName, QString tableName)
     QString thumbnailId = sql.value(2).toString();
     QString timeCode = sql.value(3).toString();
     QString fps = sql.value(4).toString();
+    QString midi = sql.value(5).toString();
 
     QSqlDatabase::database().transaction();
 
-    sql.prepare("INSERT INTO " + tableName + " (Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps) "
-                "VALUES(:Name, :DeviceId, :TypeId, :ThumbnailId, :Timecode, :Fps)");
+    sql.prepare("INSERT INTO " + tableName + " (Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps, Midi) "
+                "VALUES(:Name, :DeviceId, :TypeId, :ThumbnailId, :Timecode, :Fps, :Midi)");
     sql.bindValue(":Name", clipName);
     sql.bindValue(":DeviceId", deviceId);
     sql.bindValue(":TypeId", typeId);
     sql.bindValue(":ThumbnailId", thumbnailId);
     sql.bindValue(":Timecode", timeCode);
     sql.bindValue(":Fps", fps);
+    sql.bindValue(":Midi", midi);
 
     if (!sql.exec())
        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 
-    qDebug() << "Copying" << clipName << "to" << tableName;
+    emit databaseUpdated(tableName);
 }
 
 
@@ -419,6 +454,8 @@ void DatabaseManager::removeClipFromList(int clipId, QString tableName)
        qCritical("Failed to execute removeClipFromList query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
+
+    emit databaseUpdated(tableName);
 }
 
 
