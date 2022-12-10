@@ -423,19 +423,21 @@ void DatabaseManager::removeClipsFromList(QList<int> clipIds, QString tableName)
 {
     QMutexLocker locker(&mutex);
 
-    foreach (int clipId, clipIds) {
-        QSqlDatabase::database().transaction();
-
-        QSqlQuery sql;
-        sql.prepare("DELETE FROM " + tableName + " "
-                    "WHERE Id = :Id");
-        sql.bindValue(":Id", clipId);
-
-        if (!sql.exec())
-           qCritical("Failed to execute removeClipFromList query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
-
-        QSqlDatabase::database().commit();
+    QString deleteString = "";
+    for (int i = 0; i < clipIds.size(); i++) {
+        deleteString += QString::number(clipIds[i]) + (i < clipIds.size() - 1 ? "," : "");
     }
+
+    QSqlDatabase::database().transaction();
+
+    QSqlQuery sql;
+    sql.prepare("DELETE FROM " + tableName + " "
+                "WHERE Id IN (" + deleteString + ")");
+
+    if (!sql.exec())
+       qCritical("Failed to execute removeClipFromList query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
+    QSqlDatabase::database().commit();
 
     emit databaseUpdated(tableName);
 }

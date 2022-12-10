@@ -165,16 +165,14 @@ void PlayList::on_btnDown_clicked()
 void PlayList::on_btnDelete_clicked()
 {
     QItemSelectionModel *selections = ui->playList->selectionModel();
-    QModelIndexList selected = selections->selectedIndexes();
+    QModelIndexList selected = selections->selectedRows();
     if (selected.size() != 0) {
         QList<int> indexList;
         foreach (QModelIndex index, selected) {
             indexList.append(modelPlayList->data(modelPlayList->index(index.row(), 0)).toInt());
         }
         int row = selected.begin()->row();
-        int index = modelPlayList->data(modelPlayList->index(row, 0)).toInt();
 
-        indexList.append(index);
         DatabaseManager::getInstance()->removeClipsFromList(indexList, m_playlist);
         refreshPlayList();
         if (row < modelPlayList->rowCount()) {
