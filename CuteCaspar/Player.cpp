@@ -6,7 +6,6 @@
 
 #include "MidiConnection.h"
 #include "RaspberryPI.h"
-#include "DatabaseManager.h"
 
 #include "Timecode.h"
 
@@ -19,6 +18,7 @@ Player::Player()
 
     midiRead = new MidiReader();
     midiLog = new MidiLogger();
+    updateRandomClip();
 }
 
 Player* Player::getInstance()
@@ -57,7 +57,6 @@ void Player::loadPlayList()
     }
     query.finish();
     setStatus(PlayerStatus::READY);
-    updateRandomClip();
 }
 
 /**
@@ -190,6 +189,7 @@ void Player::nextClip()
 
 void Player::insertPlaylist(QString clipName)
 {
+    qDebug() << "insertPlaylist" << clipName;
     if (TRIGGER_PLAYLIST_AFTER_SCARE && getStatus() == PlayerStatus::READY) {
         startPlayList(m_currentClipIndex);
     }

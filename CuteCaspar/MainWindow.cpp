@@ -531,15 +531,22 @@ void MainWindow::playerStatus(PlayerStatus status, bool isRecording)
 
 void MainWindow::libraryContextMenu(QPoint pos)
 {
-    QModelIndex index = ui->tableViewLibrary->indexAt(pos);
-    QString data = ui->tableViewLibrary->model()->index(index.row(), 0).data().toString();
+    // Prepare the data of selected rows as a QStringList of all selected nemes
+    QModelIndexList list = ui->tableViewLibrary->selectionModel()->selectedRows();
+    QStringList selection;
+    foreach (QModelIndex index, list) {
+        selection.append(ui->tableViewLibrary->model()->index(index.row(), 0).data().toString());
+    }
+    QString data = selection.join(',');
+
+    // Prepare the menu with extra data
     QMenu *contextMenu = new QMenu(this);
     QVariant addon;
 
     // Prepare QAction for adding to Playlist
     QAction *copyToPlaylist = new QAction("Add to Playlist", this);
     QMap<QString, QString> *dataPlaylist = new QMap<QString, QString>;
-    dataPlaylist->insert("clipName", data);
+    dataPlaylist->insert("clipNames", data);
     dataPlaylist->insert("tableName", "Playlist");
     addon = qVariantFromValue((void *) dataPlaylist);
     copyToPlaylist->setData(addon);
@@ -547,7 +554,7 @@ void MainWindow::libraryContextMenu(QPoint pos)
     // Prepare QAction for adding to Scares
     QAction *copyToScares = new QAction("Add to Scares", this);
     QMap<QString, QString> *dataScares = new QMap<QString, QString>;
-    dataScares->insert("clipName", data);
+    dataScares->insert("clipNames", data);
     dataScares->insert("tableName", "Scares");
     addon = qVariantFromValue((void *) dataScares);
     copyToScares->setData(addon);
@@ -555,7 +562,7 @@ void MainWindow::libraryContextMenu(QPoint pos)
     // Prepare QAction for adding to Extras
     QAction *copyToExtras = new QAction("Add to Extras", this);
     QMap<QString, QString> *dataExtras = new QMap<QString, QString>;
-    dataExtras->insert("clipName", data);
+    dataExtras->insert("clipNames", data);
     dataExtras->insert("tableName", "Extras");
     addon = qVariantFromValue((void *) dataExtras);
     copyToExtras->setData(addon);
@@ -607,7 +614,7 @@ void MainWindow::copyToList()
     QMap<QString, QString> *input = (QMap<QString, QString>*) v.value<void *>();
 
     // Call the DatabaseManeger function to insert the clip into the list
-    DatabaseManager::getInstance()->copyClipTo(input->value("clipName"), input->value("tableName"));
+    DatabaseManager::getInstance()->copyClipsTo(input->value("clipNames").split(','), input->value("tableName"));
 }
 
 void MainWindow::removeClipFromList()
@@ -618,7 +625,9 @@ void MainWindow::removeClipFromList()
     QMap<QString, QString> *input = (QMap<QString, QString>*) v.value<void *>();
 
     // Call the DatabaseManeger function remove the clip from the list
-    DatabaseManager::getInstance()->removeClipFromList(input->value("clipId").toInt(), input->value("tableName"));
+    QList<int> indexList;
+    indexList.append(input->value("clipId").toInt());
+    DatabaseManager::getInstance()->removeClipsFromList(indexList, input->value("tableName"));
 }
 
 void MainWindow::databaseUpdated(QString table)
@@ -628,6 +637,8 @@ void MainWindow::databaseUpdated(QString table)
         refreshLibraryList();
     } else if (table == "Playlist") {
         refreshPlayList();
+    } else if (table == "Scares") {
+        m_player->updateRandomClip();
     }
 }
 

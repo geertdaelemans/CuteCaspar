@@ -85,7 +85,7 @@ void PlayList::refreshPlayList()
 
 void PlayList::on_clipList_doubleClicked(const QModelIndex &index)
 {
-    DatabaseManager::getInstance()->copyClipTo(index.siblingAtColumn(0).data(Qt::DisplayRole).toString(), m_playlist);
+    DatabaseManager::getInstance()->copyClipsTo(index.siblingAtColumn(0).data(Qt::DisplayRole).toStringList(), m_playlist);
     refreshPlayList();
 }
 
@@ -167,9 +167,15 @@ void PlayList::on_btnDelete_clicked()
     QItemSelectionModel *selections = ui->playList->selectionModel();
     QModelIndexList selected = selections->selectedIndexes();
     if (selected.size() != 0) {
+        QList<int> indexList;
+        foreach (QModelIndex index, selected) {
+            indexList.append(modelPlayList->data(modelPlayList->index(index.row(), 0)).toInt());
+        }
         int row = selected.begin()->row();
         int index = modelPlayList->data(modelPlayList->index(row, 0)).toInt();
-        DatabaseManager::getInstance()->removeClipFromList(index, m_playlist);
+
+        indexList.append(index);
+        DatabaseManager::getInstance()->removeClipsFromList(indexList, m_playlist);
         refreshPlayList();
         if (row < modelPlayList->rowCount()) {
             ui->playList->selectRow(row);

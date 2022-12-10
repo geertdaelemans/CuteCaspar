@@ -334,9 +334,6 @@
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
             <widget class="QTableView" name="tableViewLibrary">
-             <property name="selectionMode">
-              <enum>QAbstractItemView::SingleSelection</enum>
-             </property>
              <property name="selectionBehavior">
               <enum>QAbstractItemView::SelectRows</enum>
              </property>

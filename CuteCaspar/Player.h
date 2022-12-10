@@ -42,6 +42,7 @@ public:
     void nextClip();
     void setTriggersActive(bool value);
     int getActiveVideoLayer() {return m_activeVideoLayer;};
+    void updateRandomClip();
 
     // SoundScape Calls
     void startSoundScape();
@@ -86,7 +87,6 @@ private:
     bool m_insertedClip = false;
     bool m_endOfClipDetected = false;
     int getNumberOfClips(QString playlist) const;
-    void updateRandomClip();
     QString m_randomScare;
     int m_currentFrame;
     int m_lastFrame;
