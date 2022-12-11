@@ -39,7 +39,7 @@ void PlayList::refreshLibraryList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("SELECT Name, TypeId, Timecode, Fps FROM Library");
+    qry->prepare("SELECT Id, Name, TypeId, Timecode, Fps, Midi FROM Library");
     qry->exec();
 
     model->setQuery(*qry);
@@ -51,10 +51,12 @@ void PlayList::refreshLibraryList()
     proxyModel->sort(2, Qt::AscendingOrder);
 
     ui->clipList->setModel(proxyModel);
-    ui->clipList->setColumnWidth(0, 400);
-    ui->clipList->hideColumn(1);
-    ui->clipList->setColumnWidth(2, 100);
-    ui->clipList->hideColumn(3);
+    ui->clipList->hideColumn(0);
+    ui->clipList->setColumnWidth(1, 400);
+    ui->clipList->hideColumn(2);
+    ui->clipList->setColumnWidth(3, 100);
+    ui->clipList->hideColumn(4);
+    ui->clipList->setColumnWidth(5, 100);
 }
 
 void PlayList::refreshPlayList()
@@ -83,9 +85,31 @@ void PlayList::refreshPlayList()
     emit playlistChanged();
 }
 
+/**
+ * @brief PlayList::on_btnAddToList_clicked
+ * Button to add clips to the list, can be multi-select
+ */
+void PlayList::on_btnAddToList_clicked()
+{
+    QModelIndexList selectionList = ui->clipList->selectionModel()->selectedRows(0);
+    QList<int> selectedIndices;
+    foreach (QModelIndex index, selectionList) {
+        selectedIndices.append(index.data(Qt::DisplayRole).toInt());
+    }
+    DatabaseManager::getInstance()->copyClipsTo(selectedIndices, m_playlist);
+    refreshPlayList();
+}
+
+/**
+ * @brief PlayList::on_clipList_doubleClicked
+ * Copying the double-clicked clip to the selected list
+ * @param index - QModelIndex of the field on which the user clicked
+ */
 void PlayList::on_clipList_doubleClicked(const QModelIndex &index)
 {
-    DatabaseManager::getInstance()->copyClipsTo(index.siblingAtColumn(0).data(Qt::DisplayRole).toStringList(), m_playlist);
+    QList<int> selectedIndices;
+    selectedIndices.append(index.siblingAtColumn(0).data(Qt::DisplayRole).toInt());
+    DatabaseManager::getInstance()->copyClipsTo(selectedIndices, m_playlist);
     refreshPlayList();
 }
 
@@ -102,26 +126,9 @@ bool PlayList::isMidiPresent(QString clipName)
 
 void PlayList::on_clearPlaylistButton_clicked()
 {
-    QSqlQuery query;
-    if (!query.prepare(QString("DELETE FROM %1").arg(m_playlist)))
-        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
-    query.exec();
-
+    DatabaseManager::getInstance()->emptyList(m_playlist);
     refreshPlayList();
 }
-
-void PlayList::swapRows(int rowA, int rowB)
-{
-    QSqlQuery query;
-    if (!query.prepare(QString("UPDATE %1 SET Id = (CASE WHEN Id = %2 THEN -%3 ELSE -%2 END) WHERE Id IN (%2, %3)").arg(m_playlist).arg(QString::number(rowA), QString::number(rowB))))
-        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
-    query.exec();
-    if (!query.prepare(QString("UPDATE %1 SET Id = -Id WHERE Id < 0").arg(m_playlist)))
-        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
-    query.exec();
-    refreshPlayList();
-}
-
 
 void PlayList::on_clipList_clicked(const QModelIndex &index)
 {
@@ -139,12 +146,13 @@ void PlayList::on_btnUp_clicked()
     QItemSelectionModel *selections = ui->playList->selectionModel();
     QModelIndexList selected = selections->selectedIndexes();
     if (selected.size() != 0 && selected.begin()->row() != 0) {
-        int rowA = selected.begin()->row() - 1;
-        int rowB = selected.begin()->row();
+        int rowA = selected.begin()->row();
+        int rowB = selected.begin()->row() - 1;
         int indexA = modelPlayList->data(modelPlayList->index(rowA, 0)).toInt();
         int indexB = modelPlayList->data(modelPlayList->index(rowB, 0)).toInt();
-        swapRows(indexA, indexB);
-        ui->playList->selectRow(rowA);
+        DatabaseManager::getInstance()->moveClip(indexA, indexB, m_playlist);
+        refreshPlayList();
+        ui->playList->selectRow(rowB);
     }
 }
 
@@ -157,7 +165,8 @@ void PlayList::on_btnDown_clicked()
         int rowB = selected.begin()->row() + 1;
         int indexA = modelPlayList->data(modelPlayList->index(rowA, 0)).toInt();
         int indexB = modelPlayList->data(modelPlayList->index(rowB, 0)).toInt();
-        swapRows(indexA, indexB);
+        DatabaseManager::getInstance()->moveClip(indexA, indexB, m_playlist);
+        refreshPlayList();
         ui->playList->selectRow(rowB);
     }
 }

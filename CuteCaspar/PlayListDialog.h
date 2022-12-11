@@ -26,6 +26,7 @@ private slots:
     void on_btnUp_clicked();
     void on_btnDown_clicked();
     void on_btnDelete_clicked();
+    void on_btnAddToList_clicked();
 
 signals:
     void playlistChanged();
@@ -35,7 +36,6 @@ private:
     QString m_playlist = "Playlist";
     QSqlQueryModel * modelPlayList = nullptr;
     void deleteRow(int row);
-    void swapRows(int rowA, int rowB);
     bool isMidiPresent(QString clipName);
 };
 

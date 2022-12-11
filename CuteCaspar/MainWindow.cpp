@@ -27,8 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     oscPort = static_cast<unsigned short>(settings.value("osc_port", 6250).toInt());
     settings.endGroup();
 
-    DatabaseManager::getInstance()->loadDatabase();
-    DatabaseManager::getInstance()->initialize();
+    DatabaseManager::getInstance()->initializeDatabase();
 
     // Handle updates coming from the SQL database
     connect(DatabaseManager::getInstance(), SIGNAL(databaseUpdated(QString)),
@@ -373,7 +372,7 @@ void MainWindow::refreshLibraryList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("SELECT Name, Timecode, Fps, Midi FROM Library");
+    qry->prepare("SELECT Id, Name, Timecode, Fps, Midi FROM Library");
     qry->exec();
 
     model->setQuery(*qry);
@@ -384,15 +383,15 @@ void MainWindow::refreshLibraryList()
     proxyModel->sort(0, Qt::AscendingOrder);
 
     ui->tableViewLibrary->setModel(proxyModel);
-    ui->tableViewLibrary->setColumnWidth(0, 400);
-    ui->tableViewLibrary->setColumnWidth(1, 100);
+    ui->tableViewLibrary->hideColumn(0);
+    ui->tableViewLibrary->setColumnWidth(1, 400);
     ui->tableViewLibrary->setColumnWidth(2, 100);
     ui->tableViewLibrary->setColumnWidth(3, 100);
+    ui->tableViewLibrary->setColumnWidth(4, 100);
     ui->tableViewLibrary->selectRow(0);
     ui->tableViewLibrary->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(ui->tableViewLibrary, SIGNAL(customContextMenuRequested(QPoint)), SLOT(libraryContextMenu(QPoint)), Qt::UniqueConnection);
-
 }
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
@@ -531,11 +530,11 @@ void MainWindow::playerStatus(PlayerStatus status, bool isRecording)
 
 void MainWindow::libraryContextMenu(QPoint pos)
 {
-    // Prepare the data of selected rows as a QStringList of all selected nemes
-    QModelIndexList list = ui->tableViewLibrary->selectionModel()->selectedRows();
+    // Prepare the data of selected rows as a QStringList of all selected ids
+    QModelIndexList list = ui->tableViewLibrary->selectionModel()->selectedRows(0);
     QStringList selection;
     foreach (QModelIndex index, list) {
-        selection.append(ui->tableViewLibrary->model()->index(index.row(), 0).data().toString());
+        selection.append(index.data().toString());
     }
     QString data = selection.join(',');
 
@@ -546,7 +545,7 @@ void MainWindow::libraryContextMenu(QPoint pos)
     // Prepare QAction for adding to Playlist
     QAction *copyToPlaylist = new QAction("Add to Playlist", this);
     QMap<QString, QString> *dataPlaylist = new QMap<QString, QString>;
-    dataPlaylist->insert("clipNames", data);
+    dataPlaylist->insert("clipIds", data);
     dataPlaylist->insert("tableName", "Playlist");
     addon = qVariantFromValue((void *) dataPlaylist);
     copyToPlaylist->setData(addon);
@@ -554,7 +553,7 @@ void MainWindow::libraryContextMenu(QPoint pos)
     // Prepare QAction for adding to Scares
     QAction *copyToScares = new QAction("Add to Scares", this);
     QMap<QString, QString> *dataScares = new QMap<QString, QString>;
-    dataScares->insert("clipNames", data);
+    dataScares->insert("clipIds", data);
     dataScares->insert("tableName", "Scares");
     addon = qVariantFromValue((void *) dataScares);
     copyToScares->setData(addon);
@@ -562,7 +561,7 @@ void MainWindow::libraryContextMenu(QPoint pos)
     // Prepare QAction for adding to Extras
     QAction *copyToExtras = new QAction("Add to Extras", this);
     QMap<QString, QString> *dataExtras = new QMap<QString, QString>;
-    dataExtras->insert("clipNames", data);
+    dataExtras->insert("clipIds", data);
     dataExtras->insert("tableName", "Extras");
     addon = qVariantFromValue((void *) dataExtras);
     copyToExtras->setData(addon);
@@ -614,7 +613,11 @@ void MainWindow::copyToList()
     QMap<QString, QString> *input = (QMap<QString, QString>*) v.value<void *>();
 
     // Call the DatabaseManeger function to insert the clip into the list
-    DatabaseManager::getInstance()->copyClipsTo(input->value("clipNames").split(','), input->value("tableName"));
+    QList<int> selectedIndices;
+    foreach (QString index, input->value("clipIds").split(',')) {
+        selectedIndices.append(index.toInt());
+    }
+    DatabaseManager::getInstance()->copyClipsTo(selectedIndices, input->value("tableName"));
 }
 
 void MainWindow::removeClipFromList()
@@ -632,7 +635,6 @@ void MainWindow::removeClipFromList()
 
 void MainWindow::databaseUpdated(QString table)
 {
-    qDebug() << "Database updated - table" << table;
     if (table == "Library") {
         refreshLibraryList();
     } else if (table == "Playlist") {
