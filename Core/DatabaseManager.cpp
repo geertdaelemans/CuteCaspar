@@ -55,7 +55,7 @@ void DatabaseManager::initializeDatabase()
         qDebug("Using SQLite database");
 
         database = QSqlDatabase::addDatabase("QSQLITE");
-        QString databaseLocation = QString("%1/Database.s3db").arg(path);
+        QString databaseLocation = QString("%1/Database.sqlite").arg(path);
 
         database.setDatabaseName(databaseLocation);
     }
@@ -126,27 +126,25 @@ void DatabaseManager::upgradeDatabase()
 {
     QSqlQuery sql;
     if (!sql.exec("SELECT c.Id, c.Name, c.Value FROM Configuration c WHERE c.Name = 'DatabaseVersion'"))
-       qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     sql.first();
 
     int version = sql.value(2).toInt();
 
-    while (version + 1 <= QString("%1").arg(DATABASE_VERSION).toInt())
-    {
+    while (version + 1 <= QString("%1").arg(DATABASE_VERSION).toInt()) {
+
         QFile file(QString(":/Scripts/Sql/ChangeScript-%1.sql").arg(version + 1));
-        if (file.open(QFile::ReadOnly))
-        {
+        if (file.open(QFile::ReadOnly)) {
             QStringList queries = QString(file.readAll()).split(";");
 
             file.close();
 
-            foreach(const QString& query, queries)
-            {
-                 if (query.trimmed().isEmpty())
-                     continue;
-
-                 if (!sql.exec(query))
+            foreach(const QString& query, queries) {
+                if (query.trimmed().isEmpty())
+                    continue;
+                sql.prepare(query);
+                if (!sql.exec(query))
                     qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
             }
 
@@ -159,7 +157,6 @@ void DatabaseManager::upgradeDatabase()
 
             qDebug("Successfully upgraded to ChangeScript-%d", version + 1);
         }
-
         version++;
     }
 }
@@ -206,7 +203,7 @@ QList<DeviceModel> DatabaseManager::getDevice()
 {
     QSqlQuery sql;
     if (!sql.exec("SELECT d.Id, d.Name, d.Address, d.Port, d.Username, d.Password, d.Description, d.Version, d.Shadow, d.Channels, d.ChannelFormats, d.PreviewChannel, d.LockedChannel FROM Device d ORDER BY d.Name"))
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QList<DeviceModel> models;
     while (sql.next())
@@ -233,7 +230,7 @@ DeviceModel DatabaseManager::getDeviceById(int deviceId)
     sql.bindValue(":Id", deviceId);
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     sql.first();
 
@@ -258,7 +255,7 @@ DeviceModel DatabaseManager::getDeviceByName(const QString& name)
     sql.bindValue(":Name", name);
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     sql.first();
 
@@ -295,7 +292,7 @@ void DatabaseManager::insertDevice(const DeviceModel& model)
     sql.bindValue(":LockedChannel", model.getLockedChannel());
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 }
@@ -329,7 +326,7 @@ void DatabaseManager::updateDevice(const DeviceModel& model)
     sql.bindValue(":Id", model.getId());
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 }
@@ -351,21 +348,21 @@ void DatabaseManager::deleteDevice(int id)
     sql.bindValue(":Id",id);
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     sql.prepare("DELETE FROM Thumbnail "
                 "WHERE Id IN (SELECT l.ThumbnailId FROM Library l WHERE DeviceId = :DeviceId)");
     sql.bindValue(":DeviceId",id);
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     sql.prepare("DELETE FROM Library "
                 "WHERE DeviceId = :DeviceId");
     sql.bindValue(":DeviceId",id);
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 }
@@ -392,7 +389,7 @@ void DatabaseManager::updateLibraryMedia(const QList<LibraryModel>& insertModels
         QSqlQuery sql;
 
         if (!sql.exec("DELETE FROM Library"))
-           qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+            qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
         for (int i = 0; i < insertModels.count(); i++) {
             sql.prepare("INSERT INTO Library (Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps, Midi) "
@@ -406,7 +403,7 @@ void DatabaseManager::updateLibraryMedia(const QList<LibraryModel>& insertModels
             sql.bindValue(":Midi", insertModels.at(i).getMidi());
 
             if (!sql.exec())
-               qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+                qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
         }
 
         QSqlDatabase::database().commit();
@@ -439,7 +436,7 @@ void DatabaseManager::copyClipsTo(QList<int> clipIds, QString tableName)
                 "WHERE Id IN (" + clipIdsString + ")");
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 
@@ -466,10 +463,10 @@ void DatabaseManager::removeClipsFromList(QList<int> clipIds, QString tableName)
 
     QSqlQuery sql;
     sql.prepare("DELETE FROM " + tableName + " "
-                "WHERE Id IN (" + clipIdsString + ")");
+                                             "WHERE Id IN (" + clipIdsString + ")");
 
     if (!sql.exec())
-       qCritical("Failed to execute removeClipFromList query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute removeClipFromList query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 
@@ -498,17 +495,17 @@ void DatabaseManager::moveClip(int from, int to, QString tableName)
         sql.prepare(QString("UPDATE %1 SET Id = -(Id - 1) WHERE Id <= %2 AND Id > %3").arg(tableName).arg(to).arg(from));
     }
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     // STEP 2: Move the clip as requested as now no conflict is possible because the destination ID is shifted and inverted
     sql.prepare(QString("UPDATE %1 SET Id = %2 WHERE Id = %3").arg(tableName).arg(to).arg(from));
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     // STEP 3: Clean-up by inverting negative IDs
     sql.prepare(QString("UPDATE %1 SET Id = -Id WHERE Id < 0").arg(tableName));
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 
@@ -530,7 +527,7 @@ void DatabaseManager::emptyList(QString tableName)
     sql.prepare(QString("DELETE FROM %1").arg(tableName));
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 
@@ -555,7 +552,7 @@ void DatabaseManager::updateMidiStatus(QString clipName, int midiNotes)
     sql.bindValue(":Midi", midiNotes);
 
     if (!sql.exec())
-       qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
     QSqlDatabase::database().commit();
 
