@@ -332,23 +332,28 @@ void MainWindow::refreshPlayList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare("SELECT Id, Timecode, TypeId, Fps, Name, Midi FROM Playlist");
+    qry->prepare("SELECT Id, DisplayOrder, Timecode, TypeId, Fps, Name, Midi FROM Playlist");
     qry->exec();
 
     model->setQuery(*qry);
+    model->setHeaderData(2, Qt::Horizontal, tr("Duration"), Qt::DisplayRole);
+    model->setHeaderData(5, Qt::Horizontal, tr("Clip Name"), Qt::DisplayRole);
+    model->setHeaderData(6, Qt::Horizontal, tr("Midi Notes"), Qt::DisplayRole);
 
     // Set proxy model to enable sorting columns:
     QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
-    proxyModel->sort(0, Qt::AscendingOrder);
+    proxyModel->sort(1, Qt::AscendingOrder);
 
     ui->tableView->setModel(proxyModel);
     if (activeRowIndex == 0) {
         ui->tableView->hideColumn(0);
-        ui->tableView->setColumnWidth(1, 100);
-        ui->tableView->hideColumn(2);
+        ui->tableView->hideColumn(1);
+        ui->tableView->setColumnWidth(2, 100);
         ui->tableView->hideColumn(3);
-        ui->tableView->setColumnWidth(4, 400);
+        ui->tableView->hideColumn(4);
+        ui->tableView->setColumnWidth(5, 400);
+        ui->tableView->setColumnWidth(6, 50);
         ui->tableView->selectRow(0);
         ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     }

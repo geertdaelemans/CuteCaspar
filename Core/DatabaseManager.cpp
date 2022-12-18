@@ -438,6 +438,11 @@ void DatabaseManager::copyClipsTo(QList<int> clipIds, QString tableName)
     if (!sql.exec())
         qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
+    sql.prepare("UPDATE " + tableName + " SET DisplayOrder = Id WHERE DisplayOrder IS NULL");
+
+    if (!sql.exec())
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
     QSqlDatabase::database().commit();
 
     emit databaseUpdated(tableName);
@@ -488,22 +493,11 @@ void DatabaseManager::moveClip(int from, int to, QString tableName)
 
     QSqlQuery sql;
 
-    // STEP 1: Shift all clips in between from and to (included) up or down one step and invert the IDs to avoid a non-unique violation
     if (from > to) {
-        sql.prepare(QString("UPDATE %1 SET Id = -(Id + 1) WHERE Id >= %2 AND Id < %3").arg(tableName).arg(to).arg(from));
+        sql.prepare(QString("UPDATE %1 SET DisplayOrder = (CASE DisplayOrder WHEN %3 THEN %2 ELSE DisplayOrder + 1 END) WHERE DisplayOrder >= %2 AND DisplayOrder <= %3").arg(tableName).arg(to).arg(from));
     } else {
-        sql.prepare(QString("UPDATE %1 SET Id = -(Id - 1) WHERE Id <= %2 AND Id > %3").arg(tableName).arg(to).arg(from));
+        sql.prepare(QString("UPDATE %1 SET DisplayOrder = (CASE DisplayOrder WHEN %3 THEN %2 ELSE DisplayOrder - 1 END) WHERE DisplayOrder <= %2 AND DisplayOrder >= %3").arg(tableName).arg(to).arg(from));
     }
-    if (!sql.exec())
-        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
-
-    // STEP 2: Move the clip as requested as now no conflict is possible because the destination ID is shifted and inverted
-    sql.prepare(QString("UPDATE %1 SET Id = %2 WHERE Id = %3").arg(tableName).arg(to).arg(from));
-    if (!sql.exec())
-        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
-
-    // STEP 3: Clean-up by inverting negative IDs
-    sql.prepare(QString("UPDATE %1 SET Id = -Id WHERE Id < 0").arg(tableName));
     if (!sql.exec())
         qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 

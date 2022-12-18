@@ -43,12 +43,14 @@ void PlayList::refreshLibraryList()
     qry->exec();
 
     model->setQuery(*qry);
-    model->setHeaderData(1, Qt::Horizontal, tr("Duration"), Qt::DisplayRole);
+    model->setHeaderData(1, Qt::Horizontal, tr("Clip Name"), Qt::DisplayRole);
+    model->setHeaderData(3, Qt::Horizontal, tr("Duration"), Qt::DisplayRole);
+    model->setHeaderData(5, Qt::Horizontal, tr("Midi Notes"), Qt::DisplayRole);
 
     // Set proxy model to enable sorting columns:
     QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
-    proxyModel->sort(2, Qt::AscendingOrder);
+    proxyModel->sort(1, Qt::AscendingOrder);
 
     ui->clipList->setModel(proxyModel);
     ui->clipList->hideColumn(0);
@@ -65,22 +67,21 @@ void PlayList::refreshPlayList()
 
     QSqlQuery* qry = new QSqlQuery();
 
-    qry->prepare(QString("SELECT Id, Name, TypeId, Timecode, Fps, Midi FROM %1").arg(m_playlist));
+    qry->prepare(QString("SELECT Id, DisplayOrder, Name, TypeId, Timecode, Fps, Midi FROM %1 ORDER BY DisplayOrder").arg(m_playlist));
     qry->exec();
 
     modelPlayList->setQuery(*qry);
+    modelPlayList->setHeaderData(2, Qt::Horizontal, tr("Clip Name"), Qt::DisplayRole);
+    modelPlayList->setHeaderData(6, Qt::Horizontal, tr("Midi Notes"), Qt::DisplayRole);
 
-    // Set proxy model to enable sorting columns:
-    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(modelPlayList);
-    proxyModel->sort(0, Qt::AscendingOrder);
-
-    ui->playList->setModel(proxyModel);
+    ui->playList->setModel(modelPlayList);
     ui->playList->hideColumn(0);
-    ui->playList->setColumnWidth(1, 400);
-    ui->playList->hideColumn(2);
+    ui->playList->hideColumn(1);
+    ui->playList->setColumnWidth(2, 300);
     ui->playList->hideColumn(3);
     ui->playList->hideColumn(4);
+    ui->playList->hideColumn(5);
+    ui->playList->setColumnWidth(6, 50);
 
     emit playlistChanged();
 }
@@ -130,11 +131,6 @@ void PlayList::on_clearPlaylistButton_clicked()
     refreshPlayList();
 }
 
-void PlayList::on_clipList_clicked(const QModelIndex &index)
-{
-    const QString clipName = index.siblingAtColumn(0).data(Qt::DisplayRole).toString();
-}
-
 void PlayList::on_cmbPlaylists_currentIndexChanged(int index)
 {
     m_playlist = ui->cmbPlaylists->itemData(index).toString();
@@ -143,31 +139,29 @@ void PlayList::on_cmbPlaylists_currentIndexChanged(int index)
 
 void PlayList::on_btnUp_clicked()
 {
-    QItemSelectionModel *selections = ui->playList->selectionModel();
-    QModelIndexList selected = selections->selectedIndexes();
-    if (selected.size() != 0 && selected.begin()->row() != 0) {
-        int rowA = selected.begin()->row();
-        int rowB = selected.begin()->row() - 1;
-        int indexA = modelPlayList->data(modelPlayList->index(rowA, 0)).toInt();
-        int indexB = modelPlayList->data(modelPlayList->index(rowB, 0)).toInt();
-        DatabaseManager::getInstance()->moveClip(indexA, indexB, m_playlist);
+    QModelIndexList selected = ui->playList->selectionModel()->selectedRows();
+
+    if (selected.size() != 0 && selected[0].row() > 0) {
+        int index = selected[0].siblingAtColumn(1).data().toInt();
+        int toRow = selected[0].row() - 1;
+        int newIndex = modelPlayList->index(toRow, 1).data().toInt();
+        DatabaseManager::getInstance()->moveClip(index, newIndex, m_playlist);
         refreshPlayList();
-        ui->playList->selectRow(rowB);
+        ui->playList->selectRow(toRow);
     }
 }
 
 void PlayList::on_btnDown_clicked()
 {
-    QItemSelectionModel *selections = ui->playList->selectionModel();
-    QModelIndexList selected = selections->selectedIndexes();
-    if (selected.size() != 0 && selected.begin()->row() != modelPlayList->rowCount() - 1) {
-        int rowA = selected.begin()->row();
-        int rowB = selected.begin()->row() + 1;
-        int indexA = modelPlayList->data(modelPlayList->index(rowA, 0)).toInt();
-        int indexB = modelPlayList->data(modelPlayList->index(rowB, 0)).toInt();
-        DatabaseManager::getInstance()->moveClip(indexA, indexB, m_playlist);
+    QModelIndexList selected = ui->playList->selectionModel()->selectedRows();
+
+    if (selected.size() != 0 && selected[0].row() < modelPlayList->rowCount() - 1) {
+        int index = selected[0].siblingAtColumn(1).data().toInt();
+        int toRow = selected[0].row() + 1;
+        int newIndex = modelPlayList->index(toRow, 1).data().toInt();
+        DatabaseManager::getInstance()->moveClip(index, newIndex, m_playlist);
         refreshPlayList();
-        ui->playList->selectRow(rowB);
+        ui->playList->selectRow(toRow);
     }
 }
 
@@ -178,7 +172,7 @@ void PlayList::on_btnDelete_clicked()
     if (selected.size() != 0) {
         QList<int> indexList;
         foreach (QModelIndex index, selected) {
-            indexList.append(modelPlayList->data(modelPlayList->index(index.row(), 0)).toInt());
+            indexList.append(index.siblingAtColumn(0).data().toInt());
         }
         int row = selected.begin()->row();
 

@@ -21,7 +21,6 @@ public:
 private slots:
     void on_clipList_doubleClicked(const QModelIndex &index);
     void on_clearPlaylistButton_clicked();
-    void on_clipList_clicked(const QModelIndex &index);
     void on_cmbPlaylists_currentIndexChanged(int index);
     void on_btnUp_clicked();
     void on_btnDown_clicked();
