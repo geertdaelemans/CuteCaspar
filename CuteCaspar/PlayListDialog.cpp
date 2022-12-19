@@ -142,12 +142,24 @@ void PlayList::on_btnUp_clicked()
     QModelIndexList selected = ui->playList->selectionModel()->selectedRows();
 
     if (selected.size() != 0 && selected[0].row() > 0) {
-        int index = selected[0].siblingAtColumn(1).data().toInt();
+        // List clip ID's to be moved
+        QList<int> indexList;
+        foreach (QModelIndex index, selected) {
+            indexList.append(index.siblingAtColumn(0).data().toInt());
+        }
+
+        // Prepare the reorder command
+        int numberOfMovedClips = selected.size();
         int toRow = selected[0].row() - 1;
         int newIndex = modelPlayList->index(toRow, 1).data().toInt();
-        DatabaseManager::getInstance()->moveClip(index, newIndex, m_playlist);
+        int lastLinePosition = DatabaseManager::getInstance()->reorderClips(indexList, newIndex, m_playlist);
+
         refreshPlayList();
-        ui->playList->selectRow(toRow);
+
+        // Select the moved clips
+        QItemSelection newSelection;
+        newSelection.select(modelPlayList->index(lastLinePosition - (numberOfMovedClips - 1), 0), modelPlayList->index(lastLinePosition, 0));
+        ui->playList->selectionModel()->select(newSelection, QItemSelectionModel::Select | QItemSelectionModel::Rows);
     }
 }
 
@@ -155,13 +167,25 @@ void PlayList::on_btnDown_clicked()
 {
     QModelIndexList selected = ui->playList->selectionModel()->selectedRows();
 
-    if (selected.size() != 0 && selected[0].row() < modelPlayList->rowCount() - 1) {
-        int index = selected[0].siblingAtColumn(1).data().toInt();
-        int toRow = selected[0].row() + 1;
-        int newIndex = modelPlayList->index(toRow, 1).data().toInt();
-        DatabaseManager::getInstance()->moveClip(index, newIndex, m_playlist);
+    if (selected.size() != 0 && selected[0].row() + selected.size() < modelPlayList->rowCount()) {
+        // List clip ID's to be moved
+        QList<int> indexList;
+        foreach (QModelIndex index, selected) {
+            indexList.append(index.siblingAtColumn(0).data().toInt());
+        }
+
+        // Prepare reorder command
+        int numberOfMovedClips = selected.size();
+        int toRow = selected[0].row() + numberOfMovedClips + 1;
+        int newIndex = (modelPlayList->index(toRow, 1).isValid() ? modelPlayList->index(toRow, 1).data().toInt() : modelPlayList->rowCount() + 1);
+        int lastLinePosition = DatabaseManager::getInstance()->reorderClips(indexList, newIndex, m_playlist);
+
         refreshPlayList();
-        ui->playList->selectRow(toRow);
+
+        // Select the moved clips
+        QItemSelection newSelection;
+        newSelection.select(modelPlayList->index(lastLinePosition - (numberOfMovedClips - 1), 0), modelPlayList->index(lastLinePosition, 0));
+        ui->playList->selectionModel()->select(newSelection, QItemSelectionModel::Select | QItemSelectionModel::Rows);
     }
 }
 

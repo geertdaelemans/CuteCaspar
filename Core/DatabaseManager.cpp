@@ -484,26 +484,60 @@ void DatabaseManager::removeClipsFromList(QList<int> clipIds, QString tableName)
  * @param from - current location od the clip
  * @param to - new position of the clip in the table
  * @param tableName - name of the table that contains the clip
+ * @return the position in the table of the last moved entry
  */
-void DatabaseManager::moveClip(int from, int to, QString tableName)
+int DatabaseManager::reorderClips(QList<int> clipIds, int to, QString tableName)
 {
     QMutexLocker locker(&mutex);
+
+    // Convert QList clipIds into a string to be used in the sql statement
+    QString clipIdsString = "";
+    for (int i = 0; i < clipIds.size(); i++) {
+        clipIdsString += QString::number(clipIds[i]) + (i < clipIds.size() - 1 ? "," : "");
+    }
 
     QSqlDatabase::database().transaction();
 
     QSqlQuery sql;
 
-    if (from > to) {
-        sql.prepare(QString("UPDATE %1 SET DisplayOrder = (CASE DisplayOrder WHEN %3 THEN %2 ELSE DisplayOrder + 1 END) WHERE DisplayOrder >= %2 AND DisplayOrder <= %3").arg(tableName).arg(to).arg(from));
-    } else {
-        sql.prepare(QString("UPDATE %1 SET DisplayOrder = (CASE DisplayOrder WHEN %3 THEN %2 ELSE DisplayOrder - 1 END) WHERE DisplayOrder <= %2 AND DisplayOrder >= %3").arg(tableName).arg(to).arg(from));
-    }
+    // STEP 1: List all clips that must not be moved in the correct order
+    sql.prepare(QString("SELECT Id, DisplayOrder FROM %1 WHERE NOT ID IN(%2) ORDER BY DisplayOrder").arg(tableName).arg(clipIdsString));
     if (!sql.exec())
         qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
+    // STEP 2: Insert the clips to be moved based upon the order sequence
+    QList<int> listOrder;
+    int lastLine;
+    bool inserted = false;
+    while (sql.next()) {
+        if (sql.value(1).toInt() >= to && !inserted) {
+            foreach (int index, clipIds) {
+                listOrder.append(index);
+            }
+            inserted = true;
+            lastLine = listOrder.length() - 1;
+        }
+        listOrder.append(sql.value(0).toInt());
+    }
+    if (!inserted) {
+        foreach (int index, clipIds) {
+            listOrder.append(index);
+            lastLine = listOrder.length() - 1;
+        }
+    }
+
+    // STEP 3: Update the database with the new orderList
+    for (int i = 0; i < listOrder.length(); i++) {
+        sql.prepare(QString("UPDATE %1 SET DisplayOrder = %2 WHERE Id = %3").arg(tableName).arg(i + 1).arg(listOrder[i]));
+        if (!sql.exec())
+            qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+    }
 
     QSqlDatabase::database().commit();
 
     emit databaseUpdated(tableName);
+
+    return lastLine;
 }
 
 /**

@@ -32,7 +32,7 @@ public:
     void updateLibraryMedia(const QList<LibraryModel>& insertModels);
     void copyClipsTo(QList<int> clipIds, QString tableName);
     void removeClipsFromList(QList<int> clipIds, QString tableName);
-    void moveClip(int from, int to, QString tableName);
+    int reorderClips(QList<int> from, int to, QString tableName);
     void emptyList(QString tableName);
     void updateMidiStatus(QString clipName, int midiNotes);
 
