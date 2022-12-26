@@ -99,7 +99,7 @@ void QMidiIn::callback(double deltatime, std::vector<unsigned char> *message, vo
             default:
                 break;
         }
-    unsigned int nBytes = message->size();
+//    unsigned int nBytes = message->size();
 //    qDebug()<<"channel"<<(int)(message->at(0))-144;
 //    for ( unsigned int i=0; i<nBytes; i++ )
 //      std::cout << "Byte " << i << " = " << (int)message->at(i) << ", ";

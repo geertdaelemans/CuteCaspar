@@ -89,8 +89,6 @@ class CASPARSHARED_EXPORT AmcpDevice : public QObject
 
         QString fragments;
 
-        QTextDecoder* decoder = nullptr;
-
         AmcpDeviceParserState state = AmcpDeviceParserState::ExpectingHeader;
 
         void parseLine(const QString& line);

@@ -2,7 +2,6 @@
 
 #include <QtCore/QStringList>
 #include <QtCore/QThread>
-#include <QtCore/QTextCodec>
 #include <QtCore/QTimer>
 
 #include <QtNetwork/QTcpSocket>
@@ -13,8 +12,6 @@ AmcpDevice::AmcpDevice(const QString& address, int port, QObject* parent)
 {
     this->socket = new QTcpSocket(this);
 
-    this->decoder = new QTextDecoder(QTextCodec::codecForName("UTF-8"));
-
     QObject::connect(this->socket, SIGNAL(readyRead()), this, SLOT(readMessage()));
     QObject::connect(this->socket, SIGNAL(connected()), this, SLOT(setConnected()));
     QObject::connect(this->socket, SIGNAL(disconnected()), this, SLOT(setDisconnected()));
@@ -22,7 +19,7 @@ AmcpDevice::AmcpDevice(const QString& address, int port, QObject* parent)
 
 AmcpDevice::~AmcpDevice()
 {
-    delete this->decoder;
+
 }
 
 void AmcpDevice::connectDevice()
@@ -105,7 +102,7 @@ void AmcpDevice::readMessage()
 {
     while (this->socket->bytesAvailable())
     {
-        this->fragments += this->decoder->toUnicode(this->socket->readAll());
+        this->fragments += QString(this->socket->readAll());
 
         int position;
         while ((position = this->fragments.indexOf("\r\n")) != -1)

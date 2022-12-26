@@ -238,7 +238,7 @@ void MainWindow::listMedia()
 void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice& device)
 {
     Q_UNUSED(device)
-    QTime time;
+    QElapsedTimer time;
     time.start();
 
 //    if(mediaItems.size()) {
@@ -300,7 +300,7 @@ void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice
 //        EventManager::getInstance().fireMediaChangedEvent(MediaChangedEvent());
     }
 
-        qDebug("LibraryManager::mediaChanged %d msec", time.elapsed());
+    qDebug("LibraryManager::mediaChanged %lld msec", time.elapsed());
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -330,12 +330,7 @@ void MainWindow::refreshPlayList()
     QSqlQueryModel* model = new QSqlQueryModel();
     model = new QSqlQueryModel();
 
-    QSqlQuery* qry = new QSqlQuery();
-
-    qry->prepare("SELECT Id, DisplayOrder, Timecode, TypeId, Fps, Name, Midi FROM Playlist");
-    qry->exec();
-
-    model->setQuery(*qry);
+    model->setQuery("SELECT Id, DisplayOrder, Timecode, TypeId, Fps, Name, Midi FROM Playlist");
     model->setHeaderData(2, Qt::Horizontal, tr("Duration"), Qt::DisplayRole);
     model->setHeaderData(5, Qt::Horizontal, tr("Clip Name"), Qt::DisplayRole);
     model->setHeaderData(6, Qt::Horizontal, tr("Midi Notes"), Qt::DisplayRole);
@@ -375,12 +370,7 @@ void MainWindow::refreshLibraryList()
 {
     QSqlQueryModel* model = new QSqlQueryModel();
 
-    QSqlQuery* qry = new QSqlQuery();
-
-    qry->prepare("SELECT Id, Name, Timecode, Fps, Midi FROM Library");
-    qry->exec();
-
-    model->setQuery(*qry);
+    model->setQuery("SELECT Id, Name, Timecode, Fps, Midi FROM Library");
 
     // Set proxy model to enable sorting columns:
     QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
@@ -552,7 +542,7 @@ void MainWindow::libraryContextMenu(QPoint pos)
     QMap<QString, QString> *dataPlaylist = new QMap<QString, QString>;
     dataPlaylist->insert("clipIds", data);
     dataPlaylist->insert("tableName", "Playlist");
-    addon = qVariantFromValue((void *) dataPlaylist);
+    addon = QVariant::fromValue((void *) dataPlaylist);
     copyToPlaylist->setData(addon);
 
     // Prepare QAction for adding to Scares
@@ -560,7 +550,7 @@ void MainWindow::libraryContextMenu(QPoint pos)
     QMap<QString, QString> *dataScares = new QMap<QString, QString>;
     dataScares->insert("clipIds", data);
     dataScares->insert("tableName", "Scares");
-    addon = qVariantFromValue((void *) dataScares);
+    addon = QVariant::fromValue((void *) dataScares);
     copyToScares->setData(addon);
 
     // Prepare QAction for adding to Extras
@@ -568,7 +558,7 @@ void MainWindow::libraryContextMenu(QPoint pos)
     QMap<QString, QString> *dataExtras = new QMap<QString, QString>;
     dataExtras->insert("clipIds", data);
     dataExtras->insert("tableName", "Extras");
-    addon = qVariantFromValue((void *) dataExtras);
+    addon = QVariant::fromValue((void *) dataExtras);
     copyToExtras->setData(addon);
 
     // Add items to drop down menu
@@ -597,7 +587,7 @@ void MainWindow::playlistContextMenu(QPoint pos)
     QMap<QString, QString> *dataDeleteClip = new QMap<QString, QString>;
     dataDeleteClip->insert("clipId", QString::number(clipId));
     dataDeleteClip->insert("tableName", "Playlist");
-    addon = qVariantFromValue((void *) dataDeleteClip);
+    addon = QVariant::fromValue((void *) dataDeleteClip);
     deleteClip->setData(addon);
 
     // Add items to drop down menu

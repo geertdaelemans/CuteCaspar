@@ -37,12 +37,7 @@ void PlayList::refreshLibraryList()
 {
     QSqlQueryModel * model = new QSqlQueryModel();
 
-    QSqlQuery* qry = new QSqlQuery();
-
-    qry->prepare("SELECT Id, Name, TypeId, Timecode, Fps, Midi FROM Library");
-    qry->exec();
-
-    model->setQuery(*qry);
+    model->setQuery("SELECT Id, Name, TypeId, Timecode, Fps, Midi FROM Library");
     model->setHeaderData(1, Qt::Horizontal, tr("Clip Name"), Qt::DisplayRole);
     model->setHeaderData(3, Qt::Horizontal, tr("Duration"), Qt::DisplayRole);
     model->setHeaderData(5, Qt::Horizontal, tr("Midi Notes"), Qt::DisplayRole);
@@ -65,12 +60,7 @@ void PlayList::refreshPlayList()
 {
     modelPlayList = new QSqlQueryModel();
 
-    QSqlQuery* qry = new QSqlQuery();
-
-    qry->prepare(QString("SELECT Id, DisplayOrder, Name, TypeId, Timecode, Fps, Midi FROM %1 ORDER BY DisplayOrder").arg(m_playlist));
-    qry->exec();
-
-    modelPlayList->setQuery(*qry);
+    modelPlayList->setQuery(QString("SELECT Id, DisplayOrder, Name, TypeId, Timecode, Fps, Midi FROM %1 ORDER BY DisplayOrder").arg(m_playlist));
     modelPlayList->setHeaderData(2, Qt::Horizontal, tr("Clip Name"), Qt::DisplayRole);
     modelPlayList->setHeaderData(6, Qt::Horizontal, tr("Midi Notes"), Qt::DisplayRole);
 

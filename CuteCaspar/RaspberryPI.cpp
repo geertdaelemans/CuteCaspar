@@ -225,7 +225,7 @@ void RaspberryPI::sendMessage(QString msg)
 {
     QByteArray Data;
     Data.append("raspi/");
-    Data.append(msg);
+    Data.append(msg.toUtf8());
     udpSocketOut->writeDatagram(Data, Data.size(), m_address, m_portOut);
     qDebug() << QString("Sending UDP Message '%1' to %2:%3").arg(msg).arg(m_address.toString()).arg(m_portOut);
 }

@@ -14,7 +14,7 @@
 Q_GLOBAL_STATIC(DatabaseManager, s_databaseManager)
 
 DatabaseManager::DatabaseManager()
-    : mutex(QMutex::Recursive)
+    : mutex()
 {
 }
 

@@ -1,6 +1,7 @@
 #ifndef CASPAROSCLISTENER_H
 #define CASPAROSCLISTENER_H
 
+#include "qobject.h"
 #include <QDebug>
 
 #include <osc/OscReceivedElements.h>

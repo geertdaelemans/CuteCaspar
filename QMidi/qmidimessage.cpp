@@ -10,7 +10,7 @@ QMidiMessage::~QMidiMessage()
 
 }
 
-QMidiMessage::QMidiMessage(const QMidiMessage &other)
+QMidiMessage::QMidiMessage(const QMidiMessage &other) : QMidiMessage()
 {
     _status = other._status;
     _channel = other._channel;
@@ -34,6 +34,7 @@ QMidiMessage *QMidiMessage::clear()
     _deltaTime = 0;
     _sysExData.clear();
     _rawMessage.clear();
+    return this;
 }
 
 QMidiStatus QMidiMessage::getStatus()

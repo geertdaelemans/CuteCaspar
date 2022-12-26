@@ -8,6 +8,7 @@
 #include "DeviceDialog.h"
 
 #include <QSettings>
+#include <QRegularExpression>
 
 SettingsDialog* SettingsDialog::s_inst = nullptr;
 
@@ -84,7 +85,7 @@ void SettingsDialog::loadDevice()
         treeItem->setText(6, model.getUsername());
 
         QString password = model.getPassword();
-        treeItem->setText(7, password.replace(QRegExp("."), "*"));
+        treeItem->setText(7, password.replace(QRegularExpression("."), "*"));
 
         treeItem->setText(8, model.getVersion());
         treeItem->setText(9, model.getShadow());

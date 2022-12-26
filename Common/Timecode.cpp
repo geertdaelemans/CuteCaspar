@@ -20,17 +20,16 @@ QString Timecode::fromTime(double time, double fps, bool useDropFrameNotation)
     int seconds;
     int frames;
 
-    QString smpteFormat;
+    hour = (int)(time / 3600);
+    minutes = (int)((time - hour * 3600) / 60);
+    seconds = (int)(time - hour * 3600 - minutes * 60);
+    frames = (int)((time - hour * 3600 - minutes * 60 - seconds) * fps);
 
-    hour = static_cast<int>(time / 3600);
-    minutes = static_cast<int>((time - hour * 3600) / 60);
-    seconds = static_cast<int>(time - hour * 3600 - minutes * 60);
-    frames = static_cast<int>((time - hour * 3600 - minutes * 60 - seconds) * fps);
-
-    if (useDropFrameNotation)
-        return smpteFormat.sprintf("%02d:%02d:%02d.%02d", hour, minutes, seconds, frames);
-    else
-        return smpteFormat.sprintf("%02d:%02d:%02d:%02d", hour, minutes, seconds, frames);
+    return QString("%1:%2:%3%4%5").arg(hour, 2, 10, QChar('0'))
+                                .arg(minutes, 2, 10, QChar('0'))
+                                .arg(seconds, 2, 10, QChar('0'))
+                                .arg(useDropFrameNotation ? "." : ":")
+                                .arg(frames, 2, 10, QChar('0'));
 }
 
 double Timecode::toTime(QString timecode, double fps)
