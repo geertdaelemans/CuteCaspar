@@ -43,7 +43,7 @@ void Player::setRandom(bool random)
 void Player::loadPlayList()
 {
     QSqlQuery query;
-    if (!query.prepare("SELECT Id, Name, Fps, Midi FROM Playlist"))
+    if (!query.prepare("SELECT Id, Name, Fps, Midi FROM Playlist ORDER BY DisplayOrder"))
         qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
     query.exec();
     m_playlistClips.clear();
