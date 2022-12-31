@@ -358,8 +358,8 @@ void MainWindow::refreshPlayList()
     }
     ui->tableView->selectRow(activeRowIndex);
 
-    currentClipIndex = ui->tableView->selectionModel()->currentIndex().row();
-    currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(3).data(Qt::DisplayRole).toString();
+    currentClipIndex = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(0).data().toInt();
+    currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(3).data().toString();
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), SLOT(playlistContextMenu(QPoint)), Qt::UniqueConnection);
 
@@ -393,7 +393,7 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
 {
     const QModelIndex name = index.sibling(index.row(), 3);
     currentClip = name.data(Qt::DisplayRole).toString();
-    currentClipIndex = index.row();
+    currentClipIndex = index.siblingAtColumn(0).data().toInt();
     ui->statusLabel->setText("Video selected...");
     emit clipNameSelected(currentClip);
 }
@@ -437,9 +437,19 @@ void MainWindow::on_btnPlayClip_clicked()
 }
 
 
-void MainWindow::setCurrentClip(int index)
+/**
+ * @brief MainWindow::setCurrentClip
+ * Slot that selects the active clip in the playlist table
+ * @param activeClipIndex - the ID of the active clip
+ */
+void MainWindow::setCurrentClip(int activeClipIndex)
 {
-    ui->tableView->selectRow(index);
+    // Searching for the clip ID in the curren list, independent op it being sorted or not
+    QModelIndex start = ui->tableView->model()->index(0, 0);
+    QList<QModelIndex> match = ui->tableView->model()->match(start, Qt::DisplayRole, activeClipIndex);
+
+    // Select the active clip
+    ui->tableView->selectRow(match[0].row());
 }
 
 void MainWindow::setTimeCode(double time, double duration, int videoLayer)

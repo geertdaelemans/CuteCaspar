@@ -5,6 +5,7 @@ ClipInfo::ClipInfo()
     m_name = QString();
     m_fps = FRM_DEF;
     m_id = 0;
+    m_playlistOrder = 0;
     m_duration = 0.0;
 }
 

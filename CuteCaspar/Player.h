@@ -2,7 +2,6 @@
 #define PLAYER_H
 
 #include "CasparDevice.h"
-#include "DatabaseManager.h"
 #include "MidiReader.h"
 #include "MidiLogger.h"
 #include "ClipInfo.h"
@@ -66,8 +65,8 @@ private:
     CasparDevice* m_device;
     QList<ClipInfo> m_playlistClips;
     int m_activeVideoLayer = 2;
-    int m_currentClipIndex = 0;
-    int m_nextClipIndex = 0;
+    ClipInfo m_currentClip;
+    ClipInfo m_nextClip;
     double m_timecode;
     double m_timecodeOverlayLayer;
     double m_timecodeSoundScapeLayer;
@@ -90,7 +89,7 @@ private:
     QString m_randomScare;
     int m_currentFrame;
     int m_lastFrame;
-    int getClipIndexByName(QString ClipName) const;
+    int getClipIndexByName(QString ClipName);
     int m_defaultLayer = 2;
     int m_soundScapeLayer = 1;
     int m_overlayLayer = 3;
