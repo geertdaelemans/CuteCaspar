@@ -172,6 +172,7 @@ void Player::stopPlayList()
     m_device->stop(1, m_defaultLayer);
     midiLog->closeMidiLog();
     setStatus(PlayerStatus::READY);
+    emit activeClipName("", "");
     stopSoundScape();
     stopOverlay();
 }
@@ -183,10 +184,12 @@ void Player::nextClip()
         stopOverlay();
         resumePlayList();
     } else {
-        if (!m_insertedClip) {
+        if (m_nextClip.getName() != "") {
             loadClip(m_nextClip.getName());
+            m_device->play(1, m_defaultLayer);
+        } else {
+            stopPlayList();
         }
-        m_device->play(1, m_defaultLayer);
     }
 }
 
@@ -262,7 +265,9 @@ void Player::playClip(int clipIndex)
     // Play clip once
     m_device->loadMovie(1, m_defaultLayer, m_currentClip.getName(), "", 0, "", "", 0, 0, false, false, true);
     m_insertedClip = true;
-    nextClip();
+    setStatus(PlayerStatus::PLAYLIST_PLAYING);
+    emit activeClipName(m_currentClip.getName(), m_nextClip.getName());
+    m_device->play(1, m_defaultLayer);
 }
 
 /**
@@ -367,7 +372,8 @@ void Player::loadClip(QString clipName)
  */
 void Player::loadNextClip()
 {
-    if (!m_singlePlay && !m_insertedClip) {
+    // Loading next clip from an active playlist
+    if (!m_singlePlay && !m_insertedClip && m_nextClip.getName() != "") {
         m_currentClip = m_nextClip;
         emit activeClip(m_currentClip.getId());
         qDebug() << "Playing:" << m_currentClip.getName();
@@ -432,7 +438,7 @@ void Player::loadNextClip()
 void Player::timecode(double time, double duration, int videoLayer)
 {
     Q_UNUSED(duration)
-    if (videoLayer == m_defaultLayer) {
+    if (videoLayer == m_defaultLayer && getStatus() != PlayerStatus::IDLE && getStatus() != PlayerStatus::READY) {
         if (time > 0.0 && m_endOfClipDetected) {
             double prev_timecode = m_timecode;
             m_timecode = time;

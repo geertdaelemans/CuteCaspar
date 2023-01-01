@@ -394,7 +394,9 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
     const QModelIndex name = index.sibling(index.row(), 3);
     currentClip = name.data(Qt::DisplayRole).toString();
     currentClipIndex = index.siblingAtColumn(0).data().toInt();
-    ui->statusLabel->setText("Video selected...");
+    if (m_player->getStatus() == PlayerStatus::IDLE || m_player->getStatus() == PlayerStatus::READY) {
+        ui->statusLabel->setText("Video selected...");
+    }
     emit clipNameSelected(currentClip);
 }
 
@@ -467,7 +469,7 @@ void MainWindow::activeClipName(QString clipName, QString upcoming, bool insert)
     currentClip = clipName;
     if (!insert) {
         ui->clipName->setStyleSheet("QLabel { color : white; }");
-        ui->clipName->setText(clipName);
+        ui->clipName->setText(clipName != "" ? clipName : "---");
     } else {
         ui->clipName->setStyleSheet("QLabel { color : red; }");
         ui->clipName->setText("INSERT\n" + clipName);
