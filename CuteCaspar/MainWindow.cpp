@@ -97,48 +97,48 @@ void MainWindow::connectServer()
     m_device = new CasparDevice(address, port);
 
     connect(m_device, SIGNAL(connectionStateChanged(CasparDevice&)),
-            this, SLOT(connectionStateChanged(CasparDevice&)));
+            this, SLOT(connectionStateChanged(CasparDevice&)), Qt::UniqueConnection);
 
     m_device->connectDevice();
     m_player->setDevice(m_device);
 
     connect(m_midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
-            m_player, SLOT(playNote(unsigned int, bool)));
+            m_player, SLOT(playNote(unsigned int, bool)), Qt::UniqueConnection);
 
     connect(m_player, SIGNAL(activeClip(int)),
-            this, SLOT(setCurrentClip(int)));
+            this, SLOT(setCurrentClip(int)), Qt::UniqueConnection);
 
     // Playlist: when next clip has started, load the following clip
     connect(this, SIGNAL(nextClip()),
-            m_player, SLOT(loadNextClip()));
+            m_player, SLOT(loadNextClip()), Qt::UniqueConnection);
 
     connect(this, SIGNAL(currentTime(double, double, int)),
-            m_player, SLOT(timecode(double, double, int)));
+            m_player, SLOT(timecode(double, double, int)), Qt::UniqueConnection);
 
     connect(this, SIGNAL(currentFrame(int, int)),
-            m_player, SLOT(currentFrame(int, int)));
+            m_player, SLOT(currentFrame(int, int)), Qt::UniqueConnection);
 
     connect(this, SIGNAL(currentTime(double, double, int)),
-            this, SLOT(setTimeCode(double, double, int)));
+            this, SLOT(setTimeCode(double, double, int)), Qt::UniqueConnection);
 
     connect(m_player, SIGNAL(activeClipName(QString, QString, bool)),
-            this, SLOT(activeClipName(QString, QString, bool)));
+            this, SLOT(activeClipName(QString, QString, bool)), Qt::UniqueConnection);
 
     connect(this, SIGNAL(setRecording()),
-            m_player, SLOT(setRecording()));
+            m_player, SLOT(setRecording()), Qt::UniqueConnection);
 
     connect(m_player, SIGNAL(playerStatus(PlayerStatus, bool)),
-            this, SLOT(playerStatus(PlayerStatus, bool)));
+            this, SLOT(playerStatus(PlayerStatus, bool)), Qt::UniqueConnection);
 
     // Player wants to refresh playlist
     connect(m_player, SIGNAL(refreshPlayList()),
-            this, SLOT(refreshPlayList()));
+            this, SLOT(refreshPlayList()), Qt::UniqueConnection);
 
     connect(m_raspberryPI, SIGNAL(insertPlaylist(QString)),
-            m_player, SLOT(insertPlaylist(QString)));
+            m_player, SLOT(insertPlaylist(QString)), Qt::UniqueConnection);
 
     connect(m_player, SIGNAL(insertFinished()),
-            m_raspberryPI, SLOT(insertFinished()));
+            m_raspberryPI, SLOT(insertFinished()), Qt::UniqueConnection);
 }
 
 void MainWindow::connectionStateChanged(CasparDevice& device) {
