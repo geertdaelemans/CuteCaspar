@@ -76,14 +76,12 @@ private slots:
     void on_chkTriggers_stateChanged(int triggers);
     void on_btnPlayClip_clicked();
     void on_actionMidi_Panel_triggered();
-    void on_pushButton_clicked();
+    void on_btnInterrupt_clicked();
     void on_actionRaspberryPI_triggered();
     void on_actionControl_Panel_triggered();
     void on_actionMIDI_Editor_triggered();
-
-
+    void newRandomClip(ClipInfo randomClip);
     void on_btnNext_clicked();
-
     void on_btnReloadLibrary_clicked();
 
 signals:

@@ -46,7 +46,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_midiCon = MidiConnection::getInstance();
     m_raspberryPI = RaspberryPI::getInstance();
+
+    // Set-up player
     m_player = Player::getInstance();
+
+    connect(m_player, SIGNAL(newRandomClip(ClipInfo)),
+            this, SLOT(newRandomClip(ClipInfo)));
+
+    m_player->updateRandomClip();
 
     refreshPlayList();
 
@@ -659,7 +666,7 @@ void MainWindow::setButtonColor(QPushButton* button, QColor color)
     button->update();
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_btnInterrupt_clicked()
 {
     m_player->insertPlaylist();
 }
@@ -734,6 +741,13 @@ void MainWindow::on_actionMIDI_Editor_triggered()
         m_midiEditorDialog->hide();
     }
     emit clipNameSelected(currentClip);
+}
+
+void MainWindow::newRandomClip(ClipInfo randomClip)
+{
+    qDebug() << "RANDOM CLIP";
+    ui->btnInterrupt->setText(QString("Scare Clip (%1)").arg(randomClip.getName()));
+    qDebug() << "New random clip set" << randomClip.getName();
 }
 
 

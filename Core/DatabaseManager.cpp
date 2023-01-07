@@ -586,3 +586,30 @@ void DatabaseManager::updateMidiStatus(QString clipName, int midiNotes)
 
     emit databaseUpdated("Playlist");
 }
+
+/**
+ * @brief DatabaseManager::getNumberOfClips
+ * Returns the number of clips in a playlist
+ * @param playlist - name of playlist
+ * @return number of clips in the playlist
+ */
+int DatabaseManager::getNumberOfClips(QString playlist) const
+{
+    int number = 0;
+
+    QSqlDatabase::database().transaction();
+
+    QSqlQuery sql;
+
+    if (!sql.prepare(QString("SELECT Count(*) FROM %1").arg(playlist)))
+        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+    sql.exec();
+    while(sql.next()) {
+        number = sql.value(0).toInt();
+    }
+    sql.finish();
+
+    QSqlDatabase::database().commit();
+
+    return number;
+}

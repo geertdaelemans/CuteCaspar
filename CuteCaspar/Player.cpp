@@ -6,7 +6,7 @@
 
 #include "MidiConnection.h"
 #include "RaspberryPI.h"
-
+#include "DatabaseManager.h"
 #include "Timecode.h"
 
 Q_GLOBAL_STATIC(Player, s_player)
@@ -18,7 +18,6 @@ Player::Player()
 
     midiRead = new MidiReader();
     midiLog = new MidiLogger();
-    updateRandomClip();
 }
 
 Player* Player::getInstance()
@@ -62,41 +61,26 @@ void Player::loadPlayList()
     setStatus(PlayerStatus::READY);
 }
 
-/**
- * @brief Player::getNumberOfClips
- * @param playlist
- * @return
- */
-int Player::getNumberOfClips(QString playlist) const
-{
-    int number = 0;
-    QSqlQuery query;
-    if (!query.prepare(QString("SELECT Count(*) FROM %1").arg(playlist)))
-        qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
-    query.exec();
-    while(query.next()) {
-        number = query.value(0).toInt();
-    }
-    query.finish();
-    return number;
-}
-
 
 void Player::updateRandomClip()
 {
-    int amount = getNumberOfClips("Scares");
+    int amount = DatabaseManager::getInstance()->getNumberOfClips("Scares");
     qDebug("Random scares: %d", amount);
     if (amount > 0) {
         int id = QRandomGenerator::global()->bounded(amount) + 1;
         QSqlQuery query;
-        if (!query.prepare(QString("SELECT Name FROM Scares WHERE id = %1").arg(id)))
+        if (!query.prepare(QString("SELECT Id, Name, Fps, Midi FROM Scares WHERE Id = %1").arg(id)))
             qFatal("Failed to execute sql query: %s, Error: %s", qPrintable(query.lastQuery()), qPrintable(query.lastError().text()));
         query.exec();
         while (query.next()) {
-            m_randomScare = query.value(0).toString();
-            qDebug("Set random scare (m_randomScare) to: %s", qPrintable(m_randomScare));
+            m_randomClip.setId(query.value(0).toInt());
+            m_randomClip.setDisplayOrder(0);
+            m_randomClip.setName(query.value(1).toString());
+            m_randomClip.setFps(query.value(2).toDouble());
+            m_randomClip.setMidi(query.value(3).toInt());
         }
         query.finish();
+        emit newRandomClip(m_randomClip);
     }
 }
 
@@ -196,33 +180,34 @@ void Player::nextClip()
 void Player::insertPlaylist(QString clipName)
 {
     qDebug() << "insertPlaylist" << clipName;
+    QString interruptedClipName;
     if (TRIGGER_PLAYLIST_AFTER_SCARE && getStatus() == PlayerStatus::READY) {
         startPlayList(m_currentClip.getPlaylistOrder());
     }
     if (clipName == "random") {
-        if (m_randomScare != "") {
-            m_interruptedClipName = m_randomScare;
+        if (m_randomClip.getName() != "") {
+            interruptedClipName = m_randomClip.getName();
         } else {
             qDebug("No insert clip available");
             return;
         }
     } else {
-        m_interruptedClipName = clipName;
+        interruptedClipName = clipName;
     }
     pauseSoundScape();
     m_device-> pause(1, m_defaultLayer);
     m_activeVideoLayer = m_overlayLayer;
-    m_device->playMovie(1, m_overlayLayer, m_interruptedClipName, "", 0, "", "", 0, 0, false, false);
-    emit activeClipName(m_interruptedClipName, m_currentClip.getName(), true);
-    qDebug() << "Playing interrupt clip:" << m_interruptedClipName;
-    retrieveMidiPlayList(m_interruptedClipName);
+    m_device->playMovie(1, m_overlayLayer, interruptedClipName, "", 0, "", "", 0, 0, false, false);
+    emit activeClipName(interruptedClipName, m_currentClip.getName(), true);
+    qDebug() << "Playing interrupt clip:" << interruptedClipName;
+    retrieveMidiPlayList(interruptedClipName);
     if (midiRead->isReady()) {
         qDebug("MIDI file found...");
     } else {
         qDebug("No MIDI file found...");
     }
     if (m_recording) {
-        midiLog->openMidiLog(m_interruptedClipName);
+        midiLog->openMidiLog(interruptedClipName);
     }
     setStatus(PlayerStatus::PLAYLIST_INSERT);
     if (clipName == "random") {

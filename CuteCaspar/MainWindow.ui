@@ -252,7 +252,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton">
+             <widget class="QPushButton" name="btnInterrupt">
               <property name="text">
                <string>Scare Clip</string>
               </property>

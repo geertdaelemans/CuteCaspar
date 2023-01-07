@@ -35,6 +35,7 @@ public:
     int reorderClips(QList<int> from, int to, QString tableName);
     void emptyList(QString tableName);
     void updateMidiStatus(QString clipName, int midiNotes);
+    int getNumberOfClips(QString playlist) const;
 
 private:
     QMutex mutex;

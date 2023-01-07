@@ -21,7 +21,7 @@ class Player : public QObject
     Q_OBJECT
 
 public:
-    const bool TRIGGER_PLAYLIST_AFTER_SCARE = false;
+    const bool TRIGGER_PLAYLIST_AFTER_SCARE = true;
     Player();
     static Player *getInstance();
     void setDevice(CasparDevice *device);
@@ -80,13 +80,11 @@ private:
     bool m_singlePlay = false;
     bool m_recording = false;
     bool m_triggersActive = true;
-    QString m_interruptedClipName;
     void setStatus(PlayerStatus status);
     unsigned int previousPitch;
     bool m_insertedClip = false;
     bool m_endOfClipDetected = false;
-    int getNumberOfClips(QString playlist) const;
-    QString m_randomScare;
+    ClipInfo m_randomClip;
     int m_currentFrame;
     int m_lastFrame;
     int getClipIndexByName(QString ClipName);
@@ -105,6 +103,7 @@ signals:
     void playerStatus(PlayerStatus status, bool recording);
     void insertFinished();
     void newMidiPlaylist(QMap<QString, message> midiPlayList);
+    void newRandomClip(ClipInfo randomClip);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
     void refreshPlayList();
 };
