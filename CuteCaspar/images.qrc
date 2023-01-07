@@ -17,6 +17,7 @@
         <file>Images/Remove.png</file>
         <file>Images/RemoveHover.png</file>
         <file>Images/script.png</file>
+        <file>Images/reset 20x20.png</file>
     </qresource>
     <qresource prefix="/Graphics"/>
 </RCC>

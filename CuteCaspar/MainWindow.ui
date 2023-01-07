@@ -148,7 +148,7 @@
                  <enum>QLayout::SetDefaultConstraint</enum>
                 </property>
                 <item>
-                 <widget class="QLabel" name="label_3">
+                 <widget class="QLabel" name="lblTimecode">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                     <horstretch>0</horstretch>
@@ -195,7 +195,7 @@
               <item>
                <layout class="QVBoxLayout" name="countdown">
                 <item>
-                 <widget class="QLabel" name="label_4">
+                 <widget class="QLabel" name="lblCountdown">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                     <horstretch>0</horstretch>
@@ -252,11 +252,41 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="btnInterrupt">
-              <property name="text">
-               <string>Scare Clip</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="interrupt">
+              <item>
+               <widget class="QPushButton" name="btnInterrupt">
+                <property name="text">
+                 <string>Scare Clip</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnNewInterrupt">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string extracomment="Refresh selected scare clip"/>
+                </property>
+                <property name="toolTipDuration">
+                 <number>5000</number>
+                </property>
+                <property name="accessibleName">
+                 <string/>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="images.qrc">
+                  <normaloff>:/Images/reset 20x20.png</normaloff>:/Images/reset 20x20.png</iconset>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </widget>

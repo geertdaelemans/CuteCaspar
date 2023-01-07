@@ -809,3 +809,13 @@ void MainWindow::on_btnReloadLibrary_clicked()
 {
     listMedia();
 }
+
+/**
+ * @brief MainWindow::on_btnNewInterrupt_clicked
+ * Handle click on the Interrupt Clip Renewal button
+ */
+void MainWindow::on_btnNewInterrupt_clicked()
+{
+    Player::getInstance()->updateRandomClip();
+}
+

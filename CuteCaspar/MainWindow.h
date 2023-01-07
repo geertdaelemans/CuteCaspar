@@ -84,6 +84,8 @@ private slots:
     void on_btnNext_clicked();
     void on_btnReloadLibrary_clicked();
 
+    void on_btnNewInterrupt_clicked();
+
 signals:
     void nextClip();
     void currentTime(double time, double duration, int videoLayer);
