@@ -366,7 +366,7 @@ void MainWindow::refreshPlayList()
     ui->tableView->selectRow(activeRowIndex);
 
     currentClipIndex = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(0).data().toInt();
-    currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(3).data().toString();
+    currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(5).data().toString();
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), SLOT(playlistContextMenu(QPoint)), Qt::UniqueConnection);
 
@@ -398,7 +398,7 @@ void MainWindow::refreshLibraryList()
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
 {
-    const QModelIndex name = index.sibling(index.row(), 3);
+    const QModelIndex name = index.sibling(index.row(), 5);
     currentClip = name.data(Qt::DisplayRole).toString();
     currentClipIndex = index.siblingAtColumn(0).data().toInt();
     if (m_player->getStatus() == PlayerStatus::IDLE || m_player->getStatus() == PlayerStatus::READY) {

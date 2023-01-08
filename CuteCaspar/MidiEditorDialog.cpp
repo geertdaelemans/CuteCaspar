@@ -186,14 +186,14 @@ void MidiEditorDialog::on_btnResume_clicked()
 void MidiEditorDialog::setClipName(QString clipName, bool insert)
 {
     Q_UNUSED(insert)
-    if (m_clipName != clipName && m_playerStatus != PlayerStatus::IDLE && m_playerStatus != PlayerStatus::PLAYLIST_INSERT) {
-        Player::getInstance()->stopPlayList();
-    }
-    m_clipName = clipName;
-    if (m_clipName != "") {
+    if (clipName != "") {
+        if (m_clipName != clipName && m_playerStatus != PlayerStatus::IDLE && m_playerStatus != PlayerStatus::PLAYLIST_INSERT) {
+            Player::getInstance()->stopPlayList();
+        }
+        m_clipName = clipName;
         ui->lblClipName->setText(m_clipName);
+        Player::getInstance()->retrieveMidiPlayList(m_clipName);
     }
-    Player::getInstance()->retrieveMidiPlayList(m_clipName);
 }
 
 
