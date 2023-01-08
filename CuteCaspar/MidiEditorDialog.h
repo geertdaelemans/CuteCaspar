@@ -34,7 +34,7 @@ private slots:
 private:
     Ui::MidiEditorDialog *ui;
     QStandardItemModel* m_model = nullptr;
-    QMap<QString, message> m_newMidiPlaylist;
+    QMap<QString, message>* m_midiPlaylist = nullptr;
     void addNewNote(QString timecode, bool noteOn, unsigned int pitch);
     int m_currentIndex = 0;
     QString m_clipName;
