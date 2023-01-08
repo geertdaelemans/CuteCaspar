@@ -15,6 +15,19 @@ enum class PlayerStatus
     PLAYLIST_INSERT,
 };
 
+enum class VideoLayer
+{
+    SOUNDSCAPE = 1,
+    DEFAULT = 2,
+    OVERLAY = 3,
+    EDIT = 4
+};
+
+template <typename E>
+constexpr typename std::underlying_type<E>::type to_underlying(E e) {
+    return static_cast<typename std::underlying_type<E>::type>(e);
+}
+
 class Player : public QObject
 {
 
@@ -40,7 +53,7 @@ public:
     void playClip(QString clipName);
     void nextClip();
     void setTriggersActive(bool value);
-    int getActiveVideoLayer() {return m_activeVideoLayer;};
+    VideoLayer getActiveVideoLayer() {return m_activeVideoLayer;};
     void updateRandomClip();
 
     // SoundScape Calls
@@ -64,7 +77,7 @@ public slots:
 private:
     CasparDevice* m_device;
     QList<ClipInfo> m_playlistClips;
-    int m_activeVideoLayer = 2;
+    VideoLayer m_activeVideoLayer = VideoLayer::DEFAULT;
     ClipInfo m_currentClip;
     ClipInfo m_nextClip;
     double m_timecode;
@@ -88,9 +101,6 @@ private:
     int m_currentFrame;
     int m_lastFrame;
     int getClipIndexByName(QString ClipName);
-    int m_defaultLayer = 2;
-    int m_soundScapeLayer = 1;
-    int m_overlayLayer = 3;
     bool m_soundScapeActive;
     void retrieveMidiSoundScape(QString clipName);
     bool m_random = true;

@@ -463,7 +463,7 @@ void MainWindow::setCurrentClip(int activeClipIndex)
 
 void MainWindow::setTimeCode(double time, double duration, int videoLayer)
 {
-    if (videoLayer == m_player->getActiveVideoLayer()) {
+    if (videoLayer == to_underlying(m_player->getActiveVideoLayer())) {
         timecode = Timecode::fromTime(time, 29.97, false);
         ui->timeCode->setText(timecode);
         ui->lblDuration->setText(Timecode::fromTime(duration - time, 29.97, false));
