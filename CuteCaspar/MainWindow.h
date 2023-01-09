@@ -108,9 +108,9 @@ private:
     RaspberryPIDialog* m_raspberryPIDialog = nullptr;
     ControlDialog* m_controlDialog = nullptr;
     RaspberryPI* m_raspberryPI = nullptr;
-    QString currentClip;
+    QString m_currentClip;
     QString timecode;
-    int currentClipIndex = 0;
+    int m_currentClipIndex = 0;
     Player* m_player = nullptr;
     MidiConnection* m_midiCon = nullptr;
     void setButtonColor(QPushButton *button, QColor color);

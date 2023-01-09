@@ -96,7 +96,15 @@ void Player::startPlayList(int clipIndex)
     if (m_random) {
         m_currentClip = m_playlistClips[QRandomGenerator::global()->bounded(m_playlistClips.size())];
     } else {
-        m_currentClip = m_playlistClips[clipIndex];
+        // Search for the clipIndex in the m_playlistClips array
+        int index = 0;
+        for (int i = 0; i < m_playlistClips.length(); i++) {
+            if (m_playlistClips[i].getId() == clipIndex) {
+                index = i;
+                break;
+            }
+        }
+        m_currentClip = m_playlistClips[index];
     }
     m_nextClip = m_currentClip;
     m_timecode = 100;  // By faking the present timecode, the start of the clip (follows) will trigger loadNextClip()
