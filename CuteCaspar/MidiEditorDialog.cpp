@@ -187,10 +187,6 @@ void MidiEditorDialog::setClipName(QString clipName, bool insert)
 {
     Q_UNUSED(insert)
     if (clipName != "") {
-        if (m_clipName != clipName && m_playerStatus != PlayerStatus::IDLE && m_playerStatus != PlayerStatus::PLAYLIST_INSERT) {
-            qDebug() << "PLAYLIST STOPPED BY MIDI EDITOR - BUG #19";
-            Player::getInstance()->stopPlayList();
-        }
         m_clipName = clipName;
         ui->lblClipName->setText(m_clipName);
         Player::getInstance()->retrieveMidiPlayList(m_clipName);
