@@ -368,8 +368,8 @@ void MainWindow::refreshPlayList()
     }
     ui->tableView->selectRow(activeRowIndex);
 
-    m_currentClipIndex = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(0).data().toInt();
-    m_currentClip = ui->tableView->selectionModel()->currentIndex().siblingAtColumn(5).data().toString();
+    m_currentClip.setId(ui->tableView->selectionModel()->currentIndex().siblingAtColumn(0).data().toInt());
+    m_currentClip.setName(ui->tableView->selectionModel()->currentIndex().siblingAtColumn(5).data().toString());
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), SLOT(playlistContextMenu(QPoint)), Qt::UniqueConnection);
 
@@ -415,12 +415,12 @@ void MainWindow::soundScapeActive(bool active)
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
 {
-    m_currentClip = index.siblingAtColumn(5).data().toString();
-    m_currentClipIndex = index.siblingAtColumn(0).data().toInt();
+    m_currentClip.setId(index.siblingAtColumn(0).data().toInt());
+    m_currentClip.setName(index.siblingAtColumn(5).data().toString());
     if (m_player->getStatus() == PlayerStatus::IDLE || m_player->getStatus() == PlayerStatus::READY) {
         ui->statusLabel->setText("Video selected...");
     }
-    emit clipNameSelected(m_currentClip);
+    emit clipNameSelected(m_currentClip.getName());
 }
 
 
@@ -443,9 +443,9 @@ void MainWindow::on_btnStartPlaylist_clicked()
     if (m_player->getStatus() == PlayerStatus::READY) {
         QModelIndexList list = ui->tableView->selectionModel()->selectedRows(0);
         QModelIndex index = list[0];
-        m_currentClip = index.siblingAtColumn(5).data().toString();
-        m_currentClipIndex = index.siblingAtColumn(0).data().toInt();
-        m_player->startPlayList(m_currentClipIndex);
+        m_currentClip.setId(index.siblingAtColumn(0).data().toInt());
+        m_currentClip.setName(index.siblingAtColumn(5).data().toString());
+        m_player->startPlayList(m_currentClip.getId());
     } else if (m_player->getStatus() == PlayerStatus::PLAYLIST_PLAYING) {
         m_player->pausePlayList();
     } else if (m_player->getStatus() == PlayerStatus::PLAYLIST_PAUSED) {
@@ -462,7 +462,7 @@ void MainWindow::on_btnStopPlaylist_clicked()
 
 void MainWindow::on_btnPlayClip_clicked()
 {
-    m_player->playClip(m_currentClipIndex);
+    m_player->playClip(m_currentClip.getId());
 }
 
 
@@ -493,7 +493,7 @@ void MainWindow::setTimeCode(double time, double duration, int videoLayer)
 
 void MainWindow::activeClipName(QString clipName, QString upcoming, bool insert)
 {
-    m_currentClip = clipName;
+    m_currentClip.setName(clipName);
     if (!insert) {
         ui->clipName->setStyleSheet("QLabel { color : white; }");
         ui->clipName->setText(clipName != "" ? clipName : "---");
@@ -760,7 +760,7 @@ void MainWindow::on_actionMIDI_Editor_triggered()
     } else {
         m_midiEditorDialog->hide();
     }
-    emit clipNameSelected(m_currentClip);
+    emit clipNameSelected(m_currentClip.getName());
 }
 
 void MainWindow::newRandomClip(ClipInfo randomClip)
