@@ -1,11 +1,13 @@
 #ifndef CLIPINFO_H
 #define CLIPINFO_H
 
+#include "../Shared.h"
+
 #include <QString>
 
 #define FRM_DEF 29.97;
 
-class ClipInfo
+class CORESHARED_EXPORT ClipInfo
 {
 public:
     ClipInfo();

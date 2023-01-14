@@ -3,7 +3,7 @@
 
 #include <QDialog>
 
-#include "ClipInfo.h"
+#include "Models/ClipInfo.h"
 
 namespace Ui {
 class ControlDialog;

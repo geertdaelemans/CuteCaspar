@@ -4,7 +4,7 @@
 #include "CasparDevice.h"
 #include "MidiReader.h"
 #include "MidiLogger.h"
-#include "ClipInfo.h"
+#include "Models/ClipInfo.h"
 
 enum class PlayerStatus
 {

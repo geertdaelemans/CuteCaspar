@@ -27,13 +27,15 @@ SOURCES += \
     DatabaseManager.cpp \
     DeviceManager.cpp \
     Models/DeviceModel.cpp \
-    Models/LibraryModel.cpp
+    Models/LibraryModel.cpp \
+    Models/ClipInfo.cpp
 
 HEADERS += \
         DatabaseManager.h \
         DeviceManager.h \
         Models/DeviceModel.h \
         Models/LibraryModel.h \
+        Models/ClipInfo.h \
         Shared.h
 
 unix {
