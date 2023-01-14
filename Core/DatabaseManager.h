@@ -6,6 +6,7 @@
 
 #include "Models/DeviceModel.h"
 #include "Models/LibraryModel.h"
+#include "Models/ClipInfo.h"
 
 
 class CORESHARED_EXPORT DatabaseManager : public QObject
@@ -36,6 +37,7 @@ public:
     void emptyList(QString tableName);
     void updateMidiStatus(QString clipName, int midiNotes);
     int getNumberOfClips(QString playlist) const;
+    ClipInfo getClipInfo(QString clipName, QString tableName);
 
 private:
     QMutex mutex;

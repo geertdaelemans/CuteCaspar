@@ -613,3 +613,37 @@ int DatabaseManager::getNumberOfClips(QString playlist) const
 
     return number;
 }
+
+/**
+ * @brief DatabaseManager::getClipInfo
+ * Retrieve all clip information for a specific clip in a database
+ * @param clipId - ID of the clip
+ * @param tableName - table in which to search for the info
+ * @return ClipInfo data object
+ */
+ClipInfo DatabaseManager::getClipInfo(QString clipName, QString tableName)
+{
+    QSqlDatabase::database().transaction();
+
+    QSqlQuery sql;
+
+    sql.prepare(QString("SELECT Id, DisplayOrder, Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps, Midi FROM %1 WHERE Name = '%2'").arg(tableName).arg(clipName));
+    if (!sql.exec())
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
+    ClipInfo info;
+
+    if (sql.first()) {
+        info.setId(sql.value(0).toInt());
+        info.setDisplayOrder(sql.value(1).toInt());
+        info.setName(sql.value(2).toString());
+        info.setDuration(sql.value(6).toString());
+        info.setFps(sql.value(7).toFloat());
+        info.setMidi(sql.value(8).toInt());
+    }
+
+    QSqlDatabase::database().commit();
+
+    return info;
+}
+

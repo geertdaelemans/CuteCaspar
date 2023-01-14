@@ -491,20 +491,25 @@ void MainWindow::setTimeCode(double time, double duration, int videoLayer)
     }
 }
 
-void MainWindow::activeClipName(QString clipName, QString upcoming, bool insert)
+void MainWindow::activeClipName(QString current, QString upcoming, bool insert)
 {
-    m_currentClip.setName(clipName);
+    m_currentClip = DatabaseManager::getInstance()->getClipInfo(current, "playlist");
+
+    QString currentClipName = m_currentClip.getName();
     if (!insert) {
         ui->clipName->setStyleSheet("QLabel { color : white; }");
-        ui->clipName->setText(clipName != "" ? clipName : "---");
+        ui->clipName->setText(currentClipName != "" ? currentClipName : "---");
     } else {
         ui->clipName->setStyleSheet("QLabel { color : red; }");
-        ui->clipName->setText("INSERT\n" + clipName);
+        ui->clipName->setText("INSERT\n" + currentClipName);
     }
-    if (upcoming == clipName) {
+    ui->fps->setText(QString::number(m_currentClip.getFps()));
+
+    QString upcomingClipName = DatabaseManager::getInstance()->getClipInfo(upcoming, "playlist").getName();
+    if (upcomingClipName == currentClipName) {
         ui->lblUpcomingClip->setText("---");
     } else {
-        ui->lblUpcomingClip->setText(upcoming);
+        ui->lblUpcomingClip->setText(upcomingClipName);
     }
 }
 
