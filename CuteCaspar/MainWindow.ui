@@ -141,7 +141,34 @@
              </spacer>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <layout class="QHBoxLayout" name="status">
+              <item>
+               <widget class="QPushButton" name="btnSoundScape">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate/deactivate soundscape&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Soundscape</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="spacerStatus">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="timing">
               <item>
                <layout class="QVBoxLayout" name="timecode">
                 <property name="sizeConstraint">
@@ -255,6 +282,9 @@
              <layout class="QHBoxLayout" name="interrupt">
               <item>
                <widget class="QPushButton" name="btnInterrupt">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start scare clip&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                 <property name="text">
                  <string>Scare Clip</string>
                 </property>
@@ -269,7 +299,7 @@
                  </sizepolicy>
                 </property>
                 <property name="toolTip">
-                 <string extracomment="Refresh selected scare clip"/>
+                 <string extracomment="Refresh selected scare clip">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select randomly another scare clip&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="toolTipDuration">
                  <number>5000</number>

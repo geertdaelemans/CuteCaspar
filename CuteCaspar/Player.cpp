@@ -18,6 +18,12 @@ Player::Player()
 
     midiRead = new MidiReader();
     midiLog = new MidiLogger();
+
+    // TODO: SoundScape cLip name should not be hardcoded
+    ClipInfo soundScapeClip;
+    soundScapeClip.setName("EXTRAS/SOUNDSCAPE");
+    soundScapeClip.setFps(29.97);
+    m_soundScapeClip = soundScapeClip;
 }
 
 Player* Player::getInstance()
@@ -113,11 +119,6 @@ void Player::startPlayList(int clipIndex)
     emit activeClip(m_currentClip.getId());
     setStatus(PlayerStatus::PLAYLIST_PLAYING);
 
-    // TODO: SoundScape cLip name should not be hardcoded
-    ClipInfo soundScapeClip;
-    soundScapeClip.setName("EXTRAS/SOUNDSCAPE");
-    soundScapeClip.setFps(29.97);
-    m_soundScapeClip = soundScapeClip;
     startSoundScape();
 }
 
@@ -295,29 +296,51 @@ int Player::getClipIndexByName(QString clipName)
 
 void Player::startSoundScape()
 {
-    qDebug() << "startSoundScape";
     retrieveMidiSoundScape(m_soundScapeClip.getName());
     m_device->playMovie(1, to_underlying(VideoLayer::SOUNDSCAPE), m_soundScapeClip.getName(), "", 0, "", "", 0, 0, true, true);
     m_soundScapeActive = true;
+    m_soundScapePlaying = true;
+    emit soundScapeActive(true);
 }
 
-void Player::pauseSoundScape() const
+void Player::pauseSoundScape()
 {
-    qDebug() << "pauseSoundScape";
     m_device->pause(1, to_underlying(VideoLayer::SOUNDSCAPE));
+    m_soundScapePlaying = false;
+    emit soundScapeActive(false);
 }
 
-void Player::resumeSoundScape() const
+void Player::resumeSoundScape()
 {
-    qDebug() << "resumeSoundScape";
     m_device->resume(1, to_underlying(VideoLayer::SOUNDSCAPE));
+    m_soundScapePlaying = true;
+    emit soundScapeActive(true);
 }
 
 void Player::stopSoundScape()
 {
-    qDebug() << "stopSoundScape";
     m_device->stop(1, to_underlying(VideoLayer::SOUNDSCAPE));
     m_soundScapeActive = false;
+    m_soundScapePlaying = false;
+    emit soundScapeActive(false);
+}
+
+/**
+ * @brief Player::toggleSoundScape
+ * Toggle the soundscape on or off
+ */
+void Player::toggleSoundScape()
+{
+    if (m_soundScapePlaying) {
+        pauseSoundScape();
+    } else {
+        if (m_soundScapeActive) {
+            resumeSoundScape();
+        } else {
+            startSoundScape();
+            resumeSoundScape();
+        }
+    }
 }
 
 void Player::stopOverlay()

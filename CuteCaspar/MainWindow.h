@@ -65,6 +65,7 @@ private slots:
     void mediaChanged(const QList<CasparMedia> &mediaItems, CasparDevice &device);
     void refreshPlayList();
     void refreshLibraryList();
+    void soundScapeActive(bool active);
     void on_tableView_clicked(const QModelIndex &index);
     void on_actionSettings_triggered();
     void on_actionPreview_toggled(bool visible);
@@ -85,6 +86,8 @@ private slots:
     void on_btnReloadLibrary_clicked();
 
     void on_btnNewInterrupt_clicked();
+
+    void on_btnSoundScape_clicked();
 
 signals:
     void nextClip();

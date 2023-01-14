@@ -58,9 +58,10 @@ public:
 
     // SoundScape Calls
     void startSoundScape();
-    void pauseSoundScape() const;
-    void resumeSoundScape() const;
+    void pauseSoundScape();
+    void resumeSoundScape();
     void stopSoundScape();
+    void toggleSoundScape();
 
     void stopOverlay();
     void delayedLoadNextClip(int timeout);
@@ -101,7 +102,8 @@ private:
     int m_currentFrame;
     int m_lastFrame;
     int getClipIndexByName(QString ClipName);
-    bool m_soundScapeActive;
+    bool m_soundScapeActive = false;
+    bool m_soundScapePlaying = false;
     void retrieveMidiSoundScape(QString clipName);
     bool m_random = true;
     ClipInfo m_soundScapeClip;
@@ -116,6 +118,7 @@ signals:
     void newRandomClip(ClipInfo randomClip);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
     void refreshPlayList();
+    void soundScapeActive(bool active);
 };
 
 #endif // PLAYER_H

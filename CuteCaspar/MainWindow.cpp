@@ -53,6 +53,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_player, SIGNAL(newRandomClip(ClipInfo)),
             this, SLOT(newRandomClip(ClipInfo)));
 
+    connect(m_player, SIGNAL(soundScapeActive(bool)),
+            SLOT(soundScapeActive(bool)));
+
     m_player->updateRandomClip();
 
     refreshPlayList();
@@ -394,6 +397,20 @@ void MainWindow::refreshLibraryList()
     ui->tableViewLibrary->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(ui->tableViewLibrary, SIGNAL(customContextMenuRequested(QPoint)), SLOT(libraryContextMenu(QPoint)), Qt::UniqueConnection);
+}
+
+/**
+ * @brief MainWindow::soundScapeActive
+ * Update the status of the soundscape layer
+ * @param active - boolean that indicates if the soundscape is active
+ */
+void MainWindow::soundScapeActive(bool active)
+{
+    if (active) {
+        ui->btnSoundScape->setStyleSheet("background-color: green");
+    } else {
+        ui->btnSoundScape->setStyleSheet("background-color: none");
+    }
 }
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
@@ -820,5 +837,14 @@ void MainWindow::on_btnReloadLibrary_clicked()
 void MainWindow::on_btnNewInterrupt_clicked()
 {
     Player::getInstance()->updateRandomClip();
+}
+
+/**
+ * @brief MainWindow::on_btnSoundScape_clicked
+ * Toggle the state of the soundscape layer (active/inactive)
+ */
+void MainWindow::on_btnSoundScape_clicked()
+{
+    Player::getInstance()->toggleSoundScape();
 }
 
