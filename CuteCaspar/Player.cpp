@@ -186,40 +186,53 @@ void Player::nextClip()
     }
 }
 
+/**
+ * @brief Player::insertPlaylist
+ * Perform an interruption in the playlist by playing a separate clip on a separate layer.
+ * @param clipName - clip name to be inserted, keyword 'random' selects random clip
+ */
 void Player::insertPlaylist(QString clipName)
 {
-    qDebug() << "insertPlaylist" << clipName;
-    QString interruptedClipName;
+    // Prepare to continue after interrupt clip
     if (TRIGGER_PLAYLIST_AFTER_SCARE && getStatus() == PlayerStatus::READY) {
         startPlayList(m_currentClip.getPlaylistOrder());
     }
+
+    // Select interrupt clip
     if (clipName == "random") {
         if (m_randomClip.getName() != "") {
-            interruptedClipName = m_randomClip.getName();
+            m_interruptClip = m_randomClip;
         } else {
             qDebug("No insert clip available");
             return;
         }
     } else {
-        interruptedClipName = clipName;
+        m_interruptClip = DatabaseManager::getInstance()->getClipInfo(clipName, "scares");
     }
-    pauseSoundScape();
-    ClipInfo interrruptedClip = DatabaseManager::getInstance()->getClipInfo(interruptedClipName, "scares");
+
+    // Play interrupt clip
+    pauseSoundScape();    
     m_device-> pause(1, to_underlying(VideoLayer::DEFAULT));
     m_activeVideoLayer = VideoLayer::OVERLAY;
-    m_device->playMovie(1, to_underlying(VideoLayer::OVERLAY), interruptedClipName, "", 0, "", "", 0, 0, false, false);
-    emit newActiveClip(interrruptedClip, m_currentClip, true);
-    qDebug() << "Playing interrupt clip:" << interruptedClipName;
-    retrieveMidiPlayList(interruptedClipName);
+    m_device->playMovie(1, to_underlying(VideoLayer::OVERLAY), m_interruptClip.getName(), "", 0, "", "", 0, 0, false, false);
+
+    // Play notes if available
+    retrieveMidiPlayList(m_interruptClip.getName());
     if (midiRead->isReady()) {
         qDebug("MIDI file found...");
     } else {
         qDebug("No MIDI file found...");
     }
     if (m_recording) {
-        midiLog->openMidiLog(interruptedClipName);
+        midiLog->openMidiLog(m_interruptClip.getName());
     }
-    setStatus(PlayerStatus::PLAYLIST_INSERT);
+
+    // Set status of player
+    setStatus(PlayerStatus::PLAYLIST_INSERT);    
+    emit newActiveClip(m_interruptClip, m_currentClip, true);
+    qDebug() << "Playing interrupt clip:" << m_interruptClip.getName();
+
+    // Prepare next random clip
     if (clipName == "random") {
         updateRandomClip();
     }
@@ -555,10 +568,12 @@ void Player::currentFrame(int frame, int lastFrame)
 
 /**
  * @brief Player::playNote
+ * Process and play notes. Emit notices for the editor (for example)
  * @param pitch
  */
 void Player::playNote(unsigned int pitch, bool noteOn)
 {
+    // Retrieve keys pushed by user and raspberry Pi commands
     if (pitch == 128) {
         auto button = qobject_cast<QPushButton *>(sender());
         if (button && button->property("pitch").isValid()) {
@@ -587,12 +602,23 @@ void Player::playNote(unsigned int pitch, bool noteOn)
         }
     }
 
-    QString timecode = Timecode::fromTime(m_timecode, 29.97, false);
+    // Calculate the current timecode
+    QString timecode;
+    if (m_activeVideoLayer == VideoLayer::DEFAULT) {
+        timecode = Timecode::fromTime(m_timecode, m_currentClip.getFps(), false);
+    } else if (m_activeVideoLayer == VideoLayer::OVERLAY) {
+        timecode = Timecode::fromTime(m_timecodeOverlayLayer, m_interruptClip.getFps(), false);
+    }
+
+    // When soundscape is not playing, do send note information to editor
+    if (!m_soundScapePlaying) {
+        emit currentNote(timecode, noteOn, pitch);
+    }
+
+    // Play notes
     QString onOff = (noteOn ? "ON" : "OFF");
-    qDebug() << QString("%1 %2: pitch %3").arg(timecode).arg(onOff).arg(pitch);
-    emit currentNote(timecode, noteOn, pitch);
     if (midiLog->isReady() /*&& pitch != previousPitch*/ && noteOn) {
-        midiLog->writeNote(QString("%1,%2,%3").arg(timecode).arg(onOff).arg(pitch));
+        midiLog->writeNote(QString("%1,%2,%3").arg(timecode, onOff, QString::number(pitch)));
     }
     if (pitch < 128) {
         if(noteOn/* && pitch != previousPitch*/) {
@@ -606,6 +632,8 @@ void Player::playNote(unsigned int pitch, bool noteOn)
         emit activateButton(pitch, noteOn);
     }
     previousPitch = pitch;
+
+    qDebug() << QString("%1 %2: pitch %3").arg(timecode, onOff, m_midiNotes->getNoteNameByPitch(pitch));
 }
 
 

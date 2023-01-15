@@ -4,6 +4,7 @@
 #include "CasparDevice.h"
 #include "MidiReader.h"
 #include "MidiLogger.h"
+#include "MidiNotes.h"
 #include "Models/ClipInfo.h"
 
 enum class PlayerStatus
@@ -81,6 +82,9 @@ private:
     VideoLayer m_activeVideoLayer = VideoLayer::DEFAULT;
     ClipInfo m_currentClip;
     ClipInfo m_nextClip;
+    ClipInfo m_randomClip;
+    ClipInfo m_soundScapeClip;
+    ClipInfo m_interruptClip;
     double m_timecode;
     double m_timecodeOverlayLayer;
     double m_timecodeSoundScapeLayer;
@@ -98,7 +102,6 @@ private:
     unsigned int previousPitch;
     bool m_insertedClip = false;
     bool m_endOfClipDetected = false;
-    ClipInfo m_randomClip;
     int m_currentFrame;
     int m_lastFrame;
     int getClipIndexByName(QString ClipName);
@@ -106,7 +109,7 @@ private:
     bool m_soundScapePlaying = false;
     void retrieveMidiSoundScape(QString clipName);
     bool m_random = true;
-    ClipInfo m_soundScapeClip;
+    MidiNotes* m_midiNotes = MidiNotes::getInstance();
 
 signals:
     void newActiveClip(ClipInfo activeClip = ClipInfo(), ClipInfo upcomingClip = ClipInfo(), bool insert = false);

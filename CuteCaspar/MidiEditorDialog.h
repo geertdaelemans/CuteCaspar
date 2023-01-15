@@ -34,10 +34,10 @@ private:
     Ui::MidiEditorDialog *ui;
     QStandardItemModel* m_model = nullptr;
     QMap<QString, message>* m_midiPlaylist = nullptr;
-    void addNewNote(QString timecode, bool noteOn, unsigned int pitch);
     int m_currentIndex = 0;
     ClipInfo m_activeClip;
     PlayerStatus m_playerStatus;
+    void addNewNote(QString timecode, bool noteOn, unsigned int pitch);
 };
 
 #endif // MIDIEDITORDIALOG_H
