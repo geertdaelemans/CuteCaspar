@@ -46,9 +46,8 @@ public slots:
     void readyRead();
     void processOsc(QStringList address, QStringList values);
     void listMedia();
-    void setCurrentClip(int index);
     void setTimeCode(double time, double duration, int videoLayer);
-    void activeClipName(QString clipName, QString upcoming, bool insert = false);
+    void reportActiveClip(ClipInfo clipName, ClipInfo upcoming, bool insert = false);
     void playerStatus(PlayerStatus status, bool isRecording);
     void libraryContextMenu(QPoint pos);
     void playlistContextMenu(QPoint pos);

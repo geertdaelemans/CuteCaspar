@@ -116,7 +116,7 @@ void Player::startPlayList(int clipIndex)
     m_timecode = 100;  // By faking the present timecode, the start of the clip (follows) will trigger loadNextClip()
     m_device->playMovie(1, to_underlying(VideoLayer::DEFAULT), m_currentClip.getName(), "", 0, "", "", 0, 0, false, false);
     m_singlePlay = false;
-    emit activeClip(m_currentClip.getId());
+
     setStatus(PlayerStatus::PLAYLIST_PLAYING);
 
     startSoundScape();
@@ -138,7 +138,7 @@ void Player::pausePlayList()
  */
 void Player::resumePlayList()
 {
-    emit activeClipName(m_currentClip.getName(), m_nextClip.getName(), false);
+    emit newActiveClip(m_currentClip, m_nextClip);
     m_device->resume(1, to_underlying(VideoLayer::DEFAULT));
     setStatus(PlayerStatus::PLAYLIST_PLAYING);
     resumeSoundScape();
@@ -165,7 +165,7 @@ void Player::stopPlayList()
     m_device->stop(1, to_underlying(VideoLayer::DEFAULT));
     midiLog->closeMidiLog();
     setStatus(PlayerStatus::READY);
-    emit activeClipName("", "");
+    emit newActiveClip();
     stopSoundScape();
     stopOverlay();
 }
@@ -204,10 +204,11 @@ void Player::insertPlaylist(QString clipName)
         interruptedClipName = clipName;
     }
     pauseSoundScape();
+    ClipInfo interrruptedClip = DatabaseManager::getInstance()->getClipInfo(interruptedClipName, "scares");
     m_device-> pause(1, to_underlying(VideoLayer::DEFAULT));
     m_activeVideoLayer = VideoLayer::OVERLAY;
     m_device->playMovie(1, to_underlying(VideoLayer::OVERLAY), interruptedClipName, "", 0, "", "", 0, 0, false, false);
-    emit activeClipName(interruptedClipName, m_currentClip.getName(), true);
+    emit newActiveClip(interrruptedClip, m_currentClip, true);
     qDebug() << "Playing interrupt clip:" << interruptedClipName;
     retrieveMidiPlayList(interruptedClipName);
     if (midiRead->isReady()) {
@@ -260,7 +261,7 @@ void Player::playClip(int clipIndex)
     m_device->loadMovie(1, to_underlying(VideoLayer::DEFAULT), m_currentClip.getName(), "", 0, "", "", 0, 0, false, false, true);
     m_insertedClip = true;
     setStatus(PlayerStatus::PLAYLIST_PLAYING);
-    emit activeClipName(m_currentClip.getName(), m_nextClip.getName());
+    emit newActiveClip(m_currentClip, m_nextClip);
     m_device->play(1, to_underlying(VideoLayer::DEFAULT));
 }
 
@@ -391,7 +392,6 @@ void Player::loadNextClip()
     // Loading next clip from an active playlist
     if (!m_singlePlay && !m_insertedClip && m_nextClip.getName() != "") {
         m_currentClip = m_nextClip;
-        emit activeClip(m_currentClip.getId());
         qDebug() << "Playing:" << m_currentClip.getName();
         retrieveMidiPlayList(m_currentClip.getName());
         if (midiRead->isReady()) {
@@ -418,14 +418,12 @@ void Player::loadNextClip()
         }
         loadClip(m_nextClip.getName());
         setStatus(PlayerStatus::PLAYLIST_PLAYING);
-        emit activeClipName(m_currentClip.getName(), m_nextClip.getName());
+        emit newActiveClip(m_currentClip, m_nextClip);
     }
     if (m_singlePlay) {
-        emit activeClip(m_currentClip.getId());
         m_singlePlay = false;
     }
     if (m_insertedClip) {
-        emit activeClip(m_currentClip.getId());
         qDebug() << "Playing:" << m_currentClip.getName();
         retrieveMidiPlayList(m_currentClip.getName());
         if (midiRead->isReady()) {
@@ -442,7 +440,7 @@ void Player::loadNextClip()
         loadClip(m_nextClip.getName());
         setStatus(PlayerStatus::PLAYLIST_PLAYING);
         m_insertedClip = false;
-        emit activeClipName(m_currentClip.getName(), m_nextClip.getName());
+        emit newActiveClip(m_currentClip, m_nextClip);
     }
 }
 

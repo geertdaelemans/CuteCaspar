@@ -194,11 +194,11 @@ void MidiEditorDialog::setClipName(QString clipName, bool insert)
 }
 
 
-void MidiEditorDialog::activeClipName(QString clipName, QString upcoming, bool insert)
+void MidiEditorDialog::activeClip(ClipInfo activeClip, ClipInfo upcomingClip, bool insert)
 {
     Q_UNUSED(insert)
-    Q_UNUSED(upcoming)
-    setClipName(clipName);
+    Q_UNUSED(upcomingClip)
+    setClipName(activeClip.getName());
 }
 
 void MidiEditorDialog::playerStatus(PlayerStatus status, bool recording)

@@ -51,10 +51,13 @@ MainWindow::MainWindow(QWidget *parent) :
     m_player = Player::getInstance();
 
     connect(m_player, SIGNAL(newRandomClip(ClipInfo)),
-            this, SLOT(newRandomClip(ClipInfo)));
+            SLOT(newRandomClip(ClipInfo)));
 
     connect(m_player, SIGNAL(soundScapeActive(bool)),
             SLOT(soundScapeActive(bool)));
+
+    connect(m_player, SIGNAL(newActiveClip(ClipInfo, ClipInfo, bool)),
+            SLOT(reportActiveClip(ClipInfo, ClipInfo, bool)));
 
     m_player->updateRandomClip();
 
@@ -115,9 +118,6 @@ void MainWindow::connectServer()
     connect(m_midiCon, SIGNAL(midiMessageReceived(unsigned int, bool)),
             m_player, SLOT(playNote(unsigned int, bool)), Qt::UniqueConnection);
 
-    connect(m_player, SIGNAL(activeClip(int)),
-            this, SLOT(setCurrentClip(int)), Qt::UniqueConnection);
-
     // Playlist: when next clip has started, load the following clip
     connect(this, SIGNAL(nextClip()),
             m_player, SLOT(loadNextClip()), Qt::UniqueConnection);
@@ -130,9 +130,6 @@ void MainWindow::connectServer()
 
     connect(this, SIGNAL(currentTime(double, double, int)),
             this, SLOT(setTimeCode(double, double, int)), Qt::UniqueConnection);
-
-    connect(m_player, SIGNAL(activeClipName(QString, QString, bool)),
-            this, SLOT(activeClipName(QString, QString, bool)), Qt::UniqueConnection);
 
     connect(this, SIGNAL(setRecording()),
             m_player, SLOT(setRecording()), Qt::UniqueConnection);
@@ -465,22 +462,6 @@ void MainWindow::on_btnPlayClip_clicked()
     m_player->playClip(m_currentClip.getId());
 }
 
-
-/**
- * @brief MainWindow::setCurrentClip
- * Slot that selects the active clip in the playlist table
- * @param activeClipIndex - the ID of the active clip
- */
-void MainWindow::setCurrentClip(int activeClipIndex)
-{
-    // Searching for the clip ID in the curren list, independent op it being sorted or not
-    QModelIndex start = ui->tableView->model()->index(0, 0);
-    QList<QModelIndex> match = ui->tableView->model()->match(start, Qt::DisplayRole, activeClipIndex);
-
-    // Select the active clip
-    ui->tableView->selectRow(match[0].row());
-}
-
 void MainWindow::setTimeCode(double time, double duration, int videoLayer)
 {
     if (videoLayer == to_underlying(m_player->getActiveVideoLayer())) {
@@ -491,10 +472,18 @@ void MainWindow::setTimeCode(double time, double duration, int videoLayer)
     }
 }
 
-void MainWindow::activeClipName(QString current, QString upcoming, bool insert)
+/**
+ * @brief MainWindow::reportActiveClip
+ * Slot that reports the status of the active clip in the GUI
+ * @param current - ClipInfo of the current clip
+ * @param upcoming - ClipInfo of the upcoming clip
+ * @param insert - boolean that is set when it is an interrupt clip
+ */
+void MainWindow::reportActiveClip(ClipInfo current, ClipInfo upcoming, bool insert)
 {
-    m_currentClip = DatabaseManager::getInstance()->getClipInfo(current, "playlist");
+    m_currentClip = current;
 
+    // Update the active clip information
     QString currentClipName = m_currentClip.getName();
     if (!insert) {
         ui->clipName->setStyleSheet("QLabel { color : white; }");
@@ -503,13 +492,25 @@ void MainWindow::activeClipName(QString current, QString upcoming, bool insert)
         ui->clipName->setStyleSheet("QLabel { color : red; }");
         ui->clipName->setText("INSERT\n" + currentClipName);
     }
-    ui->fps->setText(QString::number(m_currentClip.getFps()));
 
-    QString upcomingClipName = DatabaseManager::getInstance()->getClipInfo(upcoming, "playlist").getName();
-    if (upcomingClipName == currentClipName) {
+    // Update the upcoming clip information
+    QString upcomingClipName = upcoming.getName();
+    if (upcomingClipName == "" || upcomingClipName == currentClipName) {
         ui->lblUpcomingClip->setText("---");
     } else {
         ui->lblUpcomingClip->setText(upcomingClipName);
+    }
+
+    // Update the frames per second field
+    ui->fps->setText(QString::number(m_currentClip.getFps()));
+
+    // Searching for the clip ID in the current list, independent op it being sorted or not
+    QModelIndex start = ui->tableView->model()->index(0, 0);
+    QList<QModelIndex> match = ui->tableView->model()->match(start, Qt::DisplayRole, m_currentClip.getId());
+
+    // Select the active clip
+    if (!match.isEmpty()) {
+        ui->tableView->selectRow(match[0].row());
     }
 }
 
@@ -748,8 +749,8 @@ void MainWindow::on_actionMIDI_Editor_triggered()
                 m_midiEditorDialog, SLOT(currentNote(QString, bool, unsigned int)));
 
         // Action when new clip is being played
-        connect(m_player, SIGNAL(activeClipName(QString, QString, bool)),
-                m_midiEditorDialog, SLOT(activeClipName(QString, QString, bool)));
+        connect(m_player, SIGNAL(newActiveClip(ClipInfo, ClipInfo, bool)),
+                m_midiEditorDialog, SLOT(activeClip(ClipInfo, ClipInfo, bool)));
 
         // Action when new clip is selected
         connect(this, SIGNAL(clipNameSelected(QString)),

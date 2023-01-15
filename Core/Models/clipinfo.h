@@ -31,7 +31,7 @@ public:
     void    setFps(double fps);
     void    setId(int id) { m_id = id; }
     void    setDisplayOrder(int displayOrder) { m_playlistOrder = displayOrder; }
-    QString setDuration(QString dur) { m_duration = dur; }
+    void    setDuration(QString dur) { m_duration = dur; }
     void    setMidi(int midi) { m_midi = midi; }
 };
 

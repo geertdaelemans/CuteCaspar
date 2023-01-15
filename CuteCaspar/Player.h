@@ -109,8 +109,7 @@ private:
     ClipInfo m_soundScapeClip;
 
 signals:
-    void activeClip(int value);
-    void activeClipName(QString clipName, QString upcoming = "None", bool insert = false);
+    void newActiveClip(ClipInfo activeClip = ClipInfo(), ClipInfo upcomingClip = ClipInfo(), bool insert = false);
     void activateButton(unsigned int pitch, bool active = true);
     void playerStatus(PlayerStatus status, bool recording);
     void insertFinished();

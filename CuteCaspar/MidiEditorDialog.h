@@ -22,7 +22,7 @@ public slots:
     void newMidiPlaylist(QMap<QString, message> midiPlayList);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
     void setClipName(QString clipName, bool insert = false);
-    void activeClipName(QString clipName, QString upcoming, bool insert = false);
+    void activeClip(ClipInfo activeClip, ClipInfo upcomingClip, bool insert = false);
     void playerStatus(PlayerStatus status, bool recording);
 
 private slots:
