@@ -21,8 +21,7 @@ public:
 public slots:
     void newMidiPlaylist(QMap<QString, message> midiPlayList);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
-    void setClipName(QString clipName, bool insert = false);
-    void activeClip(ClipInfo activeClip, ClipInfo upcomingClip, bool insert = false);
+    void setClip(ClipInfo clip);
     void playerStatus(PlayerStatus status, bool recording);
 
 private slots:
@@ -37,7 +36,7 @@ private:
     QMap<QString, message>* m_midiPlaylist = nullptr;
     void addNewNote(QString timecode, bool noteOn, unsigned int pitch);
     int m_currentIndex = 0;
-    QString m_clipName;
+    ClipInfo m_activeClip;
     PlayerStatus m_playerStatus;
 };
 

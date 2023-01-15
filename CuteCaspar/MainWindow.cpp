@@ -417,7 +417,7 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
     if (m_player->getStatus() == PlayerStatus::IDLE || m_player->getStatus() == PlayerStatus::READY) {
         ui->statusLabel->setText("Video selected...");
     }
-    emit clipNameSelected(m_currentClip.getName());
+    emit clipSelected(m_currentClip);
 }
 
 
@@ -750,11 +750,11 @@ void MainWindow::on_actionMIDI_Editor_triggered()
 
         // Action when new clip is being played
         connect(m_player, SIGNAL(newActiveClip(ClipInfo, ClipInfo, bool)),
-                m_midiEditorDialog, SLOT(activeClip(ClipInfo, ClipInfo, bool)));
+                m_midiEditorDialog, SLOT(setClip(ClipInfo)));
 
         // Action when new clip is selected
-        connect(this, SIGNAL(clipNameSelected(QString)),
-                m_midiEditorDialog, SLOT(setClipName(QString)));
+        connect(this, SIGNAL(clipSelected(ClipInfo)),
+                m_midiEditorDialog, SLOT(setClip(ClipInfo)));
 
         // Players reports status
         connect(m_player, SIGNAL(playerStatus(PlayerStatus, bool)),
@@ -766,7 +766,7 @@ void MainWindow::on_actionMIDI_Editor_triggered()
     } else {
         m_midiEditorDialog->hide();
     }
-    emit clipNameSelected(m_currentClip.getName());
+    emit clipSelected(m_currentClip);
 }
 
 void MainWindow::newRandomClip(ClipInfo randomClip)

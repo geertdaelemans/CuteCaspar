@@ -95,7 +95,7 @@ signals:
     void setRecording();
 //    void setRenew(bool value);
     void parseMessage(QString msg);
-    void clipNameSelected(QString clipName);
+    void clipSelected(ClipInfo selectedClip);
 
 private:
     Ui::MainWindow *ui;

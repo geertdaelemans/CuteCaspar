@@ -106,19 +106,19 @@ void MidiEditorDialog::on_btnAdd_clicked()
     }
     double timeBefore, timeAfter;
     if (row > 0) {
-        timeBefore = Timecode::toTime(m_model->data(m_model->index(row-1, 0)).toString(), 29.97);
+        timeBefore = Timecode::toTime(m_model->data(m_model->index(row-1, 0)).toString(), m_activeClip.getFps());
     } else {
         timeBefore = 0.0;
     }
     if (row >= m_model->rowCount()) {
         timeAfter = timeBefore + 1;
     } else {
-        timeAfter = Timecode::toTime(m_model->data(m_model->index(row, 0)).toString(), 29.97);
+        timeAfter = Timecode::toTime(m_model->data(m_model->index(row, 0)).toString(), m_activeClip.getFps());
     }
     m_model->insertRow(row);
     ui->tableView->selectRow(row);
 
-    m_model->setItem(row, 0, new QStandardItem(Timecode::fromTime((timeAfter + timeBefore)/2.0, 29.97, false)));
+    m_model->setItem(row, 0, new QStandardItem(Timecode::fromTime((timeAfter + timeBefore)/2.0, m_activeClip.getFps(), false)));
     m_model->setItem(row, 1, new QStandardItem("ON"));
     m_model->setItem(row, 2, new QStandardItem(MidiNotes::getInstance()->getNoteNameByPitch(0)));
 
@@ -152,7 +152,7 @@ void MidiEditorDialog::on_btnSave_clicked()
         newNote.pitch = MidiNotes::getInstance()->getNotePitchByName(m_model->data(m_model->index(i,2)).toString());
         output[m_model->data(m_model->index(i,0)).toString()] = newNote;
     }
-    DatabaseManager::getInstance()->updateMidiStatus(m_clipName, numberOfRows);
+    DatabaseManager::getInstance()->updateMidiStatus(m_activeClip.getName(), numberOfRows);
     Player::getInstance()->saveMidiPlayList(output);
 }
 
@@ -162,7 +162,7 @@ void MidiEditorDialog::on_btnResume_clicked()
     switch(m_playerStatus) {
     case PlayerStatus::IDLE:
     case PlayerStatus::READY:
-        Player::getInstance()->playClip(m_clipName);
+        Player::getInstance()->playClip(m_activeClip.getName());
         break;
     case PlayerStatus::PLAYLIST_PLAYING:
     case PlayerStatus::PLAYLIST_INSERT:
@@ -174,31 +174,27 @@ void MidiEditorDialog::on_btnResume_clicked()
         double timeSelected;
         if (selected.size() != 0) {
             int row = selected.begin()->row();
-            timeSelected = Timecode::toTime(m_model->data(m_model->index(row, 0)).toString(), 29.97);
+            timeSelected = Timecode::toTime(m_model->data(m_model->index(row, 0)).toString(), m_activeClip.getFps());
         } else {
-            timeSelected = Timecode::toTime("00:00:00:01", 29.97);
+            timeSelected = Timecode::toTime("00:00:00:01", m_activeClip.getFps());
         }
-        Player::getInstance()->resumeFromFrame(static_cast<int>(timeSelected * 29.97));
+        Player::getInstance()->resumeFromFrame(static_cast<int>(timeSelected * m_activeClip.getFps()));
         break;
     }
 }
 
-void MidiEditorDialog::setClipName(QString clipName, bool insert)
+/**
+ * @brief MidiEditorDialog::setClip
+ * When the user explicitly selects a clip, this function lets the midi editor follow
+ * @param clip - selected clip
+ */
+void MidiEditorDialog::setClip(ClipInfo clip)
 {
-    Q_UNUSED(insert)
-    if (clipName != "") {
-        m_clipName = clipName;
-        ui->lblClipName->setText(m_clipName);
-        Player::getInstance()->retrieveMidiPlayList(m_clipName);
+    if (clip.getName() != "") {
+        m_activeClip = clip;
+        ui->lblClipName->setText(m_activeClip.getName());
+        Player::getInstance()->retrieveMidiPlayList(m_activeClip.getName());
     }
-}
-
-
-void MidiEditorDialog::activeClip(ClipInfo activeClip, ClipInfo upcomingClip, bool insert)
-{
-    Q_UNUSED(insert)
-    Q_UNUSED(upcomingClip)
-    setClipName(activeClip.getName());
 }
 
 void MidiEditorDialog::playerStatus(PlayerStatus status, bool recording)
