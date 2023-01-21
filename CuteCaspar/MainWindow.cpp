@@ -504,13 +504,15 @@ void MainWindow::reportActiveClip(ClipInfo current, ClipInfo upcoming, bool inse
     // Update the frames per second field
     ui->fps->setText(QString::number(m_currentClip.getFps()));
 
-    // Searching for the clip ID in the current list, independent op it being sorted or not
-    QModelIndex start = ui->tableView->model()->index(0, 0);
-    QList<QModelIndex> match = ui->tableView->model()->match(start, Qt::DisplayRole, m_currentClip.getId());
+    if (!insert) {
+        // Searching for the clip ID in the current list, independent op it being sorted or not
+        QModelIndex start = ui->tableView->model()->index(0, 0);
+        QList<QModelIndex> match = ui->tableView->model()->match(start, Qt::DisplayRole, m_currentClip.getId());
 
-    // Select the active clip
-    if (!match.isEmpty()) {
-        ui->tableView->selectRow(match[0].row());
+        // Select the active clip
+        if (!match.isEmpty()) {
+            ui->tableView->selectRow(match[0].row());
+        }
     }
 }
 

@@ -110,6 +110,7 @@ private:
     void retrieveMidiSoundScape(QString clipName);
     bool m_random = true;
     MidiNotes* m_midiNotes = MidiNotes::getInstance();
+    int m_stopLength = 0;
 
 signals:
     void newActiveClip(ClipInfo activeClip = ClipInfo(), ClipInfo upcomingClip = ClipInfo(), bool insert = false);

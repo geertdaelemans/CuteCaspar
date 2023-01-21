@@ -128,7 +128,9 @@ void Player::startPlayList(int clipIndex)
 void Player::pausePlayList()
 {
     m_device->pause(1, to_underlying(VideoLayer::DEFAULT));
-    pauseSoundScape();
+    if (m_soundScapePlaying) {
+        pauseSoundScape();
+    }
     setStatus(PlayerStatus::PLAYLIST_PAUSED);
 }
 
@@ -141,7 +143,9 @@ void Player::resumePlayList()
     emit newActiveClip(m_currentClip, m_nextClip);
     m_device->resume(1, to_underlying(VideoLayer::DEFAULT));
     setStatus(PlayerStatus::PLAYLIST_PLAYING);
-    resumeSoundScape();
+    if (!m_currentClip.getMidi()) {
+        resumeSoundScape();
+    }
 }
 
 
@@ -173,9 +177,9 @@ void Player::stopPlayList()
 
 void Player::nextClip()
 {
-    if (m_activeVideoLayer != VideoLayer::DEFAULT) {
-        stopOverlay();
+    if (m_activeVideoLayer == VideoLayer::OVERLAY) {
         resumePlayList();
+        stopOverlay();
     } else {
         if (m_nextClip.getName() != "") {
             loadClip(m_nextClip.getName());
@@ -362,6 +366,9 @@ void Player::stopOverlay()
     qDebug() << "stopOverlay";
     m_device->stop(1, to_underlying(VideoLayer::OVERLAY));
     m_activeVideoLayer = VideoLayer::DEFAULT;
+    if (m_soundScapePlaying) {
+        pauseSoundScape();
+    }
     emit insertFinished();
 }
 
@@ -478,16 +485,24 @@ void Player::timecode(double time, double duration, int videoLayer)
             m_timecode = time;
             // Next clip has started automatically (Playlist)
             if (prev_timecode > m_timecode && m_timecode < 1.0) {
-                qDebug() << "NEXT CLIP HAS STARTED AUTOMATICALLY" << prev_timecode << " - " << m_timecode;
+                qDebug() << "NEXT CLIP HAS STARTED AUTOMATICALLY AT " << m_timecode;
                 delayedLoadNextClip(100); //delay in ms
             }
-            // Previous clip has just stopped
+            // Previous clip has just stopped - a hack has been added to measure the length of the freeze before taking action
+            // TODO: this can be eliminated, I guess...
             if (qFabs(prev_timecode - m_timecode) < 0.001) {
-                qDebug() << "PREVIOUS CLIP HAS JUST STOPPED" << prev_timecode << " - " << m_timecode;;
-                m_endOfClipDetected = true;
-                qDebug() << "m_endOfClipDetected = true";
-                delayedLoadNextClip(100); //delay in ms
-                midiLog->closeMidiLog();
+                if (m_stopLength > 10) {
+                    qDebug() << "PREVIOUS CLIP " << m_currentClip.getName() << " HAS STOPPED AT " << m_timecode;
+                    m_endOfClipDetected = true;
+                    qDebug() << "m_endOfClipDetected = true";
+                    delayedLoadNextClip(100); //delay in ms
+                    midiLog->closeMidiLog();
+                    m_stopLength = 0;
+                } else {
+                    m_stopLength++;
+                }
+            } else if (m_stopLength) {
+                m_stopLength = 0;
             }
             if (midiPlayList.count() > 0) {
                 double fps = m_currentClip.getFps();
@@ -515,8 +530,7 @@ void Player::timecode(double time, double duration, int videoLayer)
                 qDebug() << "INSERTED CLIP HAS STOPPED";
                 stopOverlay();
                 resumePlayList();
-            }
-            if (midiPlayList.count() > 0) {
+            } else if (midiPlayList.count() > 0) {
                 double fps = m_currentClip.getFps();
                 QString timecode = Timecode::fromTime(time, fps, false);
                 if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
