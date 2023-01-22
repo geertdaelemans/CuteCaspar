@@ -743,8 +743,8 @@ void MainWindow::on_actionMIDI_Editor_triggered()
         m_midiEditorDialog = new MidiEditorDialog();
 
         // Retrieve current MIDI playlist from Player
-        connect(m_player, SIGNAL(newMidiPlaylist(QMap<QString, message>)),
-                m_midiEditorDialog, SLOT(newMidiPlaylist(QMap<QString, message>)));
+        connect(m_player, SIGNAL(newMidiPlaylist(QMap<QString, message>, double)),
+                m_midiEditorDialog, SLOT(newMidiPlaylist(QMap<QString, message>, double)));
 
         // Actual note being played at the moment
         connect(m_player, SIGNAL(currentNote(QString, bool, unsigned int)),
@@ -761,6 +761,11 @@ void MainWindow::on_actionMIDI_Editor_triggered()
         // Players reports status
         connect(m_player, SIGNAL(playerStatus(PlayerStatus, bool)),
                 m_midiEditorDialog, SLOT(playerStatus(PlayerStatus, bool)));
+
+        // Current timecode
+        connect(this, SIGNAL(currentTime(double,double,int)),
+                m_midiEditorDialog, SLOT(timecode(double, double, int)), Qt::UniqueConnection);
+
     }
     if (!m_midiEditorDialog->isVisible()) {
         m_midiEditorDialog->show();

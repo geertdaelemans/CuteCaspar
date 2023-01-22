@@ -41,7 +41,7 @@ MidiEditorDialog::~MidiEditorDialog()
     delete ui;
 }
 
-void MidiEditorDialog::newMidiPlaylist(QMap<QString, message> midiPlayList)
+void MidiEditorDialog::newMidiPlaylist(QMap<QString, message> midiPlayList, double timecode)
 {
     m_model->setRowCount(0);
     m_midiPlaylist = &midiPlayList;
@@ -61,6 +61,16 @@ void MidiEditorDialog::newMidiPlaylist(QMap<QString, message> midiPlayList)
 
     ui->tableView->setItemDelegateForColumn(1, cbid);
     ui->tableView->setItemDelegateForColumn(2, cbid);
+
+    QString timecodeString = Timecode::fromTime(timecode, m_activeClip.getFps(), false);
+    for (int i = 0; i < m_model->rowCount(); i++) {
+        if (timecodeString < m_model->index(i, 0).data().toString()) {
+            if (i > 0) {
+                ui->tableView->selectRow(i);
+            }
+            break;
+        }
+    }
 }
 
 void MidiEditorDialog::currentNote(QString timecode, bool noteOn, unsigned int pitch)
@@ -180,6 +190,24 @@ void MidiEditorDialog::on_btnResume_clicked()
         }
         Player::getInstance()->resumeFromFrame(static_cast<int>(timeSelected * m_activeClip.getFps()));
         break;
+    }
+}
+
+/**
+ * @brief MidiEditorDialog::timecode
+ * Displays and records the current timecode
+ * @param time - double representation of the timecode
+ * @param duration - not used
+ * @param videoLayer - active video layer
+ */
+void MidiEditorDialog::timecode(double time, double duration, int videoLayer)
+{
+    Q_UNUSED(duration)
+
+    if ((videoLayer == 2 && m_playerStatus == PlayerStatus::PLAYLIST_PLAYING) ||
+            (videoLayer == 3 && m_playerStatus == PlayerStatus::PLAYLIST_INSERT)) {
+        m_timecode = Timecode::fromTime(time, m_activeClip.getFps(), false);
+        ui->lblTimecode->setText(m_timecode);
     }
 }
 

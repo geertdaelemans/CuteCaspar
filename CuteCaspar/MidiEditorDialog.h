@@ -19,7 +19,7 @@ public:
     ~MidiEditorDialog();
 
 public slots:
-    void newMidiPlaylist(QMap<QString, message> midiPlayList);
+    void newMidiPlaylist(QMap<QString, message> midiPlayList, double timecode);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
     void setClip(ClipInfo clip);
     void playerStatus(PlayerStatus status, bool recording);
@@ -29,6 +29,7 @@ private slots:
     void on_btnAdd_clicked();
     void on_btnSave_clicked();
     void on_btnResume_clicked();
+    void timecode(double time, double duration, int videoLayer);
 
 private:
     Ui::MidiEditorDialog *ui;
@@ -37,6 +38,7 @@ private:
     int m_currentIndex = 0;
     ClipInfo m_activeClip;
     PlayerStatus m_playerStatus;
+    QString m_timecode;
     void addNewNote(QString timecode, bool noteOn, unsigned int pitch);
 };
 

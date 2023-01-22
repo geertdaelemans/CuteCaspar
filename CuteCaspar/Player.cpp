@@ -690,7 +690,11 @@ void Player::retrieveMidiPlayList(QString clipName)
 {
     midiPlayList = midiRead->openLog(clipName);
     midiPlayListIterator = midiPlayList.begin();
-    emit newMidiPlaylist(midiPlayList);
+    double currentTimecode = 0.0;
+    if (m_activeVideoLayer == VideoLayer::DEFAULT) {
+        currentTimecode = m_timecode;
+    }
+    emit newMidiPlaylist(midiPlayList, currentTimecode);
 }
 
 void Player::retrieveMidiSoundScape(QString clipName)

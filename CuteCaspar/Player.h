@@ -117,7 +117,7 @@ signals:
     void activateButton(unsigned int pitch, bool active = true);
     void playerStatus(PlayerStatus status, bool recording);
     void insertFinished();
-    void newMidiPlaylist(QMap<QString, message> midiPlayList);
+    void newMidiPlaylist(QMap<QString, message> midiPlayList, double timecode);
     void newRandomClip(ClipInfo randomClip);
     void currentNote(QString timecode, bool noteOn, unsigned int pitch);
     void refreshPlayList();
