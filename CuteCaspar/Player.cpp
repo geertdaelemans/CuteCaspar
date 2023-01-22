@@ -510,10 +510,12 @@ void Player::timecode(double time, double duration, int videoLayer)
                 if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
                     if (midiPlayListIterator.key().length() > 0) {
                         if (midiPlayListIterator->timeCode <= timecode) {
-                            if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
-                                playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
-                            } else {
-                                playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+                            if (midiPlayListIterator->timeCode == timecode) {
+                                if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
+                                    playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
+                                } else {
+                                    playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+                                }
                             }
                             midiPlayListIterator++;
                         }
@@ -536,10 +538,12 @@ void Player::timecode(double time, double duration, int videoLayer)
                 if (m_triggersActive && midiPlayListIterator != midiPlayList.end()) {
                     if (midiPlayListIterator.key().length() > 0) {
                         if (midiPlayListIterator->timeCode <= timecode) {
-                            if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
-                                playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
-                            } else {
-                                playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+                            if (midiPlayListIterator->timeCode == timecode) {
+                                if (midiPlayList[midiPlayListIterator->timeCode].type == "ON") {
+                                    playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, true);
+                                } else {
+                                    playNote(midiPlayList[midiPlayListIterator->timeCode].pitch, false);
+                                }
                             }
                             midiPlayListIterator++;
                         }
@@ -560,10 +564,12 @@ void Player::timecode(double time, double duration, int videoLayer)
             if (m_triggersActive && midiSoundScapeIterator != midiSoundScape.end()) {
                 if (midiSoundScapeIterator.key().length() > 0) {
                     if (midiSoundScapeIterator->timeCode <= timecode) {
-                        if (midiSoundScape[midiSoundScapeIterator->timeCode].type == "ON") {
-                            playNote(midiSoundScape[midiSoundScapeIterator->timeCode].pitch, true);
-                        } else {
-                            playNote(midiSoundScape[midiSoundScapeIterator->timeCode].pitch, false);
+                        if (midiSoundScapeIterator->timeCode == timecode) {
+                            if (midiSoundScape[midiSoundScapeIterator->timeCode].type == "ON") {
+                                playNote(midiSoundScape[midiSoundScapeIterator->timeCode].pitch, true);
+                            } else {
+                                playNote(midiSoundScape[midiSoundScapeIterator->timeCode].pitch, false);
+                            }
                         }
                         midiSoundScapeIterator++;
                     }

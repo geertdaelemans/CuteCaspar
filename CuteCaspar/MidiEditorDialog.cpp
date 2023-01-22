@@ -70,9 +70,7 @@ void MidiEditorDialog::currentNote(QString timecode, bool noteOn, unsigned int p
 
     QModelIndexList matches = m_model->match(m_model->index(0,0), Qt::DisplayRole, timecode);
     if (matches.size() == 0) {
-// TODO: This has been commented, but now the recording of notes will not work anymore
-//       By rewriting the MIDI tracker in the MIDI editor, this can be fixed
-//        addNewNote(timecode, noteOn, pitch);
+        addNewNote(timecode, noteOn, pitch);
     } else {
         foreach(const QModelIndex &index, matches) {
             ui->tableView->selectRow(index.row());
