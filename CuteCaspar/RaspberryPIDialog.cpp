@@ -165,7 +165,7 @@ void RaspberryPIDialog::on_btnMagnet_clicked()
 
 void RaspberryPIDialog::on_btnMotion_clicked()
 {
-    if (!RaspberryPI::getInstance()->isMotionActive()) {
+    if (RaspberryPI::getInstance()->isMotionActive()) {
         RaspberryPI::getInstance()->setMotionActive(true);
     } else {
         RaspberryPI::getInstance()->setMotionActive(false);
@@ -205,7 +205,7 @@ void RaspberryPIDialog::refreshUpdate(status stat)
     setButton(ui->btnButton, stat.buttonActive);
     setButton(ui->btnLight, stat.lightActive);
     setButton(ui->btnMagnet, stat.magnetActive);
-    setButton(ui->btnMotion, stat.motionActive);
+    setButton(ui->btnMotion, !stat.motionActive);
     setButton(ui->btnSmoke, stat.smokeActive);
     ui->sldMagnet->setValue(stat.magnetProbability);
 }

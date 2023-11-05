@@ -84,6 +84,6 @@ void ControlDialog::takeAction()
 {
     auto button = qobject_cast<QPushButton *>(sender());
     if (button && button->property("name").isValid()) {
-        emit insertPlaylist(button->property("name").toString());
+        emit insertPlaylist(button->property("name").toString(), "extras");
     }
 }

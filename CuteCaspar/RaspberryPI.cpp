@@ -170,8 +170,8 @@ void RaspberryPI::setMagnetActive(bool magnetActive, bool overRule)
 
 void RaspberryPI::setMotionActive(bool motionActive)
 {
-    sendMessage(motionActive ? "motion_on" : "motion_off");
-    m_status.motionActive = motionActive;
+    sendMessage(motionActive ? "motion_off" : "motion_on");
+    m_status.motionActive = !motionActive;
     sendStatus();
 }
 
@@ -237,6 +237,18 @@ void RaspberryPI::parseMessage(QString msg)
         qDebug() << "Insert clip" << msg;
         emit insertPlaylist();
         setButtonActive(false);
+    } else if (msg == "high2") {
+        qDebug() << "Insert doorbell clip";
+        emit insertPlaylist("EXTRAS/TRICK OR TREAT", "extras");
+        setButtonActive(false);
+    } else if (msg == "latch2_closed") {
+        qDebug() << "Latch 2 closed";
+        m_status.motionActive = false;
+        sendStatus();
+    } else if (msg == "latch1_closed") {
+        qDebug() << "Latch 1 closed";
+        m_status.magnetActive = true;
+        sendStatus();
     }
     emit statusButton(msg);
     if (msg == "ok") {

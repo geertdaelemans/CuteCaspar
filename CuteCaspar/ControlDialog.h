@@ -23,7 +23,7 @@ private:
     QList<ClipInfo> clips;
 
 signals:
-    void insertPlaylist(QString clipName);
+    void insertPlaylist(QString clipName, QString database = "scares");
 
 private slots:
     void takeAction();

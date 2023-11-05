@@ -157,7 +157,8 @@ void Player::resumeFromFrame(int frames)
 {
     m_device->callSeek(1, to_underlying(VideoLayer::DEFAULT), frames);
     m_device->resume(1, to_underlying(VideoLayer::DEFAULT));
-    setStatus(PlayerStatus::PLAYLIST_PLAYING);
+    midiPlayListIterator= midiPlayList.begin();
+//    setStatus(PlayerStatus::PLAYLIST_PLAYING);
 }
 
 
@@ -195,7 +196,7 @@ void Player::nextClip()
  * Perform an interruption in the playlist by playing a separate clip on a separate layer.
  * @param clipName - clip name to be inserted, keyword 'random' selects random clip
  */
-void Player::insertPlaylist(QString clipName)
+void Player::insertPlaylist(QString clipName, QString database)
 {
     // Prepare to continue after interrupt clip
     if (TRIGGER_PLAYLIST_AFTER_SCARE && getStatus() == PlayerStatus::READY) {
@@ -211,7 +212,8 @@ void Player::insertPlaylist(QString clipName)
             return;
         }
     } else {
-        m_interruptClip = DatabaseManager::getInstance()->getClipInfo(clipName, "scares");
+        qDebug() << "Searching for:" << clipName;
+        m_interruptClip = DatabaseManager::getInstance()->getClipInfo(clipName, database);
     }
 
     // Play interrupt clip

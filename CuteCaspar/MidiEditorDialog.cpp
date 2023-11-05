@@ -41,6 +41,12 @@ MidiEditorDialog::~MidiEditorDialog()
     delete ui;
 }
 
+/**
+ * @brief MidiEditorDialog::newMidiPlaylist
+ * Load a new MIDI list in memory, starting the pointer at a certain timecode
+ * @param midiPlayList - the playlist to be loaded
+ * @param timecode - the timecode to put the pointer at
+ */
 void MidiEditorDialog::newMidiPlaylist(QMap<QString, message> midiPlayList, double timecode)
 {
     m_model->setRowCount(0);
@@ -184,10 +190,12 @@ void MidiEditorDialog::on_btnResume_clicked()
         double timeSelected;
         if (selected.size() != 0) {
             int row = selected.begin()->row();
+            qDebug() << "TIME SELECTED" << m_model->data(m_model->index(row, 0)).toString();
             timeSelected = Timecode::toTime(m_model->data(m_model->index(row, 0)).toString(), m_activeClip.getFps());
         } else {
             timeSelected = Timecode::toTime("00:00:00:01", m_activeClip.getFps());
         }
+        qDebug() << "Seconds" << timeSelected;
         Player::getInstance()->resumeFromFrame(static_cast<int>(timeSelected * m_activeClip.getFps()));
         break;
     }
@@ -207,7 +215,7 @@ void MidiEditorDialog::timecode(double time, double duration, int videoLayer)
     if ((videoLayer == 2 && m_playerStatus == PlayerStatus::PLAYLIST_PLAYING) ||
             (videoLayer == 3 && m_playerStatus == PlayerStatus::PLAYLIST_INSERT)) {
         m_timecode = Timecode::fromTime(time, m_activeClip.getFps(), false);
-        ui->lblTimecode->setText(m_timecode);
+        ui->lblTimecode->setText(m_timecode + " - " + QString::number(time));
     }
 }
 

@@ -44,7 +44,7 @@ public:
 signals:
     void statusButton(QString msg);
     void statusUpdate(status stat);
-    void insertPlaylist(QString clipName = "random");
+    void insertPlaylist(QString clipName = "random", QString database = "scares");
     void heartBeat();
 
 public slots:

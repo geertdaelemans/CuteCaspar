@@ -73,7 +73,7 @@ public slots:
     void playNote(unsigned int pitch = 128, bool noteOne = true);
     void killNote();
     void setRecording();
-    void insertPlaylist(QString clipName = "random");
+    void insertPlaylist(QString clipName = "random", QString database = "scares");
     void onTimer_LoadNextClip();
 
 private:

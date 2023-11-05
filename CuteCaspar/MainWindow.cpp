@@ -141,8 +141,8 @@ void MainWindow::connectServer()
     connect(m_player, SIGNAL(refreshPlayList()),
             this, SLOT(refreshPlayList()), Qt::UniqueConnection);
 
-    connect(m_raspberryPI, SIGNAL(insertPlaylist(QString)),
-            m_player, SLOT(insertPlaylist(QString)), Qt::UniqueConnection);
+    connect(m_raspberryPI, SIGNAL(insertPlaylist(QString, QString)),
+            m_player, SLOT(insertPlaylist(QString, QString)), Qt::UniqueConnection);
 
     connect(m_player, SIGNAL(insertFinished()),
             m_raspberryPI, SLOT(insertFinished()), Qt::UniqueConnection);
@@ -721,8 +721,8 @@ void MainWindow::on_actionControl_Panel_triggered()
         m_controlDialog = new ControlDialog();
 
         // Send selected clips to Player
-        connect(m_controlDialog, SIGNAL(insertPlaylist(QString)),
-                m_player, SLOT(insertPlaylist(QString)));
+        connect(m_controlDialog, SIGNAL(insertPlaylist(QString, QString)),
+                m_player, SLOT(insertPlaylist(QString, QString)));
     }
     if (!m_controlDialog->isVisible()) {
         m_controlDialog->setup();
