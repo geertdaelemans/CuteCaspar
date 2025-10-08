@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QUdpSocket>
+#include <QMqttClient>
 
 struct status {
     bool connected = false;
@@ -59,6 +60,7 @@ private:
     static RaspberryPI* s_inst;
     QUdpSocket* udpSocketIn = nullptr;
     QUdpSocket* udpSocketOut = nullptr;
+    QMqttClient* mqttClient = nullptr;
     QHostAddress m_address = QHostAddress("127.0.0.1");
     unsigned short m_portIn = 1234;
     unsigned short m_portOut = 1235;

@@ -2,6 +2,7 @@
 
 #include <QUdpSocket>
 #include <QSettings>
+#include <QMqttClient>
 
 #include <QHostInfo>
 #include <QNetworkInterface>
@@ -67,6 +68,31 @@ void RaspberryPI::setup()
     // When a datagram has been received, go and process it
     QObject::connect(udpSocketIn, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()), Qt::UniqueConnection);
+
+    // Initialize MQTT client (Step 1: Connection only)
+    if (mqttClient == nullptr) {
+        mqttClient = new QMqttClient(this);
+        mqttClient->setHostname("127.0.0.1");
+        mqttClient->setPort(1883);
+        mqttClient->setClientId("CuteCaspar");
+        
+        // Connect to MQTT broker
+        qDebug() << "Connecting to MQTT broker at 127.0.0.1:1883...";
+        mqttClient->connectToHost();
+        
+        // Add connection status logging
+        QObject::connect(mqttClient, &QMqttClient::connected, [this]() {
+            qDebug() << "✅ MQTT connected successfully!";
+        });
+        
+        QObject::connect(mqttClient, &QMqttClient::disconnected, [this]() {
+            qDebug() << "❌ MQTT disconnected";
+        });
+        
+        QObject::connect(mqttClient, &QMqttClient::errorChanged, [this](QMqttClient::ClientError error) {
+            qDebug() << "MQTT Error:" << error;
+        });
+    }
 
     // Report connection
     qDebug() << QString("Raspberry PI connected on %1:%2").arg(address).arg(m_portIn);
@@ -223,11 +249,26 @@ void RaspberryPI::processPendingDatagrams()
  */
 void RaspberryPI::sendMessage(QString msg)
 {
+    qDebug() << QString("🔄 sendMessage called with: '%1'").arg(msg);
+    
+    // Always send via UDP (keep existing functionality)
     QByteArray Data;
     Data.append("raspi/");
     Data.append(msg.toUtf8());
     udpSocketOut->writeDatagram(Data, Data.size(), m_address, m_portOut);
-    qDebug() << QString("Sending UDP Message '%1' to %2:%3").arg(msg).arg(m_address.toString()).arg(m_portOut);
+    qDebug() << QString("📤 Sending UDP Message '%1' to %2:%3").arg(msg).arg(m_address.toString()).arg(m_portOut);
+    
+    // Step 3: Send ALL commands via MQTT (not just "start" and "alive")
+    if (mqttClient && mqttClient->state() == QMqttClient::Connected) {
+        QString topic = "cutecaspar/raspi/command";
+        QByteArray mqttMessage = msg.toUtf8();
+        mqttClient->publish(QMqttTopicName(topic), mqttMessage, 1); // QoS 1 for reliability
+        qDebug() << QString("📡 Published MQTT message '%1' to topic '%2'").arg(msg).arg(topic);
+    } else if (mqttClient) {
+        qDebug() << QString("⚠️ MQTT client not connected (state: %1), cannot send '%2'").arg(mqttClient->state()).arg(msg);
+    } else {
+        qDebug() << QString("❌ MQTT client is null, cannot send '%1'").arg(msg);
+    }
 }
 
 
