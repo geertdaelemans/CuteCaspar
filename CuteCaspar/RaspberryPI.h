@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QMqttClient>
+#include <QMqttSubscription>
 
 struct status {
     bool connected = false;
@@ -61,6 +62,7 @@ private:
     QUdpSocket* udpSocketIn = nullptr;
     QUdpSocket* udpSocketOut = nullptr;
     QMqttClient* mqttClient = nullptr;
+    QMqttSubscription* mqttSubscription = nullptr;
     QHostAddress m_address = QHostAddress("127.0.0.1");
     unsigned short m_portIn = 1234;
     unsigned short m_portOut = 1235;

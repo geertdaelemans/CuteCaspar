@@ -3,6 +3,7 @@
 #include <QUdpSocket>
 #include <QSettings>
 #include <QMqttClient>
+#include <QMqttSubscription>
 
 #include <QHostInfo>
 #include <QNetworkInterface>
@@ -80,9 +81,30 @@ void RaspberryPI::setup()
         qDebug() << "Connecting to MQTT broker at 127.0.0.1:1883...";
         mqttClient->connectToHost();
         
-        // Add connection status logging
+        // Add connection status logging and subscription
         QObject::connect(mqttClient, &QMqttClient::connected, [this]() {
             qDebug() << "✅ MQTT connected successfully!";
+            
+            // Step 4: Subscribe to status topic for incoming messages
+            QString statusTopic = "cutecaspar/raspi/status";
+            mqttSubscription = mqttClient->subscribe(statusTopic, 1); // QoS 1
+            
+            if (mqttSubscription) {
+                qDebug() << QString("📥 Subscribed to MQTT topic: %1").arg(statusTopic);
+                
+                // Connect to message received signal (QMqttMessage parameter)
+                QObject::connect(mqttSubscription, &QMqttSubscription::messageReceived, 
+                               [this](const QMqttMessage &mqttMessage) {
+                    QString msg = QString::fromUtf8(mqttMessage.payload());
+                    QString topic = mqttMessage.topic().name();
+                    qDebug() << QString("📨 Received MQTT message '%1' from topic '%2'").arg(msg).arg(topic);
+                    
+                    // Route to existing parseMessage function (same as UDP)
+                    parseMessage(msg);
+                });
+            } else {
+                qDebug() << "❌ Failed to subscribe to MQTT status topic";
+            }
         });
         
         QObject::connect(mqttClient, &QMqttClient::disconnected, [this]() {
