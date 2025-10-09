@@ -42,6 +42,19 @@ public:
     int getMagnetProbability() const;
     void reboot();
     void shutdown();
+    
+    // MQTT Configuration Methods
+    bool isMqttEnabled() const;
+    void setMqttEnabled(bool enabled);
+    QString getMqttBrokerHost() const;
+    void setMqttBrokerHost(const QString &host);
+    quint16 getMqttBrokerPort() const;
+    void setMqttBrokerPort(quint16 port);
+    QString getMqttClientId() const;
+    void setMqttClientId(const QString &clientId);
+    QString getMqttTopicPrefix() const;
+    void setMqttTopicPrefix(const QString &prefix);
+    bool isMqttConnected() const;
 
 signals:
     void statusButton(QString msg);
@@ -66,6 +79,12 @@ private:
     QHostAddress m_address = QHostAddress("127.0.0.1");
     unsigned short m_portIn = 1234;
     unsigned short m_portOut = 1235;
+    // MQTT Configuration
+    bool m_mqttEnabled = true;
+    QString m_mqttBrokerHost = "127.0.0.1";
+    quint16 m_mqttBrokerPort = 1883;
+    QString m_mqttClientId = "CuteCaspar";
+    QString m_mqttTopicPrefix = "cutecaspar/raspi";
     status m_status;
     void sendStatus();
 };

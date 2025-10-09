@@ -38,6 +38,13 @@ void RaspberryPI::setup()
     m_address = QHostAddress(address);
     m_portIn = static_cast<unsigned short>(settings.value("raspport_in", "1234").toInt());
     m_portOut = static_cast<unsigned short>(settings.value("raspport_out", "1235").toInt());
+    
+    // Load MQTT Configuration from settings
+    m_mqttEnabled = settings.value("mqtt_enabled", true).toBool();
+    m_mqttBrokerHost = settings.value("mqtt_broker_host", "127.0.0.1").toString();
+    m_mqttBrokerPort = static_cast<quint16>(settings.value("mqtt_broker_port", 1883).toInt());
+    m_mqttClientId = settings.value("mqtt_client_id", "CuteCaspar").toString();
+    m_mqttTopicPrefix = settings.value("mqtt_topic_prefix", "cutecaspar/raspi").toString();
     settings.endGroup();
 
     // Find real LocalHost Address
@@ -70,15 +77,16 @@ void RaspberryPI::setup()
     QObject::connect(udpSocketIn, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()), Qt::UniqueConnection);
 
-    // Initialize MQTT client (Step 1: Connection only)
-    if (mqttClient == nullptr) {
+    // Initialize MQTT client (Step 5: Using configurable settings)
+    if (m_mqttEnabled && mqttClient == nullptr) {
         mqttClient = new QMqttClient(this);
-        mqttClient->setHostname("127.0.0.1");
-        mqttClient->setPort(1883);
-        mqttClient->setClientId("CuteCaspar");
+        mqttClient->setHostname(m_mqttBrokerHost);
+        mqttClient->setPort(m_mqttBrokerPort);
+        mqttClient->setClientId(m_mqttClientId);
         
         // Connect to MQTT broker
-        qDebug() << "Connecting to MQTT broker at 127.0.0.1:1883...";
+        qDebug() << QString("Connecting to MQTT broker at %1:%2 (Client ID: %3)...")
+                    .arg(m_mqttBrokerHost).arg(m_mqttBrokerPort).arg(m_mqttClientId);
         mqttClient->connectToHost();
         
         // Add connection status logging and subscription
@@ -86,7 +94,7 @@ void RaspberryPI::setup()
             qDebug() << "✅ MQTT connected successfully!";
             
             // Step 4: Subscribe to status topic for incoming messages
-            QString statusTopic = "cutecaspar/raspi/status";
+            QString statusTopic = QString("%1/status").arg(m_mqttTopicPrefix);
             mqttSubscription = mqttClient->subscribe(statusTopic, 1); // QoS 1
             
             if (mqttSubscription) {
@@ -281,14 +289,14 @@ void RaspberryPI::sendMessage(QString msg)
     qDebug() << QString("📤 Sending UDP Message '%1' to %2:%3").arg(msg).arg(m_address.toString()).arg(m_portOut);
     
     // Step 3: Send ALL commands via MQTT (not just "start" and "alive")
-    if (mqttClient && mqttClient->state() == QMqttClient::Connected) {
-        QString topic = "cutecaspar/raspi/command";
+    if (m_mqttEnabled && mqttClient && mqttClient->state() == QMqttClient::Connected) {
+        QString topic = QString("%1/command").arg(m_mqttTopicPrefix);
         QByteArray mqttMessage = msg.toUtf8();
         mqttClient->publish(QMqttTopicName(topic), mqttMessage, 1); // QoS 1 for reliability
         qDebug() << QString("📡 Published MQTT message '%1' to topic '%2'").arg(msg).arg(topic);
-    } else if (mqttClient) {
+    } else if (m_mqttEnabled && mqttClient) {
         qDebug() << QString("⚠️ MQTT client not connected (state: %1), cannot send '%2'").arg(mqttClient->state()).arg(msg);
-    } else {
+    } else if (m_mqttEnabled) {
         qDebug() << QString("❌ MQTT client is null, cannot send '%1'").arg(msg);
     }
 }
@@ -328,4 +336,120 @@ void RaspberryPI::insertFinished()
 void RaspberryPI::sendStatus()
 {
     emit statusUpdate(m_status);
+}
+
+// MQTT Configuration Methods Implementation
+
+bool RaspberryPI::isMqttEnabled() const
+{
+    return m_mqttEnabled;
+}
+
+void RaspberryPI::setMqttEnabled(bool enabled)
+{
+    if (m_mqttEnabled != enabled) {
+        m_mqttEnabled = enabled;
+        
+        // Save to settings
+        QSettings settings("VRT", "CasparCGClient");
+        settings.beginGroup("Configuration");
+        settings.setValue("mqtt_enabled", enabled);
+        settings.endGroup();
+        
+        qDebug() << QString("MQTT %1").arg(enabled ? "enabled" : "disabled");
+        
+        // Note: Restart required for changes to take effect
+        qDebug() << "⚠️ Restart CuteCaspar for MQTT settings to take effect";
+    }
+}
+
+QString RaspberryPI::getMqttBrokerHost() const
+{
+    return m_mqttBrokerHost;
+}
+
+void RaspberryPI::setMqttBrokerHost(const QString &host)
+{
+    if (m_mqttBrokerHost != host) {
+        m_mqttBrokerHost = host;
+        
+        // Save to settings
+        QSettings settings("VRT", "CasparCGClient");
+        settings.beginGroup("Configuration");
+        settings.setValue("mqtt_broker_host", host);
+        settings.endGroup();
+        
+        qDebug() << QString("MQTT broker host set to: %1").arg(host);
+        qDebug() << "⚠️ Restart CuteCaspar for MQTT settings to take effect";
+    }
+}
+
+quint16 RaspberryPI::getMqttBrokerPort() const
+{
+    return m_mqttBrokerPort;
+}
+
+void RaspberryPI::setMqttBrokerPort(quint16 port)
+{
+    if (m_mqttBrokerPort != port) {
+        m_mqttBrokerPort = port;
+        
+        // Save to settings
+        QSettings settings("VRT", "CasparCGClient");
+        settings.beginGroup("Configuration");
+        settings.setValue("mqtt_broker_port", port);
+        settings.endGroup();
+        
+        qDebug() << QString("MQTT broker port set to: %1").arg(port);
+        qDebug() << "⚠️ Restart CuteCaspar for MQTT settings to take effect";
+    }
+}
+
+QString RaspberryPI::getMqttClientId() const
+{
+    return m_mqttClientId;
+}
+
+void RaspberryPI::setMqttClientId(const QString &clientId)
+{
+    if (m_mqttClientId != clientId) {
+        m_mqttClientId = clientId;
+        
+        // Save to settings
+        QSettings settings("VRT", "CasparCGClient");
+        settings.beginGroup("Configuration");
+        settings.setValue("mqtt_client_id", clientId);
+        settings.endGroup();
+        
+        qDebug() << QString("MQTT client ID set to: %1").arg(clientId);
+        qDebug() << "⚠️ Restart CuteCaspar for MQTT settings to take effect";
+    }
+}
+
+QString RaspberryPI::getMqttTopicPrefix() const
+{
+    return m_mqttTopicPrefix;
+}
+
+void RaspberryPI::setMqttTopicPrefix(const QString &prefix)
+{
+    if (m_mqttTopicPrefix != prefix) {
+        m_mqttTopicPrefix = prefix;
+        
+        // Save to settings
+        QSettings settings("VRT", "CasparCGClient");
+        settings.beginGroup("Configuration");
+        settings.setValue("mqtt_topic_prefix", prefix);
+        settings.endGroup();
+        
+        qDebug() << QString("MQTT topic prefix set to: %1").arg(prefix);
+        qDebug() << QString("Command topic: %1/command").arg(prefix);
+        qDebug() << QString("Status topic: %1/status").arg(prefix);
+        qDebug() << "⚠️ Restart CuteCaspar for MQTT settings to take effect";
+    }
+}
+
+bool RaspberryPI::isMqttConnected() const
+{
+    return mqttClient && mqttClient->state() == QMqttClient::Connected;
 }
