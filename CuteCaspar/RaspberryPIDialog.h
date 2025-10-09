@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include <QStatusBar>
+#include <QTimer>
+#include <QElapsedTimer>
 
 #include "RaspberryPI.h"
 
@@ -38,6 +40,11 @@ private:
     QStatusBar* statusBar;
     void setButtonColor(QPushButton *button, QColor color);
     void setButton(QPushButton *button, bool state);
+    
+    // Debouncing support
+    QElapsedTimer m_lastClickTimer;
+    static const int DEBOUNCE_DELAY_MS = 300; // 300ms debounce delay
+    bool isClickAllowed(); // Helper function for debouncing
 };
 
 #endif // RASPBERRYPIDIALOG_H

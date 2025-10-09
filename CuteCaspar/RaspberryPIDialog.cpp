@@ -18,6 +18,9 @@ RaspberryPIDialog::RaspberryPIDialog(QWidget *parent) :
     this->setWindowFlags(this->windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     ui->setupUi(this);
+    
+    // Initialize debounce timer
+    m_lastClickTimer.start();
 
     // Set status bar
     statusBar = new QStatusBar(this);
@@ -138,6 +141,8 @@ void RaspberryPIDialog::on_btnShutdown_clicked()
 
 void RaspberryPIDialog::on_btnButton_clicked()
 {
+    if (!isClickAllowed()) return; // Debounce check
+    
     if (!RaspberryPI::getInstance()->isButtonActive()) {
         RaspberryPI::getInstance()->setButtonActive(true);
     } else {
@@ -147,6 +152,8 @@ void RaspberryPIDialog::on_btnButton_clicked()
 
 void RaspberryPIDialog::on_btnLight_clicked()
 {
+    if (!isClickAllowed()) return; // Debounce check
+    
     if (!RaspberryPI::getInstance()->isLightActive()) {
         RaspberryPI::getInstance()->setLightActive(true);
     } else {
@@ -156,6 +163,8 @@ void RaspberryPIDialog::on_btnLight_clicked()
 
 void RaspberryPIDialog::on_btnMagnet_clicked()
 {
+    if (!isClickAllowed()) return; // Debounce check
+    
     if (!RaspberryPI::getInstance()->isMagnetActive()) {
         RaspberryPI::getInstance()->setMagnetActive(true);
     } else {
@@ -165,7 +174,9 @@ void RaspberryPIDialog::on_btnMagnet_clicked()
 
 void RaspberryPIDialog::on_btnMotion_clicked()
 {
-    if (RaspberryPI::getInstance()->isMotionActive()) {
+    if (!isClickAllowed()) return; // Debounce check
+    
+    if (!RaspberryPI::getInstance()->isMotionActive()) {
         RaspberryPI::getInstance()->setMotionActive(true);
     } else {
         RaspberryPI::getInstance()->setMotionActive(false);
@@ -174,6 +185,8 @@ void RaspberryPIDialog::on_btnMotion_clicked()
 
 void RaspberryPIDialog::on_btnSmoke_clicked()
 {
+    if (!isClickAllowed()) return; // Debounce check
+    
     if (!RaspberryPI::getInstance()->isSmokeActive()) {
         RaspberryPI::getInstance()->setSmokeActive(true);
     } else {
@@ -189,6 +202,16 @@ void RaspberryPIDialog::on_sldMagnet_valueChanged(int value)
 /**
  * HELPERS
  */
+
+bool RaspberryPIDialog::isClickAllowed()
+{
+    if (m_lastClickTimer.elapsed() < DEBOUNCE_DELAY_MS) {
+        qDebug() << "Click ignored (debouncing)";
+        return false;
+    }
+    m_lastClickTimer.restart();
+    return true;
+}
 
 void RaspberryPIDialog::setButtonColor(QPushButton* button, QColor color)
 {

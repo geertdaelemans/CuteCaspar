@@ -213,12 +213,12 @@ void RaspberryPI::setMagnetActive(bool magnetActive, bool overRule)
     int randomNumber = QRandomGenerator::global()->bounded(100) + 1;
 
     // When random number is smaller or equal to the probability as set by user
-    // switch the magnet off is active (this can be overruled)
+    // open the latch if not active (this can be overruled)
     if ((randomNumber <= getMagnetProbability() && !magnetActive) || overRule) {
-        sendMessage("magnet_off");
+        sendMessage("latch_open");  // Temporarily open the latch
         m_status.magnetActive = false;
     } else if (magnetActive) {
-        sendMessage("magnet_on");
+        sendMessage("latch_close"); // Manually close the latch
         m_status.magnetActive = true;
     }
     sendStatus();
@@ -226,8 +226,8 @@ void RaspberryPI::setMagnetActive(bool magnetActive, bool overRule)
 
 void RaspberryPI::setMotionActive(bool motionActive)
 {
-    sendMessage(motionActive ? "motion_off" : "motion_on");
-    m_status.motionActive = !motionActive;
+    sendMessage(motionActive ? "motion_on" : "motion_off");
+    m_status.motionActive = motionActive;
     sendStatus();
 }
 
