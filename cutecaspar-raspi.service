@@ -1,0 +1,41 @@
+[Unit]
+Description=CuteCaspar Raspberry Pi MQTT Controller
+Documentation=https://github.com/geertdaelemans/CuteCaspar
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi
+
+# Main command
+ExecStart=/usr/bin/python3 /home/pi/raspberrypi_startup_mqtt.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitBurst=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cutecaspar-raspi
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONIOENCODING=utf-8
+
+# Security (optional hardening)
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Process management
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
