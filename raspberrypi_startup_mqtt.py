@@ -128,18 +128,21 @@ def process_command(message):
     elif message == 'on':
         flashing = True
         print("LED switched on")
-    elif message == 'magnet_on':
-        print("Magnet on")
+    elif message == 'latch_close' or message == 'magnet_on':  # Support both new and old names
+        print("Latch close (manual)")
         GPIO.output(8, 1)
         send_status_message("latch1_closed")
-    elif message == 'magnet_off':
+        return None  # Don't send additional "ok"
+    elif message == 'latch_open' or message == 'magnet_off':  # Support both new and old names
         disableButton = True
-        print("Magnet off")
-        GPIO.output(8, 0)
-        time.sleep(0.25)
-        GPIO.output(8, 1)
+        print("Latch open (temporary)")
+        GPIO.output(8, 0)  # Open latch
+        time.sleep(0.25)   # Brief open time
+        GPIO.output(8, 1)  # Auto-close latch
+        send_status_message("latch1_closed")  # Notify CuteCaspar latch is closed again
+        time.sleep(1.0)    # Safety delay
         disableButton = False
-        send_status_message("latch1_opened")
+        return None  # Don't send additional "ok"
     elif message == 'light_on':
         print("Light on")
         GPIO.output(11, 0)  # Assuming 0 = on for relay
@@ -159,6 +162,7 @@ def process_command(message):
         print("Motion sensor off")
         GPIO.output(16, 1)
         send_status_message("latch2_closed")
+        return None  # Don't send additional "ok"
     elif message == 'reboot':
         print("Rebooting system...")
         call("sudo reboot", shell=True)
