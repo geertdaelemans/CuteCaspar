@@ -610,6 +610,8 @@ void Player::playNote(unsigned int pitch, bool noteOn)
             RaspberryPI::getInstance()->setButtonActive(noteOn);
             break;
         case 130:
+            // Example: send a custom MQTT message to loxone/socket3
+            RaspberryPI::getInstance()->publishMqtt("loxone/socket3", noteOn ? "on" : "off");
             RaspberryPI::getInstance()->setLightActive(noteOn);
             break;
         case 131:

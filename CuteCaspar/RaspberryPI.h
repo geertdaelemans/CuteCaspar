@@ -55,6 +55,9 @@ public:
     void setMqttTopicPrefix(const QString &prefix);
     bool isMqttConnected() const;
 
+    // Helper to publish arbitrary MQTT messages
+    void publishMqtt(const QString& topic, const QString& payload, int qos = 1);
+
 signals:
     void statusButton(QString msg);
     void statusUpdate(status stat);
@@ -85,7 +88,7 @@ private:
     QString m_mqttClientId = "CuteCaspar";
     QString m_mqttTopicPrefix = "cutecaspar/raspi";
     status m_status;
-    void sendStatus();
+    void sendStatus();    
 };
 
 #endif // RASPBERRYPI_H

@@ -299,6 +299,23 @@ void RaspberryPI::processPendingDatagrams()
 }
 
 /**
+ * @brief RaspberryPI::publishMqtt
+ * @param topic - the MQTT topic
+ * @param payload - the message payload
+ * @param qos - the Quality of Service level
+ */
+
+void RaspberryPI::publishMqtt(const QString& topic, const QString& payload, int qos)
+{
+    if (m_mqttEnabled && mqttClient && mqttClient->state() == QMqttClient::Connected) {
+        mqttClient->publish(QMqttTopicName(topic), payload.toUtf8(), qos);
+        qDebug() << QString("📡 Published MQTT message '%1' to topic '%2'").arg(payload).arg(topic);
+    } else {
+        qDebug() << "❌ MQTT not connected, cannot publish to" << topic;
+    }
+}
+
+/**
  * @brief RaspberryPI::sendMessage
  * @param msg
  */
