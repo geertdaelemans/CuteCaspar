@@ -50,7 +50,7 @@ UDP_PORT_OUT = 1234
 
 # MQTT Configuration
 MQTT_ENABLED = True  # Set to False to disable MQTT
-MQTT_BROKER_HOST = "192.168.0.184"  # Change this to your CuteCaspar machine IP or external broker
+MQTT_BROKER_HOST = "192.168.0.220"  # Change this to your CuteCaspar machine IP or external broker
 MQTT_BROKER_PORT = 1883
 MQTT_CLIENT_ID = "RaspberryPi"
 MQTT_TOPIC_PREFIX = "cutecaspar/raspi"
@@ -157,7 +157,12 @@ def process_command(message):
         GPIO.output(10, 1)
     elif message == 'motion_on':
         print("Motion sensor on")
-        GPIO.output(16, 0)
+        GPIO.output(16, 0) # Open latch
+        time.sleep(0.25)   # Brief open time
+        GPIO.output(16, 1)  # Auto-close latch
+        send_status_message("latch2_closed")  # Notify CuteCaspar latch is closed again
+        time.sleep(1.0)    # Safety delay
+        return None  # Don't send additional "ok"
     elif message == 'motion_off':
         print("Motion sensor off")
         GPIO.output(16, 1)
