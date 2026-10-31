@@ -15,6 +15,9 @@ RaspberryPI *RaspberryPI::s_inst = nullptr;
 
 RaspberryPI::RaspberryPI()
 {
+    m_doorbellRelayOffTimer.setSingleShot(true);
+    connect(&m_doorbellRelayOffTimer, &QTimer::timeout, this, [this]()
+            { publishMqtt("esp32/relay/1", "off"); });
     setup();
 }
 
@@ -359,6 +362,8 @@ void RaspberryPI::parseMessage(QString msg)
     else if (msg == "high2")
     {
         qDebug() << "Insert doorbell clip";
+        publishMqtt("esp32/relay/1", "on");
+        m_doorbellRelayOffTimer.start(10000);
         emit insertPlaylist("EXTRAS/TRICK OR TREAT", "extras");
         setButtonActive(false);
     }
