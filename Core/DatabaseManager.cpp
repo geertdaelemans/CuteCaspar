@@ -380,36 +380,39 @@ void DatabaseManager::deleteDevice(int id)
  */
 void DatabaseManager::updateLibraryMedia(const QList<LibraryModel>& insertModels)
 {
-    if (insertModels.count() > 0) {
+    QMutexLocker locker(&mutex);
 
-        QMutexLocker locker(&mutex);
+    QSqlDatabase::database().transaction();
 
-        QSqlDatabase::database().transaction();
+    QSqlQuery sql;
 
-        QSqlQuery sql;
+    if (!sql.exec("DELETE FROM Library"))
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
 
-        if (!sql.exec("DELETE FROM Library"))
+    for (int i = 0; i < insertModels.count(); i++) {
+        sql.prepare("INSERT INTO Library (Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps, Midi) "
+                    "VALUES(:Name, :DeviceId, :TypeId, :ThumbnailId, :Timecode, :Fps, :Midi)");
+        sql.bindValue(":Name", insertModels.at(i).getName());
+        sql.bindValue(":DeviceId", insertModels.at(i).getDeviceName());
+        sql.bindValue(":TypeId", insertModels.at(i).getType());
+        sql.bindValue(":ThumbnailId", insertModels.at(i).getThumbnailId());
+        sql.bindValue(":Timecode", insertModels.at(i).getTimecode());
+        sql.bindValue(":Fps", insertModels.at(i).getFPS());
+        sql.bindValue(":Midi", insertModels.at(i).getMidi());
+
+        if (!sql.exec())
             qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
-
-        for (int i = 0; i < insertModels.count(); i++) {
-            sql.prepare("INSERT INTO Library (Name, DeviceId, TypeId, ThumbnailId, Timecode, Fps, Midi) "
-                        "VALUES(:Name, :DeviceId, :TypeId, :ThumbnailId, :Timecode, :Fps, :Midi)");
-            sql.bindValue(":Name", insertModels.at(i).getName());
-            sql.bindValue(":DeviceId", insertModels.at(i).getDeviceName());
-            sql.bindValue(":TypeId", insertModels.at(i).getType());
-            sql.bindValue(":ThumbnailId", insertModels.at(i).getThumbnailId());
-            sql.bindValue(":Timecode", insertModels.at(i).getTimecode());
-            sql.bindValue(":Fps", insertModels.at(i).getFPS());
-            sql.bindValue(":Midi", insertModels.at(i).getMidi());
-
-            if (!sql.exec())
-                qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
-        }
-
-        QSqlDatabase::database().commit();
-
-        emit databaseUpdated("Library");
     }
+
+    if (!sql.exec("UPDATE Playlist SET Midi = "
+                  "(SELECT Library.Midi FROM Library WHERE Library.Name = Playlist.Name) "
+                  "WHERE EXISTS (SELECT 1 FROM Library WHERE Library.Name = Playlist.Name)"))
+        qCritical("Failed to execute sql query: %s, Error: %s", qPrintable(sql.lastQuery()), qPrintable(sql.lastError().text()));
+
+    QSqlDatabase::database().commit();
+
+    emit databaseUpdated("Library");
+    emit databaseUpdated("Playlist");
 }
 
 /**
@@ -646,4 +649,3 @@ ClipInfo DatabaseManager::getClipInfo(QString clipName, QString tableName)
 
     return info;
 }
-

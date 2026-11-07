@@ -1,7 +1,8 @@
 #ifndef MIDILOGGER_H
 #define MIDILOGGER_H
 
-#include <QtCore>
+#include <QFile>
+#include <QTextStream>
 
 class MidiLogger
 {
@@ -14,9 +15,8 @@ public:
 
 private:
     bool m_ready = false;
-    QString m_videoName;
-    QFile* logFile;
-    QTextStream* out;
+    QFile logFile;
+    QTextStream out;
 };
 
 #endif // MIDILOGGER_H

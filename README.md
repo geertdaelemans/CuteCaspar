@@ -12,6 +12,7 @@ The basic idea behind this tool is to provide a CasparCG based playlist that has
 * **MIDI & DMX Control**
   * Lighting scenarios triggered through MIDI notes
   * Each clip can have a sidecar with MIDI sequence
+  * MIDI sidecars are stored in the configurable folder under Settings > MIDI (default: the user's application data folder)
   * Note/MIDI assignments imported through .csv files
   * Synchronized light shows with video clips
 

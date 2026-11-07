@@ -6,6 +6,7 @@
 #include "EffectsDelegate.h"
 #include "DatabaseManager.h"
 
+#include <QSortFilterProxyModel>
 
 MidiEditorDialog::MidiEditorDialog(QWidget *parent) :
     QDialog(parent),

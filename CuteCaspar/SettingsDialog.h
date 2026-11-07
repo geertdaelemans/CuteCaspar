@@ -27,6 +27,7 @@ private slots:
     void openOutputPort(int index);
 
     void on_btnConnectRasp_clicked();
+    void on_btnBrowseMidiDirectory_clicked();
 
 private:
     static SettingsDialog* s_inst;

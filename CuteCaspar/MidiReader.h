@@ -13,6 +13,8 @@ class MidiReader
 {
 public:
     MidiReader();
+    static QString midiDirectory();
+    static QString midiFilePath(QString videoFile);
     QMap<QString, message> openLog(QString videoFile);
     bool isReady() const;
 

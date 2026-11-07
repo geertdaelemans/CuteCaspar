@@ -503,6 +503,35 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="layoutWidgetMidiDirectory">
+       <property name="geometry">
+        <rect>
+         <x>45</x>
+         <y>205</y>
+         <width>650</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="midiDirectoryLayout">
+        <item>
+         <widget class="QLabel" name="lblMidiDirectory">
+          <property name="text">
+           <string>MIDI files directory:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="edtMidiDirectory"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnBrowseMidiDirectory">
+          <property name="text">
+           <string>Browse...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </widget>
    </item>

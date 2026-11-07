@@ -4,6 +4,7 @@
 
 #include <QSqlQueryModel>
 #include <QSqlQuery>
+#include <QFileInfo>
 #include <QtSql>
 #include <QtMath>
 
@@ -259,6 +260,8 @@ void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice
 
     QList<LibraryModel> insertModels;
     QList<LibraryModel> deleteModels;
+    const QStringList imageTypes = {"IMAGE", "STILL"};
+    const QStringList imageExtensions = {"jpg", "jpeg", "png", "bmp", "gif", "tif", "tiff", "webp"};
 //    QList<LibraryModel> libraryModels = DatabaseManager::getInstance()->getLibraryMediaByDeviceAddress(device.getAddress());
 
 //    DatabaseManager::getInstance
@@ -281,6 +284,12 @@ void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice
     // Find library items to insert.
     foreach (CasparMedia mediaItem, mediaItems)
     {
+        const QString type = mediaItem.getType();
+        const QString suffix = QFileInfo(mediaItem.getName()).suffix();
+        if (imageTypes.contains(type, Qt::CaseInsensitive)
+                || imageExtensions.contains(suffix, Qt::CaseInsensitive))
+            continue;
+
         bool found = false;
 //        foreach (const LibraryModel& libraryModel, libraryModels)
 //        {
@@ -299,13 +308,10 @@ void MainWindow::mediaChanged(const QList<CasparMedia>& mediaItems, CasparDevice
         }
     }
 
-    if (deleteModels.count() > 0 || insertModels.count() > 0)
-    {
 //        DatabaseManager::getInstance()->updateLibraryMedia(device.getAddress(), deleteModels, insertModels);
-        DatabaseManager::getInstance()->updateLibraryMedia(insertModels);
+    DatabaseManager::getInstance()->updateLibraryMedia(insertModels);
 
 //        EventManager::getInstance().fireMediaChangedEvent(MediaChangedEvent());
-    }
 
     qDebug("LibraryManager::mediaChanged %lld msec", time.elapsed());
 }
@@ -860,4 +866,3 @@ void MainWindow::on_btnSoundScape_clicked()
 {
     Player::getInstance()->toggleSoundScape();
 }
-

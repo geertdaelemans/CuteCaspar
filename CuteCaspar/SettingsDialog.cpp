@@ -6,7 +6,9 @@
 #include "MidiConnection.h"
 #include "RaspberryPI.h"
 #include "DeviceDialog.h"
+#include "MidiReader.h"
 
+#include <QFileDialog>
 #include <QSettings>
 #include <QRegularExpression>
 
@@ -31,6 +33,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->edtRaspAddress->setText(settings.value("raspaddress", "127.0.0.1").toString());
     ui->edtRaspPortIn->setText(settings.value("raspport_in", "1234").toString());
     ui->edtRaspPortOut->setText(settings.value("raspport_out", "1235").toString());
+    ui->edtMidiDirectory->setText(MidiReader::midiDirectory());
     settings.endGroup();
 
     loadDevice();
@@ -191,6 +194,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue("raspaddress", ui->edtRaspAddress->text());
     settings.setValue("raspport_in", ui->edtRaspPortIn->text());
     settings.setValue("raspport_out", ui->edtRaspPortOut->text());
+    settings.setValue("midi_directory", ui->edtMidiDirectory->text().trimmed());
     settings.endGroup();
 }
 
@@ -215,4 +219,12 @@ void SettingsDialog::on_btnConnectRasp_clicked()
     settings.setValue("raspport_out", ui->edtRaspPortOut->text());
     settings.endGroup();
     RaspberryPI::getInstance()->setup();
+}
+
+void SettingsDialog::on_btnBrowseMidiDirectory_clicked()
+{
+    const QString directory = QFileDialog::getExistingDirectory(
+        this, tr("Select MIDI files directory"), ui->edtMidiDirectory->text());
+    if (!directory.isEmpty())
+        ui->edtMidiDirectory->setText(directory);
 }
